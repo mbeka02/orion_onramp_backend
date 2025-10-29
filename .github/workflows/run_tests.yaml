@@ -1,0 +1,20 @@
+name: run-
+run-name: ${{ github.actor }} is making a PR
+on: push
+jobs:
+  run-tests:
+    name: Run defined tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Use NodeJS
+        uses: actions/setup-node@v6.0.0
+        node-version-file: .nvmrc
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4.2.0
+      - name: Install dependencies
+        run: pnpm Install
+      - name: Run tests
+        run: pnpm test
+

@@ -1,6 +1,7 @@
 import pino from "pino";
 import { loggerLevelsSchema } from "../types/logger";
 import "dotenv/config";
+import postHogLogger, { PostHogEventTypes } from "./posthog";
 
 const parsed = loggerLevelsSchema.safeParse(process.env);
 if (parsed.error) {
@@ -74,12 +75,15 @@ const pinoLogger = pino({
 const logger: Logger = {
   fatal(message: string, context?: LogContext) {
     pinoLogger.fatal(context, message);
+    postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
   },
   error(message: string, context?: LogContext) {
     pinoLogger.error(context, message);
+    postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
   },
   warn(message: string, context?: LogContext) {
     pinoLogger.warn(context, message);
+    postHogLogger.sendEvent(PostHogEventTypes.WARNING, message, {context});
   },
   info(message: string, context?: LogContext) {
     pinoLogger.info(context, message);

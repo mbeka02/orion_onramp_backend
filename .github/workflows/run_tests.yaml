@@ -1,4 +1,4 @@
-name: run-
+name: Run Tests On Open PR
 run-name: ${{ github.actor }} is making a PR
 on: 
   pull_request:

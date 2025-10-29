@@ -1,23 +1,32 @@
 {
     "compilerOptions": {
-      "target": "esnext",
-      "allowJs": true,
-      "skipLibCheck": true,
-      "strict": true,
-      "forceConsistentCasingInFileNames": true,
-      "noEmit": true,
-      "esModuleInterop": true,
-      "module": "NodeNext",
-      "moduleResolution": "NodeNext",
-      "resolveJsonModule": true,
-      "isolatedModules": true,
-      "noErrorTruncation": true,
-      "outDir": "./dist",
-      "declaration": true
+        "target": "esnext",
+        "allowJs": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noErrorTruncation": true,
+        "outDir": "./dist",
+        "declaration": true,
+        "rootDir": "./",
+        "types": [
+            "jest"
+        ]
     },
-    "include": ["./**/*.ts", "src/controller/auth"],
-    "exclude": ["node_modules"],
+    "include": [
+        "./**/*.ts",
+        "tests/**/*.test.ts"
+    ],
+    "exclude": [
+        "node_modules"
+    ],
     "ts-node": {
-      "experimentalSpecifierResolution": "node"
+        "experimentalSpecifierResolution": "node"
     }
-  }
+}

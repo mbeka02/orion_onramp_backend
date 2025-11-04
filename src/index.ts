@@ -13,7 +13,7 @@ if (!PORT || !DATABASE_URL || !FRONTEND_URL) {
     logger.error("Invalid env setup, set PORT, FRONTEND_URL and DATABASE_URL in env variables");
     process.exit(1);
 }
-app.use("/", cors({ origin: `http://localhost:3001`, credentials: true }));
+app.use("/", cors({ origin: FRONTEND_URL, credentials: true }));
 // BETTER AUTH ROUTES , DO NOT TAMPER WITH THE CONFIGURATION
 // api/auth/sign-up/email
 // api/auth/sign-in/email

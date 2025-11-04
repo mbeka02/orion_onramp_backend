@@ -6,9 +6,12 @@ import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 const PORT = process.env.PORT;
+const DATABASE_URL = process.env.DATABASE_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
-if (!PORT || !FRONTEND_URL) {
-  logger.error("Invalid env setup, set PORT or FRONTEND_URL in env variables");
+
+if (!PORT || !DATABASE_URL || !FRONTEND_URL) {
+    logger.error("Invalid env setup, set PORT, FRONTEND_URL and DATABASE_URL in env variables");
+    process.exit(1);
 }
 app.use("/", cors({ origin: `http://localhost:3001`, credentials: true }));
 // BETTER AUTH ROUTES , DO NOT TAMPER WITH THE CONFIGURATION

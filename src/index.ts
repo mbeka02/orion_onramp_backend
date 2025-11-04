@@ -12,6 +12,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 
 if (!PORT || !DATABASE_URL || !FRONTEND_URL) {
     logger.error("Invalid env setup, set PORT, FRONTEND_URL and DATABASE_URL in env variables");
+    process.exit(1);
 }
 
 app.use("/", cors({origin: FRONTEND_URL, credentials: true}));

@@ -8,11 +8,13 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
-if (!PORT || !DATABASE_URL) {
-    logger.error("Invalid env setup, set PORT and DATABASE_URL in env variables");
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+if (!PORT || !DATABASE_URL || !FRONTEND_URL) {
+    logger.error("Invalid env setup, set PORT, FRONTEND_URL and DATABASE_URL in env variables");
 }
 
-app.use("/", cors({origin: `http://localhost:${PORT}`, credentials: true}));
+app.use("/", cors({origin: FRONTEND_URL, credentials: true}));
 app.use("/", express.json());
 
 app.listen(PORT, () => {

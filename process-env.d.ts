@@ -7,7 +7,8 @@ declare global {
             DATABASE_URL: string,
             POSTHOG_SECRET: string,
             POSTHOG_URL: string,
-            POSTHOG_DISTINCT_ID: string
+            POSTHOG_DISTINCT_ID: string,
+            FRONTEND_URL: string
         }
     }
 }

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Container } from '@react-email/components';
 import { Layout } from '../components/layout';
-function ExampleEmail() {
+export default function ExampleEmail() {
     return (
         <Layout
             heading="Example Email"
@@ -13,4 +13,3 @@ function ExampleEmail() {
         </Layout>
     )
 }
-export default ExampleEmail;

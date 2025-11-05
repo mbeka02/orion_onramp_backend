@@ -7,7 +7,12 @@ declare global {
             DATABASE_URL: string,
             POSTHOG_SECRET: string,
             POSTHOG_URL: string,
-            POSTHOG_DISTINCT_ID: string
+            POSTHOG_DISTINCT_ID: string,
+            EMAIL_FROM: string,
+            EMAIL_SERVER_HOST: string,
+            EMAIL_SERVER_PORT: string,
+            EMAIL_SERVER_USER: string,
+            EMAIL_SERVER_PASSWORD: string,
         }
     }
 }

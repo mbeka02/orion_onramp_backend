@@ -6,7 +6,10 @@ import { environmentModelMock } from "../mocks/environment_model_mock";
 describe("Environment Controller Tests", () => {
     const business = "existing id";
     const non_existing_environment = ENVIRONMENT_TYPES.LIVE;
-    const existing_environment = ENVIRONMENT_TYPES.TEST
+    const existing_environment = ENVIRONMENT_TYPES.TEST;
+    const created_environment_id = "created environment";
+    const public_key = "publick";
+    const private_key = "private";
 
     beforeAll(async () => {
         try {
@@ -20,6 +23,16 @@ describe("Environment Controller Tests", () => {
                         rej("Invalid arguments");
                     }
                 })
+            });
+
+            environmentModelMock.storeEnvironment = jest.fn().mockImplementation(environment => {
+                return new Promise((res, rej) => {
+                    res(created_environment_id);
+                })
+            });
+
+            environmentModelMock.createKeys = jest.fn().mockImplementation(() => {
+                return ({ public_key: public_key, private_key: private_key });
             })
         } catch(err) {
             console.error("Error setting up mocks");
@@ -47,4 +60,26 @@ describe("Environment Controller Tests", () => {
             }
         }
     });
+
+    it("should create the environment", async () => {
+        try {
+            const args: CreateEnvironmentType = {
+                type: non_existing_environment
+            };
+
+            const environmentID = await environmentController.create(args, business, environmentModelMock);
+
+            expect(environmentModelMock.createKeys).toHaveBeenCalled();
+            expect(environmentModelMock.storeEnvironment).toHaveBeenCalledWith({ 
+                type: args.type, 
+                public_key: public_key, 
+                private_key: private_key, 
+                business_id: business 
+            });
+            expect(environmentID).toBe(created_environment_id);
+        } catch(err) {
+            console.error(err);
+            expect(false).toBe(true);
+        }
+    })
 })

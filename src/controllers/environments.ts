@@ -10,6 +10,18 @@ export class EnvironmentsController {
             if (doesBusinessAlreadyHaveEnvironment === true) {
                 throw new MyError(Errors.BUSINESS_ALREADY_HAS_ENVIRONMENT);
             }
+
+            // Create keys for environment
+            const {public_key, private_key} = environmentModel.createKeys();
+
+            // Store environment
+            const environment_id = await environmentModel.storeEnvironment({
+                type: args.type,
+                private_key,
+                public_key,
+                business_id
+            });
+            return environment_id;
         } catch(err) {
             if (err instanceof MyError) {
                 throw err;

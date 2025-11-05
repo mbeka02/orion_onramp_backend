@@ -1,10 +1,17 @@
-import { pgTable, pgEnum, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, text, timestamp, boolean, uuid } from "drizzle-orm/pg-core";
 import { ENVIRONMENT_TYPES } from "../../types/environments";
+
+export const businessesTable = pgTable("businesses", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull()
+});
 
 export const environment = pgEnum("environment_types", [ENVIRONMENT_TYPES.LIVE, ENVIRONMENT_TYPES.TEST])
 
 // Put database schemas here
-export const environments = pgTable("environments", {
+export const environmentsTable = pgTable("environments", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessID: uuid("business_id").notNull().references(() => businessesTable.id, {onDelete: "cascade"}),
     publicKey: text("public_key").notNull().unique(),
     privateKey: text("private_key").notNull().unique(),
     type: environment().notNull(),

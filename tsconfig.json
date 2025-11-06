@@ -17,12 +17,13 @@
         "rootDir": "./",
         "types": [
             "jest"
-        ]
+        ],
+        "jsx": "react-jsx"
     },
     "include": [
         "./**/*.ts",
         "tests/**/*.test.ts"
-    ],
+, "src/lib/emails/components/layout.tsx"    ],
     "exclude": [
         "node_modules"
     ],

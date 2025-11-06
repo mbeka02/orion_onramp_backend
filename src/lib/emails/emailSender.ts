@@ -1,6 +1,7 @@
 import { render } from '@react-email/render';
 import transporter from './mailer';
 import React from 'react';
+import logger from '../logger';
 
 interface SendEmailOptions {
     to: string;
@@ -23,7 +24,7 @@ export const sendEmail = async ({ to, subject, react }: SendEmailOptions) => {
         console.log(`Email sent successfully to ${to}! Message ID: ${info.messageId}`);
         return { success: true, messageId: info.messageId };
     } catch (error) {
-        console.error(`Error sending email to ${to}:`, error);
+        logger.error(`Error sending email to ${to}:`, {error});
 
         return { success: false, error };
     }

@@ -6,8 +6,10 @@ env:
   POSTHOG_DISTINCT_ID: ${{ vars.POSTHOG_DISTINCT_ID }}
   POSTHOG_URL: ${{ vars.POSTHOG_URL }}
 on: 
+  push:
+    branches: [ "main" ]
   pull_request:
-    types: [opened, reopened]
+    branches: [ "main" ]
 jobs:
   run-tests:
     name: Run defined tests

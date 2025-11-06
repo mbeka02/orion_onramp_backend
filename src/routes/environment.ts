@@ -5,6 +5,7 @@ import environmentController from "../controllers/environments";
 import environmentModel from "../models/environments";
 import { authenticationMiddleware } from "../middleware/authenticationMiddleware";
 import { SuccessMessage } from "../success";
+import { Errors } from "../errors";
 const router: Router = Express.Router();
 
 router.post("/", authenticationMiddleware, async(req, res) => {
@@ -23,7 +24,7 @@ router.post("/", authenticationMiddleware, async(req, res) => {
         }
     } catch(err) {
         logger.error("Error creating environment in router", {error: err});
-        res.status(500).json({message: err})
+        res.status(500).json({message: Errors.INTERNAL_SERVER_ERROR})
     }
 })
 

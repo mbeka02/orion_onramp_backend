@@ -5,6 +5,8 @@ const app = express();
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
+import environmentRouter from "./routes/environment";
+
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -22,6 +24,7 @@ app.all("/api/auth/{*any}", toNodeHandler(auth));
 // Mount express json middleware after Better Auth handler
 // or only apply it to routes that don't interact with Better Auth
 app.use("/", express.json());
+app.use("/environment", environmentRouter);
 
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);

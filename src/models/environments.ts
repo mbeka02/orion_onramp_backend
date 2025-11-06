@@ -16,7 +16,7 @@ export class EnvironmentModel {
                     eq(environmentsTable.type, environmentType)
                 ));
 
-            return existingBusinessQuery.length > 1;
+            return existingBusinessQuery.length > 0;
         } catch (err) {
             logger.error("Environment Model Error: Error checking if business already has environment", { error: err, businessID, environmentType });
             throw new Error("Error checking if business already has environment");

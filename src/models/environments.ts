@@ -3,7 +3,7 @@ import { ENVIRONMENT_TYPES } from "../types/environments";
 import { db } from "../lib/db";
 import { environmentsTable } from "../lib/db/schema";
 import { eq, and } from "drizzle-orm";
-import { generateKeyPairSync, createHash } from "crypto";
+import { generateKeyPairSync } from "crypto";
 
 export class EnvironmentModel {
     async doesBusinessAlreadyHaveEnvironment(businessID: string, environmentType: ENVIRONMENT_TYPES): Promise<boolean> {

@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, text, timestamp, boolean, uuid } from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, text, timestamp, boolean, uuid, unique } from "drizzle-orm/pg-core";
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 
 export const businessesTable = pgTable("businesses", {
@@ -17,7 +17,9 @@ export const environmentsTable = pgTable("environments", {
     type: environment().notNull(),
     webhookUrl: text("webhook_url"),
     callbackUrl: text("callback_url")
-})
+}, (t) => [
+  unique().on(t.businessID, t.type)
+])
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),

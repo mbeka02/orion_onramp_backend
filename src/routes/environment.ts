@@ -4,6 +4,7 @@ import { createEnvironmentSchema } from "../types/environments";
 import environmentController from "../controllers/environments";
 import environmentModel from "../models/environments";
 import { authenticationMiddleware } from "../middleware/authenticationMiddleware";
+import { SuccessMessage } from "../success";
 const router: Router = Express.Router();
 
 router.post("/", authenticationMiddleware, async(req, res) => {
@@ -12,7 +13,8 @@ router.post("/", authenticationMiddleware, async(req, res) => {
         if (parsed.success) {
             const data = parsed.data;
             // TODO: Add code for getting business id from request
-            await environmentController.create(data, "", environmentModel);
+            await environmentController.create(data, "355b6a4f-b4e8-41bc-8673-578afb8e11d6", environmentModel);
+            res.status(201).json({message: SuccessMessage.CREATE_ENVIRONMENT})
         } else {
             const error = parsed.error.issues[0].message;
             logger.error("Environment Route: Invalid create data", {data: req.body, error});

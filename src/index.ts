@@ -24,7 +24,7 @@ app.all("/api/auth/{*any}", toNodeHandler(auth));
 // Mount express json middleware after Better Auth handler
 // or only apply it to routes that don't interact with Better Auth
 app.use("/", express.json());
-app.use("/environment", environmentRouter);
+app.use("/api/environment", environmentRouter);
 
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);

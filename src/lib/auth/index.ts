@@ -2,6 +2,7 @@ import { betterAuth, type Auth } from "better-auth";
 import { db } from "../db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { account, session, user, verification } from "../db/schema";
+import { emailService } from "../emails/email.util";
 export const auth: Auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -14,6 +15,7 @@ export const auth: Auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
   },
   user: {
     additionalFields: {
@@ -34,4 +36,11 @@ export const auth: Auth = betterAuth({
     },
   },
   trustedOrigins: [process.env.FRONTEND_URL!],
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }, request) => {
+      await emailService.verificationEmail(url, user.email);
+    },
+    sendOnSignUp: true,
+    sendOnSignIn: true
+  }
 });

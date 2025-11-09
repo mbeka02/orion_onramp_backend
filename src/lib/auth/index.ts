@@ -41,6 +41,8 @@ export const auth: Auth = betterAuth({
       await emailService.verificationEmail(url, user.email);
     },
     sendOnSignUp: true,
-    sendOnSignIn: true
+    sendOnSignIn: true,
+    redirectTo: process.env.FRONTEND_URL!,
+    autoSignInAfterVerification: true,
   }
 });

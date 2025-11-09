@@ -54,7 +54,7 @@ export const auth: Auth = betterAuth({
         await emailService.verificationEmail(url, user.email);
       }
       catch (error) {
-        throw Error("Unable to send password reset email. Please try again later.");
+        throw Error("Unable to send password verification email. Please try again later.");
       }
     },
     sendOnSignUp: true,

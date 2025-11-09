@@ -5,7 +5,7 @@ import { account, session, user, verification } from "../db/schema";
 import { emailService } from "../emails/email.util";
 const frontendUrl = process.env.FRONTEND_URL;
 if (!frontendUrl) {
-  throw new Error('FRONTEND_URL environment variable is required');
+  throw new Error("FRONTEND_URL environment variable is required");
 }
 export const auth: Auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -23,11 +23,12 @@ export const auth: Auth = betterAuth({
     sendResetPassword: async ({ user, url }, request) => {
       try {
         await emailService.resetPasswordEmail(url, user.email);
+      } catch (error) {
+        throw Error(
+          "Unable to send password reset email. Please try again later.",
+        );
       }
-      catch (error) {
-        throw Error("Unable to send password reset email. Please try again later.");
-      }
-    }
+    },
   },
   user: {
     additionalFields: {
@@ -49,16 +50,23 @@ export const auth: Auth = betterAuth({
   },
   trustedOrigins: [frontendUrl],
   emailVerification: {
+    autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }, request) => {
       try {
-        await emailService.verificationEmail(url, user.email);
-      }
-      catch (error) {
-        throw Error("Unable to send password verification email. Please try again later.");
+        const verificationUrl = new URL(url);
+        verificationUrl.searchParams.set(
+          "callbackURL",
+          `${frontendUrl}/verify-email`,
+        );
+        await emailService.verificationEmail(
+          verificationUrl.toString(),
+          user.email,
+        );
+      } catch (error) {
+        throw Error(
+          "Unable to send email verification message. Please try again later.",
+        );
       }
     },
-    sendOnSignUp: true,
-    redirectTo: frontendUrl,
-    autoSignInAfterVerification: true,
-  }
+  },
 });

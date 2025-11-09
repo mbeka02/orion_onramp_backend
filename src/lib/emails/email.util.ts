@@ -13,8 +13,12 @@ export class EmailService {
     }
     async verificationEmail(url: string, to: string) {
         try {
-            if (typeof (url) !== 'string' || !to) {
+            if (typeof (url) !== 'string' || !url.trim()) {
                 throw new Error("Invalid arguments for verification email");
+            }
+            const valid = this.validateEmailAddress(to);
+            if (!valid) {
+                throw new Error("Invalid email address for reset password email");
             }
             await sendEmail({
                 to,
@@ -29,8 +33,12 @@ export class EmailService {
     }
     async resetPasswordEmail(url: string, to: string) {
         try {
-            if (typeof (url) !== 'string' || !to) {
+            if (typeof (url) !== 'string' || !url.trim()) {
                 throw new Error("Invalid arguments for reset password email");
+            }
+            const valid = this.validateEmailAddress(to);
+            if (!valid) {
+                throw new Error("Invalid email address for reset password email");
             }
             await sendEmail({
                 to,
@@ -41,6 +49,12 @@ export class EmailService {
             logger.error(`Error sending reset password email to ${to}: ${(error as Error).message}`);
             throw error;
         }
+    }
+    private validateEmailAddress(email: string): boolean {
+        if (typeof (email) !== 'string' || !email) return false;
+        if (email.trim() === '') return false;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     }
 }
 

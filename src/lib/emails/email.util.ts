@@ -18,7 +18,7 @@ export class EmailService {
             }
             const valid = this.validateEmailAddress(to);
             if (!valid) {
-                throw new Error("Invalid email address for reset password email");
+                throw new Error("Invalid email address");
             }
             await sendEmail({
                 to,
@@ -38,7 +38,7 @@ export class EmailService {
             }
             const valid = this.validateEmailAddress(to);
             if (!valid) {
-                throw new Error("Invalid email address for reset password email");
+                throw new Error("Invalid email address");
             }
             await sendEmail({
                 to,

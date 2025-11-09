@@ -12,8 +12,10 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
 if (!PORT || !DATABASE_URL || !FRONTEND_URL) {
-    logger.error("Invalid env setup, set PORT, FRONTEND_URL and DATABASE_URL in env variables");
-    process.exit(1);
+  logger.error(
+    "Invalid env setup, set PORT, FRONTEND_URL and DATABASE_URL in env variables",
+  );
+  process.exit(1);
 }
 app.use("/", cors({ origin: FRONTEND_URL, credentials: true }));
 // BETTER AUTH ROUTES , DO NOT TAMPER WITH THE CONFIGURATION
@@ -24,6 +26,9 @@ app.all("/api/auth/{*any}", toNodeHandler(auth));
 // Mount express json middleware after Better Auth handler
 // or only apply it to routes that don't interact with Better Auth
 app.use("/", express.json());
+app.get("/", async (req, res) => {
+  res.json("Orion API");
+});
 app.use("/api/environment", environmentRouter);
 
 app.listen(PORT, () => {

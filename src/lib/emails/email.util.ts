@@ -24,6 +24,7 @@ export class EmailService {
         }
         catch (error) {
             logger.error(`Error sending verification email to ${to}: ${(error as Error).message}`);
+            throw error;
         }
     }
     async resetPasswordEmail(url: string, to: string) {
@@ -38,6 +39,7 @@ export class EmailService {
             });
         } catch (error) {
             logger.error(`Error sending reset password email to ${to}: ${(error as Error).message}`);
+            throw error;
         }
     }
 }

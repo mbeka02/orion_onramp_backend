@@ -64,7 +64,7 @@ export const auth: Auth = betterAuth({
         );
       } catch (error) {
         throw Error(
-          "Unable to send password verification email. Please try again later.",
+          "Unable to send email verification message. Please try again later.",
         );
       }
     },

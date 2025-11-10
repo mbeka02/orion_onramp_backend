@@ -35,9 +35,10 @@ export class EnvironmentModel {
                 if (createdEnvironment.length < 1) {
                     throw new Error("Environment was not created");
                 }
+                environment_id = createdEnvironment[0].id
 
                 await tx.insert(environmentKeysTable).values({
-                    environmentID: createdEnvironment[0].id,
+                    environmentID: environment_id,
                     publicKey: environment.public_key,
                     privateKey: environment.private_key
                 });

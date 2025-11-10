@@ -6,7 +6,7 @@ import environmentModel from "../models/environments";
 import { authenticationMiddleware } from "../middleware/authenticationMiddleware";
 import { SuccessMessage } from "../success";
 import { Errors, MyError } from "../errors";
-import encryptionService from "../lib/encryption";
+import { EncryptionService } from "../lib/encryption";
 const router: Router = Express.Router();
 
 router.post("/", authenticationMiddleware, async(req, res) => {
@@ -15,6 +15,7 @@ router.post("/", authenticationMiddleware, async(req, res) => {
         if (parsed.success) {
             const data = parsed.data;
             // TODO: Add code for getting business id from request
+            const encryptionService = new EncryptionService();
             await environmentController.create(data, "355b6a4f-b4e8-41bc-8673-578afb8e11d6", environmentModel, encryptionService);
             res.status(201).json({message: SuccessMessage.CREATE_ENVIRONMENT})
         } else {
@@ -41,6 +42,7 @@ router.post("/new", async (req, res) => {
             const data = parsed.data;
 
             // TODO: Add code for getting business id from request
+            const encryptionService = new EncryptionService();
             await environmentController.rotateKeys("355b6a4f-b4e8-41bc-8673-578afb8e11d6", data.type, environmentModel, encryptionService);
             res.status(201).json({message: SuccessMessage.ROTATE_KEY});
         } else {

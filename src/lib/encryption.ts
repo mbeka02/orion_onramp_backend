@@ -35,6 +35,3 @@ export class EncryptionService {
         return decryped;
     }
 }
-
-const encryptionService = new EncryptionService();
-export default encryptionService

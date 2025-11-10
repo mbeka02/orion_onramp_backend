@@ -1,7 +1,7 @@
 import logger from "../lib/logger";
 import { ENVIRONMENT_TYPES } from "../types/environments";
 import { db } from "../lib/db";
-import { environmentsTable } from "../lib/db/schema";
+import { environmentKeysTable, environmentsTable } from "../lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { generateKeyPairSync } from "crypto";
 
@@ -25,14 +25,29 @@ export class EnvironmentModel {
 
     async storeEnvironment(environment: { type: ENVIRONMENT_TYPES, public_key: string, private_key: string, business_id: string }): Promise<string> {
         try {
-            const createdEnvironment = await db.insert(environmentsTable).values({
-                businessID: environment.business_id,
-                privateKey: environment.private_key,
-                publicKey: environment.public_key,
-                type: environment.type
-            }).returning({ id: environmentsTable.id });
+            let environment_id: string | null = null;
+            await db.transaction(async (tx) => {
+                const createdEnvironment = await tx.insert(environmentsTable).values({
+                    businessID: environment.business_id,
+                    type: environment.type
+                }).returning({ id: environmentsTable.id });
 
-            return createdEnvironment[0].id;
+                if (createdEnvironment.length < 1) {
+                    throw new Error("Environment was not created");
+                }
+
+                await tx.insert(environmentKeysTable).values({
+                    environmentID: createdEnvironment[0].id,
+                    publicKey: environment.public_key,
+                    privateKey: environment.private_key
+                });
+            })
+
+            if (environment_id) {
+                return environment_id;
+            } else {
+                throw new Error("Environment was not created")
+            }
         } catch (err) {
             logger.error("Environment Model Error: Error storing environment", { error: err, environment })
             throw new Error("Error storing created environment in db");
@@ -63,6 +78,17 @@ export class EnvironmentModel {
         } catch (err) {
             logger.error("Environment Model Error: Error creating API keys", { error: err });
             throw new Error("Error creating API keys");
+        }
+    }
+
+    async rotateKey(business_id: string, environment_type: ENVIRONMENT_TYPES, new_public_key: string, new_private_key: string) {
+        try {
+            // Store new key
+            
+            // Add a valid to for old key (1 minute from current time)
+        } catch(err) {
+            logger.error("Error storing new keys", {error: err});
+            throw new Error("Could not store new keys");
         }
     }
 }

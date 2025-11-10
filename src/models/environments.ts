@@ -2,7 +2,7 @@ import logger from "../lib/logger";
 import { ENVIRONMENT_TYPES } from "../types/environments";
 import { db } from "../lib/db";
 import { environmentKeysTable, environmentsTable } from "../lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import { generateKeyPairSync } from "crypto";
 
 export class EnvironmentModel {
@@ -81,11 +81,68 @@ export class EnvironmentModel {
         }
     }
 
-    async rotateKey(business_id: string, environment_type: ENVIRONMENT_TYPES, new_public_key: string, new_private_key: string) {
+    async getLatestValidBusinessEnvironmentKeys(business_id: string, environment_type: ENVIRONMENT_TYPES): Promise<{public_key: string, encrypted_private_key: string} | null> {
         try {
-            // Store new key
+            const environmentKeys = await db.select({
+                encrypted_private_key: environmentKeysTable.privateKey,
+                public_key: environmentKeysTable.publicKey
+            }).from(environmentKeysTable)
+            .innerJoin(environmentsTable, eq(environmentsTable.id, environmentKeysTable.environmentID))
+            .where(and(
+                eq(environmentsTable.businessID, business_id),
+                eq(environmentsTable.type, environment_type),    
+                isNull(environmentKeysTable.expiresAt)
+            ))
+            .orderBy(desc(environmentKeysTable.createdAt))
+            .limit(1);
+
+            if (environmentKeys.length < 1) {
+                return null;
+            } else {
+                return environmentKeys[0];
+            }
+        } catch(err) {
+            logger.error("Error getting business environment keys", {error: err, business_id, environment_type});
+            throw new Error("Error getting environment keys");
+        }
+    }
+
+    // Assumes that business with environment exists
+    async rotateKey(business_id: string, environment_type: ENVIRONMENT_TYPES, new_public_key: string, new_private_key: string, old_public_key: string) {
+        try {
             
-            // Add a valid to for old key (1 minute from current time)
+            await db.transaction(async (tx) => {
+                const environmentID = await tx.select({
+                    id: environmentsTable.id
+                }).from(environmentsTable)
+                .where(and(
+                    eq(environmentsTable.businessID, business_id),
+                    eq(environmentsTable.type, environment_type)
+                ));
+
+                if (environmentID.length < 1) {
+                    throw new Error("Could not get ID of environment");
+                }
+
+                // Store new key
+                await tx.insert(environmentKeysTable).values({
+                    environmentID: environmentID[0].id,
+                    publicKey: new_public_key,
+                    privateKey: new_private_key
+                });
+
+                const expiresAt = new Date();
+                expiresAt.setMinutes(expiresAt.getMinutes() + 5, 0, 0);
+                // Add an expiresAt for old key (1 minute from current time)
+                await tx.update(environmentKeysTable).set({
+                    expiresAt: expiresAt
+                }).where(and(
+                    eq(environmentKeysTable.environmentID, environmentID[0].id),
+                    eq(environmentKeysTable.publicKey, old_public_key)
+                ));
+            })
+            
+           
         } catch(err) {
             logger.error("Error storing new keys", {error: err});
             throw new Error("Could not store new keys");

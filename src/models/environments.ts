@@ -108,6 +108,42 @@ export class EnvironmentModel {
         }
     }
 
+    async getBusinessEnvironments(business_id: string): Promise<Array<{
+        id: string,
+        type: ENVIRONMENT_TYPES,
+        public_key: string,
+        private_key_preview: string,
+        created_at: Date
+    }>> {
+        try {
+            const environments = await db.select({
+                id: environmentsTable.id,
+                type: environmentsTable.type,
+                public_key: environmentKeysTable.publicKey,
+                encrypted_private_key: environmentKeysTable.privateKey,
+                created_at: environmentKeysTable.createdAt
+            }).from(environmentsTable)
+            .innerJoin(environmentKeysTable, eq(environmentsTable.id, environmentKeysTable.environmentID))
+            .where(and(
+                eq(environmentsTable.businessID, business_id),
+                isNull(environmentKeysTable.expiresAt)
+            ))
+            .orderBy(desc(environmentKeysTable.createdAt));
+
+            // Mask private keys for security (show only last 4 characters)
+            return environments.map(env => ({
+                id: env.id,
+                type: env.type,
+                public_key: env.public_key,
+                private_key_preview: '***' + env.encrypted_private_key.slice(-6),
+                created_at: env.created_at
+            }));
+        } catch(err) {
+            logger.error("Error getting business environments", {error: err, business_id});
+            throw new Error("Error getting business environments");
+        }
+    }
+
     // Assumes that business with environment exists
     async rotateKey(business_id: string, environment_type: ENVIRONMENT_TYPES, new_public_key: string, new_private_key: string, old_public_key: string) {
         try {

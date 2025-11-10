@@ -1,11 +1,11 @@
 import "dotenv/config";
 import crypto from "crypto";
 
-class EncryptionService {
-    private secretKey: string;
+export class EncryptionService {
+    secretKey: string;
     algorithm = 'aes-256-gcm';
-    private key: string;
-    private iv: Buffer;
+    key: string;
+    iv: Buffer;
 
     constructor() {
         if (!process.env.SECRET_KEY) {

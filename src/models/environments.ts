@@ -130,7 +130,7 @@ export class EnvironmentModel {
             ))
             .orderBy(desc(environmentKeysTable.createdAt));
 
-            // Mask private keys for security (show only last 4 characters)
+            // Mask private keys for security (show only last 6 characters)
             return environments.map(env => ({
                 id: env.id,
                 type: env.type,

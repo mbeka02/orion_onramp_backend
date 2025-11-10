@@ -20,7 +20,7 @@ export const environmentsTable = pgTable("environments", {
 ]);
 
 export const environmentKeysTable = pgTable("environment_keys", {
-  environmentID: uuid("environment_id").references(() => environmentsTable.id, {onDelete: "cascade"}),
+  environmentID: uuid("environment_id").references(() => environmentsTable.id, {onDelete: "cascade"}).notNull(),
   publicKey: text("public_key").notNull().unique(),
   privateKey: text("private_key").notNull().unique(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

@@ -13,7 +13,8 @@ declare global {
             EMAIL_SERVER_PORT: string,
             EMAIL_SERVER_USER: string,
             EMAIL_SERVER_PASSWORD: string,
-            FRONTEND_URL: string
+            FRONTEND_URL: string,
+            SECRET_KEY: string
         }
     }
 }

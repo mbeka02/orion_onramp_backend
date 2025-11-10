@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, text, timestamp, boolean, uuid, unique } from "drizzle-orm/pg-core";
+import { pgTable, primaryKey, pgEnum, text, timestamp, boolean, uuid, unique } from "drizzle-orm/pg-core";
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 
 export const businessesTable = pgTable("businesses", {
@@ -12,13 +12,21 @@ export const environment = pgEnum("environment_types", [ENVIRONMENT_TYPES.LIVE, 
 export const environmentsTable = pgTable("environments", {
     id: uuid("id").primaryKey().defaultRandom(),
     businessID: uuid("business_id").notNull().references(() => businessesTable.id, {onDelete: "cascade"}),
-    publicKey: text("public_key").notNull().unique(),
-    privateKey: text("private_key").notNull().unique(),
     type: environment().notNull(),
     webhookUrl: text("webhook_url"),
     callbackUrl: text("callback_url")
 }, (t) => [
   unique().on(t.businessID, t.type)
+]);
+
+export const environmentKeysTable = pgTable("environment_keys", {
+  environmentID: uuid("environment_id").references(() => environmentsTable.id, {onDelete: "cascade"}).notNull(),
+  publicKey: text("public_key").notNull().unique(),
+  privateKey: text("private_key").notNull().unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at") // If set it means a new key has been created for environment
+}, (table) => [
+  primaryKey({columns: [table.environmentID, table.privateKey, table.publicKey]})
 ])
 
 export const user = pgTable("user", {

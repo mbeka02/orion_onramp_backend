@@ -35,7 +35,7 @@ router.post("/", authenticationMiddleware, async(req, res) => {
     }
 });
 
-router.post("/new", async (req, res) => {
+router.post("/new", authenticationMiddleware, async (req, res) => {
     try {
         const parsed = rotateKeysSchema.safeParse(req.body);
         if (parsed.success) {

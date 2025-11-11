@@ -15,8 +15,16 @@ router.get("/", authenticationMiddleware, async (req, res) => {
         // TODO: Add code for getting business id from request
         const environments = await environmentController.getAllBusinessEnvironments("355b6a4f-b4e8-41bc-8673-578afb8e11d6", environmentModel);
         
+        const formattedEnvironments = environments.map(env => ({
+            id: env.id,
+            type: env.type,
+            publicKey: env.public_key,
+            privateKeyPreview: env.private_key_preview,
+            createdAt: env.created_at
+        }));
+
         res.status(200).json({
-            environments
+            environments: formattedEnvironments
         });
     } catch(err) {
         logger.error("Error getting environments in router", {error: err});

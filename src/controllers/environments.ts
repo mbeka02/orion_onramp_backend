@@ -23,7 +23,14 @@ export class EnvironmentsController {
                 public_key,
                 business_id
             });
-            return environment_id;
+
+            // Return the keys for immediate display
+            return {
+                environment_id,
+                type: args.type,
+                public_key,
+                private_key, // Return unencrypted private key (shown only once)
+            };
         } catch(err) {
             if (err instanceof MyError) {
                 throw err;
@@ -62,6 +69,12 @@ export class EnvironmentsController {
                 encryptedPrivateKey,
                 oldKeys.public_key
             );
+
+            // Return the new keys for immediate display
+            return {
+                public_key,
+                private_key, // Return unencrypted private key (shown only once)
+            };
         } catch(err) {
             if (err instanceof MyError) {
                 throw err;
@@ -69,6 +82,16 @@ export class EnvironmentsController {
 
             logger.error("Environment Controller: Error rotating keys", {err, business_id, environment_type});
             throw new Error("Error rotating keys");
+        }
+    }
+
+    async getAllBusinessEnvironments(business_id: string, environmentModel: EnvironmentModel) {
+        try {
+            const environments = await environmentModel.getBusinessEnvironments(business_id);
+            return environments;
+        } catch(err) {
+            logger.error("Environment Controller: Error getting environments", {err, business_id});
+            throw new Error("Error getting environments");
         }
     }
 }

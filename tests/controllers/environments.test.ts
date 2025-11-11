@@ -77,7 +77,7 @@ describe("Environment Controller: Create Key Tests", () => {
                 type: non_existing_environment
             };
 
-            const environmentID = await environmentController.create(args, business, environmentModelMock, encryption_service_mock);
+            const environmentDetails = await environmentController.create(args, business, environmentModelMock, encryption_service_mock);
 
             expect(environmentModelMock.createKeys).toHaveBeenCalled();
             expect(encryption_service_mock.encrypt).toHaveBeenCalledWith(private_key)
@@ -87,7 +87,12 @@ describe("Environment Controller: Create Key Tests", () => {
                 private_key: encrypted_private_key, 
                 business_id: business 
             });
-            expect(environmentID).toBe(created_environment_id);
+            expect(environmentDetails).toEqual({
+                environment_id: created_environment_id,
+                public_key,
+                type: args.type,
+                private_key
+            });
         } catch(err) {
             console.error(err);
             expect(false).toBe(true);
@@ -172,7 +177,7 @@ describe("Environment Controller: Rotate Key Tests", () => {
 
     it("should create the new key", async () => {
         try {
-            await environmentController.rotateKeys(business, existing_environment, environmentModelMock, encryption_service_mock);
+            const newKeys = await environmentController.rotateKeys(business, existing_environment, environmentModelMock, encryption_service_mock);
             
             // Test that new keys were created
             expect(environmentModelMock.createKeys).toHaveBeenCalled();
@@ -180,6 +185,10 @@ describe("Environment Controller: Rotate Key Tests", () => {
             expect(encryption_service_mock.encrypt).toHaveBeenCalledWith(private_key);
             // Test that new keys were stored and the old one added a validUntil Date
             expect(environmentModelMock.rotateKey).toHaveBeenCalledWith(business, existing_environment, public_key, encrypted_private_key, old_public_key)
+            expect(newKeys).toEqual({
+                public_key,
+                private_key
+            })
         } catch(err) {
             console.error("Unexpected error", err);
             expect(false).toBe(true)

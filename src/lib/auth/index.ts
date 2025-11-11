@@ -22,7 +22,15 @@ export const auth: Auth = betterAuth({
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }, request) => {
       try {
-        await emailService.resetPasswordEmail(url, user.email);
+        const passwordResetUrl = new URL(url);
+        passwordResetUrl.searchParams.set(
+          "callbackURL",
+          `${frontendUrl}/reset-password`,
+        );
+        await emailService.resetPasswordEmail(
+          passwordResetUrl.toString(),
+          user.email,
+        );
       } catch (error) {
         throw Error(
           "Unable to send password reset email. Please try again later.",

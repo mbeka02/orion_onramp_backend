@@ -27,7 +27,10 @@ export const auth: Auth = betterAuth({
           "callbackURL",
           `${frontendUrl}/reset-password`,
         );
-        await emailService.resetPasswordEmail(url, user.email);
+        await emailService.resetPasswordEmail(
+          passwordResetUrl.toString(),
+          user.email,
+        );
       } catch (error) {
         throw Error(
           "Unable to send password reset email. Please try again later.",

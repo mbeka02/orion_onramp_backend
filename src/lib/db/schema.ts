@@ -15,6 +15,7 @@ import {
 
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 import { TRANSACTION_STATUS } from "../../types/transactions";
+import { TOKEN_TYPE } from "../../types/token";
 export const businessesTable = pgTable("businesses", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -23,6 +24,10 @@ export const businessesTable = pgTable("businesses", {
 export const environment = pgEnum("environment_types", [
   ENVIRONMENT_TYPES.LIVE,
   ENVIRONMENT_TYPES.TEST,
+]);
+export const token = pgEnum("token", [
+  TOKEN_TYPE.KESy_TESTNET,
+  TOKEN_TYPE.KESy_MAINNET,
 ]);
 export const transaction_status = pgEnum("transaction_status", [
   TRANSACTION_STATUS.PENDING,
@@ -49,11 +54,12 @@ export const environmentsTable = pgTable(
   (t) => [unique().on(t.businessID, t.type)],
 );
 export const transactionsTable = pgTable("transactions", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   environmentID: uuid("environment_id")
     .notNull()
     .references(() => environmentsTable.id, { onDelete: "cascade" }),
   reference: varchar("reference", { length: 100 }).notNull().unique(),
+  token: token().notNull(),
   amount: integer("amount").notNull(), //  cents
   email: varchar("email", { length: 255 }).notNull(),
   transactionStatus: transaction_status()

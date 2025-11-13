@@ -1,6 +1,8 @@
+
 import {
   pgTable,
   pgEnum,
+  primaryKey,
   text,
   timestamp,
   boolean,
@@ -11,6 +13,7 @@ import {
   integer,
   jsonb,
 } from "drizzle-orm/pg-core";
+
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 import { TRANSACTION_STATUS } from "../../types/transactions";
 export const businessesTable = pgTable("businesses", {
@@ -34,17 +37,17 @@ export const environmentsTable = pgTable(
   "environments",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    businessID: uuid("business_id")
-      .notNull()
-      .references(() => businessesTable.id, { onDelete: "cascade" }),
+
     publicKey: text("public_key").notNull().unique(),
     privateKey: text("private_key").notNull().unique(),
     type: environment().notNull(),
+    businessID: uuid("business_id").notNull().references(() => businessesTable.id, {onDelete: "cascade"}),
+    type: environment().notNull(),
     webhookUrl: text("webhook_url"),
-    callbackUrl: text("callback_url"),
-  },
-  (t) => [unique().on(t.businessID, t.type)],
-);
+    callbackUrl: text("callback_url")
+}, (t) => [
+  unique().on(t.businessID, t.type)
+]);
 export const transactionsTable = pgTable("transactions", {
   id: serial("id").primaryKey(),
   environmentID: uuid("environment_id")
@@ -64,6 +67,17 @@ export const transactionsTable = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+export const environmentKeysTable = pgTable("environment_keys", {
+  environmentID: uuid("environment_id").references(() => environmentsTable.id, {onDelete: "cascade"}).notNull(),
+  publicKey: text("public_key").notNull().unique(),
+  privateKey: text("private_key").notNull().unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at") // If set it means a new key has been created for environment
+}, (table) => [
+  primaryKey({columns: [table.environmentID, table.privateKey, table.publicKey]})
+])
+
+
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),

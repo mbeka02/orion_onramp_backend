@@ -1,26 +1,69 @@
-import { pgTable, pgEnum, text, timestamp, boolean, uuid, unique } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  pgEnum,
+  text,
+  timestamp,
+  boolean,
+  uuid,
+  unique,
+  serial,
+  varchar,
+  integer,
+  jsonb,
+} from "drizzle-orm/pg-core";
 import { ENVIRONMENT_TYPES } from "../../types/environments";
-
+import { TRANSACTION_STATUS } from "../../types/transactions";
 export const businessesTable = pgTable("businesses", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: text("name").notNull()
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
 });
 
-export const environment = pgEnum("environment_types", [ENVIRONMENT_TYPES.LIVE, ENVIRONMENT_TYPES.TEST])
-
+export const environment = pgEnum("environment_types", [
+  ENVIRONMENT_TYPES.LIVE,
+  ENVIRONMENT_TYPES.TEST,
+]);
+export const transaction_status = pgEnum("transaction_status", [
+  TRANSACTION_STATUS.PENDING,
+  TRANSACTION_STATUS.SUCCESSFUL,
+  TRANSACTION_STATUS.FAILED,
+  TRANSACTION_STATUS.OFFRAMPED,
+  TRANSACTION_STATUS.ONRAMPED,
+]);
 // Put database schemas here
-export const environmentsTable = pgTable("environments", {
+export const environmentsTable = pgTable(
+  "environments",
+  {
     id: uuid("id").primaryKey().defaultRandom(),
-    businessID: uuid("business_id").notNull().references(() => businessesTable.id, {onDelete: "cascade"}),
+    businessID: uuid("business_id")
+      .notNull()
+      .references(() => businessesTable.id, { onDelete: "cascade" }),
     publicKey: text("public_key").notNull().unique(),
     privateKey: text("private_key").notNull().unique(),
     type: environment().notNull(),
     webhookUrl: text("webhook_url"),
-    callbackUrl: text("callback_url")
-}, (t) => [
-  unique().on(t.businessID, t.type)
-])
-
+    callbackUrl: text("callback_url"),
+  },
+  (t) => [unique().on(t.businessID, t.type)],
+);
+export const transactionsTable = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+  environmentID: uuid("environment_id")
+    .notNull()
+    .references(() => environmentsTable.id, { onDelete: "cascade" }),
+  reference: varchar("reference", { length: 100 }).notNull().unique(),
+  amount: integer("amount").notNull(), //  cents
+  email: varchar("email", { length: 255 }).notNull(),
+  transactionStatus: transaction_status()
+    .notNull()
+    .default(TRANSACTION_STATUS.PENDING),
+  // from paystack
+  authorizationUrl: varchar("authorization_url", { length: 500 }),
+  accessCode: varchar("access_code", { length: 100 }),
+  paystackResponseRaw: jsonb("paystack_response_raw"), // full paystack response for audit
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),

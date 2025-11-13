@@ -25,7 +25,7 @@ export const environment = pgEnum("environment_types", [
   ENVIRONMENT_TYPES.LIVE,
   ENVIRONMENT_TYPES.TEST,
 ]);
-export const token = pgEnum("token", [
+export const token_type = pgEnum("token", [
   TOKEN_TYPE.KESy_TESTNET,
   TOKEN_TYPE.KESy_MAINNET,
 ]);
@@ -59,7 +59,7 @@ export const transactionsTable = pgTable("transactions", {
     .notNull()
     .references(() => environmentsTable.id, { onDelete: "cascade" }),
   reference: varchar("reference", { length: 100 }).notNull().unique(),
-  token: token().notNull(),
+  token: token_type().notNull(),
   amount: integer("amount").notNull(), //  cents
   email: varchar("email", { length: 255 }).notNull(),
   transactionStatus: transaction_status()

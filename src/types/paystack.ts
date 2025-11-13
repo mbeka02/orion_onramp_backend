@@ -234,7 +234,7 @@ export const WEBHOOK_EVENTS = {
 } as const;
 
 // Transaction status constants
-export const TRANSACTION_STATUS = {
+export const PAYSTACK_TRANSACTION_STATUS = {
   SUCCESS: "success",
   FAILED: "failed",
   PENDING: "pending",

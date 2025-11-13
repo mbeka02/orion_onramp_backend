@@ -1,0 +1,4 @@
+export enum TOKEN_TYPE {
+  KESy_MAINNET = "KESy_MAINNET",
+  KESy_TESTNET = "KESy_TESTNET",
+}

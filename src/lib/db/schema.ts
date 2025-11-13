@@ -1,33 +1,97 @@
-import { pgTable, primaryKey, pgEnum, text, timestamp, boolean, uuid, unique } from "drizzle-orm/pg-core";
-import { ENVIRONMENT_TYPES } from "../../types/environments";
+import {
+  pgTable,
+  pgEnum,
+  primaryKey,
+  text,
+  timestamp,
+  boolean,
+  uuid,
+  unique,
+  serial,
+  varchar,
+  integer,
+  jsonb,
+} from "drizzle-orm/pg-core";
 
+import { ENVIRONMENT_TYPES } from "../../types/environments";
+import { TRANSACTION_STATUS } from "../../types/transactions";
+import { TOKEN_TYPE } from "../../types/token";
 export const businessesTable = pgTable("businesses", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: text("name").notNull()
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
 });
 
-export const environment = pgEnum("environment_types", [ENVIRONMENT_TYPES.LIVE, ENVIRONMENT_TYPES.TEST])
-
-// Put database schemas here
-export const environmentsTable = pgTable("environments", {
-    id: uuid("id").primaryKey().defaultRandom(),
-    businessID: uuid("business_id").notNull().references(() => businessesTable.id, {onDelete: "cascade"}),
-    type: environment().notNull(),
-    webhookUrl: text("webhook_url"),
-    callbackUrl: text("callback_url")
-}, (t) => [
-  unique().on(t.businessID, t.type)
+export const environment = pgEnum("environment_types", [
+  ENVIRONMENT_TYPES.LIVE,
+  ENVIRONMENT_TYPES.TEST,
 ]);
+export const token_type = pgEnum("token", [
+  TOKEN_TYPE.KESy_TESTNET,
+  TOKEN_TYPE.KESy_MAINNET,
+]);
+export const transaction_status = pgEnum("transaction_status", [
+  TRANSACTION_STATUS.PENDING,
+  TRANSACTION_STATUS.SUCCESSFUL,
+  TRANSACTION_STATUS.FAILED,
+  TRANSACTION_STATUS.OFFRAMPED,
+  TRANSACTION_STATUS.ONRAMPED,
+]);
+// Put database schemas here
+export const environmentsTable = pgTable(
+  "environments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
 
-export const environmentKeysTable = pgTable("environment_keys", {
-  environmentID: uuid("environment_id").references(() => environmentsTable.id, {onDelete: "cascade"}).notNull(),
-  publicKey: text("public_key").notNull().unique(),
-  privateKey: text("private_key").notNull().unique(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  expiresAt: timestamp("expires_at") // If set it means a new key has been created for environment
-}, (table) => [
-  primaryKey({columns: [table.environmentID, table.privateKey, table.publicKey]})
-])
+    publicKey: text("public_key").notNull().unique(),
+    privateKey: text("private_key").notNull().unique(),
+    type: environment().notNull(),
+    businessID: uuid("business_id")
+      .notNull()
+      .references(() => businessesTable.id, { onDelete: "cascade" }),
+    webhookUrl: text("webhook_url"),
+    callbackUrl: text("callback_url"),
+  },
+  (t) => [unique().on(t.businessID, t.type)],
+);
+export const transactionsTable = pgTable("transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  environmentID: uuid("environment_id")
+    .notNull()
+    .references(() => environmentsTable.id, { onDelete: "cascade" }),
+  reference: varchar("reference", { length: 100 }).notNull().unique(),
+  token: token_type().notNull(),
+  amount: integer("amount").notNull(), //  cents
+  email: varchar("email", { length: 255 }).notNull(),
+  transactionStatus: transaction_status()
+    .notNull()
+    .default(TRANSACTION_STATUS.PENDING),
+  // from paystack
+  authorizationUrl: varchar("authorization_url", { length: 500 }),
+  accessCode: varchar("access_code", { length: 100 }),
+  paystackResponseRaw: jsonb("paystack_response_raw"), // full paystack response for audit
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+export const environmentKeysTable = pgTable(
+  "environment_keys",
+  {
+    environmentID: uuid("environment_id")
+      .references(() => environmentsTable.id, { onDelete: "cascade" })
+      .notNull(),
+    publicKey: text("public_key").notNull().unique(),
+    privateKey: text("private_key").notNull().unique(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    expiresAt: timestamp("expires_at"), // If set it means a new key has been created for environment
+  },
+  (table) => [
+    primaryKey({
+      columns: [table.environmentID, table.privateKey, table.publicKey],
+    }),
+  ],
+);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),

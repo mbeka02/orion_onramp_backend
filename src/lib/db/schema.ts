@@ -65,7 +65,9 @@ export const transactionsTable = pgTable("transactions", {
   paystackResponseRaw: jsonb("paystack_response_raw"), // full paystack response for audit
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 export const environmentKeysTable = pgTable("environment_keys", {
   environmentID: uuid("environment_id").references(() => environmentsTable.id, {onDelete: "cascade"}).notNull(),

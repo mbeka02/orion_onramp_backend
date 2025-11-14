@@ -165,6 +165,11 @@ router.delete("/:id", authenticationMiddleware, async (req, res) => {
 router.get("/:id", authenticationMiddleware, async (req, res) => {
     try {
         const businessId = req.params.id;
+        const session = await getAuthContext(req as any);
+        const userId = session?.user?.id;
+        if (!userId) return res.status(401).json({ message: Errors.UNAUTHORIZED });
+        const isAllowed = await businessModel.isUserOwnerOrAdmin(businessId, userId);
+        if (!isAllowed) return res.status(403).json({ message: Errors.UNAUTHORIZED });
         const business = await businessController.getBusinessById(businessId, businessModel);
         res.status(200).json({ business });
     } catch (err) {

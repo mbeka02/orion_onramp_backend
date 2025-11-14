@@ -66,7 +66,7 @@ export interface TransactionData {
   fees_split?: FeesSplit;
   authorization: Authorization;
   customer: Customer;
-  plan: any; // Can be null or Plan object
+  plan: Record<string, any> | null; // Can be null or Plan object
   subaccount?: any;
   order_id?: any;
   requested_amount?: number;

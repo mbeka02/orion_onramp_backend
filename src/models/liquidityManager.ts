@@ -19,7 +19,7 @@ export class LiquidityManagerModel {
             if (tokenBalance.length < 1) {
                 return 0;
             } else {
-                return divideBigIntWithDecimals(tokenBalance[0].balance, BigInt(tokenBalance[0].decimals));
+                return divideBigIntWithDecimals(tokenBalance[0].balance, BigInt(Math.pow(10, tokenBalance[0].decimals)));
             }
         } catch(err) {
             logger.error("Error getting cached treasury balance", {error: err, token_type});

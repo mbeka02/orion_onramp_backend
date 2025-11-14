@@ -15,7 +15,7 @@ import {
 
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 import { TRANSACTION_STATUS } from "../../types/transactions";
-import { TOKEN_TYPE } from "../../types/token";
+import { SUPPORTED_CHAINS, TOKEN_TYPE } from "../../types/token";
 export const businessesTable = pgTable("businesses", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -29,6 +29,12 @@ export const token_type = pgEnum("token", [
   TOKEN_TYPE.KESy_TESTNET,
   TOKEN_TYPE.KESy_MAINNET,
 ]);
+
+export const chain_enum = pgEnum("chain_enum", [
+  SUPPORTED_CHAINS.HEDERA_MAINNET,
+  SUPPORTED_CHAINS.HEDERA_TESTNET
+])
+
 export const transaction_status = pgEnum("transaction_status", [
   TRANSACTION_STATUS.PENDING,
   TRANSACTION_STATUS.SUCCESSFUL,
@@ -41,7 +47,6 @@ export const environmentsTable = pgTable(
   "environments",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-
     publicKey: text("public_key").notNull().unique(),
     privateKey: text("private_key").notNull().unique(),
     type: environment().notNull(),
@@ -155,3 +160,12 @@ export const verification = pgTable("verification", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+export const treasuryBalanceTable = pgTable("treasury_token_balances", {
+  token: token_type("token").notNull().primaryKey(),
+  address: text("token_address").notNull(),
+  chain: chain_enum("chain").notNull(),
+  treasuryAccount: text("treasury_account").notNull(),
+  decimals: integer("token_decimals").notNull(),
+  balance: integer("balance").notNull()
+})

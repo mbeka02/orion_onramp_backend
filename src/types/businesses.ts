@@ -35,8 +35,8 @@ export const createBusinessSchema = z.object({
     description: z.string().optional(),
     staffSize: z.string().optional(),
     annualSalesVolume: z.string().optional(),
-    industry: z.string().optional(),
-    category: z.string().optional(),
+    industryName: z.string().optional(),
+    categoryName: z.string().optional(),
     businessType: z.enum([BUSINESS_TYPES.STARTER, BUSINESS_TYPES.REGISTERED]).optional(),
     industryId: z.uuid().optional().nullable(),
     categoryId: z.uuid().optional().nullable(),
@@ -85,11 +85,7 @@ export interface BusinessType {
     description?: string;
     staffSize?: string;
     annualSalesVolume?: string;
-    industry?: string;
-    category?: string;
     businessType?: BUSINESS_TYPES;
-    industryId?: string | null;
-    categoryId?: string | null;
     legalBusinessName?: string;
     registrationtype?: BUSINESS_REGISTRATION_TYPES;
     generalEmail?: string;
@@ -109,6 +105,9 @@ export interface BusinessType {
     revenuePin?: string;
     businessRegistrationCertificate?: string;
     businessRegistrationNumber?: string;
+    // prefer returning the resolved names instead of raw ids
+    industryName?: string;
+    categoryName?: string;
     status: BUSINESS_STATUS;
     createdAt: Date;
     updatedAt?: Date;

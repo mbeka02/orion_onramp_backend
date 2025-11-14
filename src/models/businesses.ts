@@ -1,23 +1,36 @@
 import logger from "../lib/logger";
 import { db } from "../lib/db";
-import { businesses, businessUsers, invitations } from "../lib/db/schema";
+import { businesses, businessUsers, invitations, industries, categories } from "../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS, BusinessType, Invitation, CreateBusinessType, UpdateBusinessType } from "../types/businesses";
 
 export class BusinessModel {
     async createDraft(business: CreateBusinessType, ownerId: string): Promise<string> {
         try {
+            // Resolve industry/category ids: either use provided ids or create/find by name
+            let finalIndustryId = business.industryId ?? null;
+            if (!finalIndustryId && (business as any).industryName) {
+                finalIndustryId = await this.findOrCreateIndustry((business as any).industryName);
+            }
+
+            let finalCategoryId = business.categoryId ?? null;
+            if (!finalCategoryId && (business as any).categoryName) {
+                // ensure we have an industry id to attach the category to
+                if (!finalIndustryId) {
+                    throw new Error("Cannot create category without industry");
+                }
+                finalCategoryId = await this.findOrCreateCategory((business as any).categoryName, finalIndustryId);
+            }
+
             const created = await db.insert(businesses).values({
                 ownerId,
                 tradingName: business.tradingName,
                 description: business.description,
                 staffSize: business.staffSize,
                 annualSalesVolume: business.annualSalesVolume,
-                industry: business.industry,
-                category: business.category,
                 businessType: business.businessType,
-                industryId: business.industryId,
-                categoryId: business.categoryId,
+                industryId: finalIndustryId,
+                categoryId: finalCategoryId,
                 legalBusinessName: business.legalBusinessName,
                 registrationtype: business.registrationType,
                 generalEmail: business.generalEmail,
@@ -58,17 +71,29 @@ export class BusinessModel {
 
     async updateBusiness(businessId: string, updates: UpdateBusinessType, actorId: string) {
         try {
+            // Resolve industry/category ids if names are provided
+            let finalIndustryId = updates.industryId ?? null;
+            if (!finalIndustryId && (updates as any).industryName) {
+                finalIndustryId = await this.findOrCreateIndustry((updates as any).industryName);
+            }
+
+            let finalCategoryId = updates.categoryId ?? null;
+            if (!finalCategoryId && (updates as any).categoryName) {
+                if (!finalIndustryId) {
+                    throw new Error("Cannot create category without industry");
+                }
+                finalCategoryId = await this.findOrCreateCategory((updates as any).categoryName, finalIndustryId);
+            }
+
             // merge updates
             const updated = await db.update(businesses).set({
                 tradingName: updates.tradingName,
                 description: updates.description,
                 staffSize: updates.staffSize,
                 annualSalesVolume: updates.annualSalesVolume,
-                industry: updates.industry,
-                category: updates.category,
                 businessType: updates.businessType,
-                industryId: updates.industryId,
-                categoryId: updates.categoryId,
+                industryId: finalIndustryId,
+                categoryId: finalCategoryId,
                 legalBusinessName: updates.legalBusinessName,
                 registrationtype: updates.registrationType,
                 generalEmail: updates.generalEmail,
@@ -93,6 +118,32 @@ export class BusinessModel {
         } catch (err) {
             logger.error("Business Model Error: Error updating business", { error: err, businessId, updates, actorId });
             throw new Error("Error updating business");
+        }
+    }
+
+    // Create or find an industry by name and return its id
+    async findOrCreateIndustry(name: string): Promise<string> {
+        try {
+            const rows = await db.select({ id: industries.id }).from(industries).where(eq(industries.name, name));
+            if (rows.length > 0) return rows[0].id;
+            const created = await db.insert(industries).values({ name }).returning({ id: industries.id });
+            return created[0].id;
+        } catch (err) {
+            logger.error("Business Model Error: Error finding/creating industry", { error: err, name });
+            throw new Error("Error handling industry");
+        }
+    }
+
+    // Create or find a category under a given industry and return its id
+    async findOrCreateCategory(name: string, industryId: string): Promise<string> {
+        try {
+            const rows = await db.select({ id: categories.id }).from(categories).where(and(eq(categories.name, name), eq(categories.industryId, industryId)));
+            if (rows.length > 0) return rows[0].id;
+            const created = await db.insert(categories).values({ name, industryId }).returning({ id: categories.id });
+            return created[0].id;
+        } catch (err) {
+            logger.error("Business Model Error: Error finding/creating category", { error: err, name, industryId });
+            throw new Error("Error handling category");
         }
     }
 
@@ -168,13 +219,39 @@ export class BusinessModel {
 
     async getBusinessesForUser(userId: string): Promise<BusinessType[]> {
         try {
-            const owned = await db.select().from(businesses).where(eq(businesses.ownerId, userId));
-            // Get businesses where the user is a member via join
-            const memberBusinesses = await db.select({ biz: businesses }).from(businesses)
+            // Owned businesses with industry/category names
+            const ownedRows = await db.select({ biz: businesses, industryName: industries.name, categoryName: categories.name })
+                .from(businesses)
+                .leftJoin(industries, eq(industries.id, businesses.industryId))
+                .leftJoin(categories, eq(categories.id, businesses.categoryId))
+                .where(eq(businesses.ownerId, userId));
+
+            // Businesses where the user is a member
+            const memberRows = await db.select({ biz: businesses, industryName: industries.name, categoryName: categories.name })
+                .from(businesses)
                 .innerJoin(businessUsers, eq(businessUsers.businessId, businesses.id))
+                .leftJoin(industries, eq(industries.id, businesses.industryId))
+                .leftJoin(categories, eq(categories.id, businesses.categoryId))
                 .where(eq(businessUsers.userId, userId));
 
-            const memberBizRows = memberBusinesses.map((r: any) => r.biz);
+            const owned = ownedRows.map((r: any) => {
+                const out = { ...r.biz } as any;
+                // remove raw id fields from API output
+                delete out.industryId;
+                delete out.categoryId;
+                out.industryName = r.industryName;
+                out.categoryName = r.categoryName;
+                return out as BusinessType;
+            });
+
+            const memberBizRows = memberRows.map((r: any) => {
+                const out = { ...r.biz } as any;
+                delete out.industryId;
+                delete out.categoryId;
+                out.industryName = r.industryName;
+                out.categoryName = r.categoryName;
+                return out as BusinessType;
+            });
             return [...owned, ...memberBizRows];
         } catch (err) {
             logger.error("Business Model Error: Error getting businesses for user", { error: err, userId });
@@ -184,42 +261,21 @@ export class BusinessModel {
 
     async getBusinessById(businessId: string): Promise<BusinessType | null> {
         try {
-            const rows = await db.select(
-                {id: businesses.id,
-                ownerId: businesses.ownerId,
-                tradingName: businesses.tradingName,
-                description: businesses.description,
-                staffSize: businesses.staffSize,
-                annualSalesVolume: businesses.annualSalesVolume,
-                industry: businesses.industry,
-                category: businesses.category,
-                businessType: businesses.businessType,
-                industryId: businesses.industryId,
-                categoryId: businesses.categoryId,
-                legalBusinessName: businesses.legalBusinessName,
-                registrationType: businesses.registrationtype,
-                generalEmail: businesses.generalEmail,
-                supportEmail: businesses.supportEmail,
-                disputesEmail: businesses.disputesemail,
-                phoneNumber: businesses.phoneNumber,
-                website: businesses.website,
-                twitterHandle: businesses.twitterHandle,
-                facebookPage: businesses.facebookPage,
-                instagramHandle: businesses.instagramHandle,
-                country: businesses.country,
-                city: businesses.city,
-                streetAddress: businesses.streetaddress,
-                building: businesses.building,
-                postalCode: businesses.postalcode,
-                cryptoWalletAddress: businesses.cryptoWalletAddress,
-                revenuePin: businesses.revenuePin,
-                businessRegistrationCertificate: businesses.businessRegistrationCertificate,
-                businessRegistrationNumber: businesses.businessRegistrationNumber,
-                status: businesses.status,
-                createdAt: businesses.createdAt,
-                }
-            ).from(businesses).where(eq(businesses.id, businessId));
-            return rows.length > 0 ? rows[0] as BusinessType : null;
+            const rows = await db.select({ biz: businesses, industryName: industries.name, categoryName: categories.name })
+                .from(businesses)
+                .leftJoin(industries, eq(industries.id, businesses.industryId))
+                .leftJoin(categories, eq(categories.id, businesses.categoryId))
+                .where(eq(businesses.id, businessId));
+
+            if (rows.length === 0) return null;
+            const row = rows[0] as any;
+            const biz = row.biz as any;
+            const out = { ...biz } as any;
+            delete out.industryId;
+            delete out.categoryId;
+            out.industryName = row.industryName;
+            out.categoryName = row.categoryName;
+            return out as BusinessType;
         } catch (err) {
             logger.error("Business Model Error: Error getting business by id", { error: err, businessId });
             throw new Error("Error getting business");

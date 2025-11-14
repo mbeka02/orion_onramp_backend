@@ -22,17 +22,24 @@ export class HederaChainModel {
                 tokenID = AccountId.fromEvmAddress(0, 0, token).toString();
             }
 
+            const controller = new AbortController();
+            const timeoutID = setTimeout(() => controller.abort(), 10000) // Timeout after 10 seconds
+
             // Get token balance on chain
             let response = null;
             if (chain === SUPPORTED_CHAINS.HEDERA_MAINNET) {
-                const res = await fetch(`${API_NODES.HEDERA_MAINNET}/api/v1/accounts/${accountAddress}/tokens?token.id=${tokenID}`);
+                const res = await fetch(`${API_NODES.HEDERA_MAINNET}/api/v1/accounts/${accountAddress}/tokens?token.id=${tokenID}`, {
+                    signal: controller.signal
+                }).finally(() => clearTimeout(timeoutID));
                 if (res.status === 200) {
                     response = await res.json();
                 } else {
                     throw new Error("Could not get token balance from mirror node");
                 }
             } else if (chain === SUPPORTED_CHAINS.HEDERA_TESTNET) {
-                const res = await fetch(`${API_NODES.HEDERA_TESTNET}/api/v1/accounts/${accountAddress}/tokens?token.id=${tokenID}`);
+                const res = await fetch(`${API_NODES.HEDERA_TESTNET}/api/v1/accounts/${accountAddress}/tokens?token.id=${tokenID}`, {
+                    signal: controller.signal
+                }).finally(() => clearTimeout(timeoutID));
                 if (res.status === 200) {
                     response = await res.json();
                 } else {

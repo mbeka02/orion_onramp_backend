@@ -3,7 +3,7 @@ import { LiquidityManagerModel } from "../models/liquidityManager";
 import { TOKEN_TYPE } from "../types/token";
 
 export class LiquidityManagerController {
-    async getCachedTreasuryBalance(token: TOKEN_TYPE, liquidityModel: LiquidityManagerModel): Promise<BigInt> {
+    async getCachedTreasuryBalance(token: TOKEN_TYPE, liquidityModel: LiquidityManagerModel): Promise<number> {
         try {
             const balance = await liquidityModel.getCachedTreasuryTokenBalance(token);
             return balance;

@@ -14,11 +14,12 @@ async function updateCachedTreasuryBalances() {
         const tokens = [TOKEN_TYPE.KESy_MAINNET, TOKEN_TYPE.KESy_TESTNET];
 
         for (const token of tokens) {
-            const balance = await liquidityModel.getTreasuryBalanceFromOnchain(token, hederaChainModel);
+            const {balance, decimals} = await liquidityModel.getTreasuryBalanceFromOnchain(token, hederaChainModel);
 
             // Update balance in db
             await db.update(treasuryBalanceTable).set({
-                balance: BigInt(balance.toString())
+                balance: BigInt(balance.toString()),
+                decimals: decimals
             }).where(eq(treasuryBalanceTable.token, token));
         }
     } catch(err) {

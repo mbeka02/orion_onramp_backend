@@ -8,7 +8,7 @@ export class HederaChainModel {
         return hederaAddressFormatRegex.test(address);
     }
 
-    async getTokenBalance(chain: SUPPORTED_CHAINS, account: string, token: string): Promise<BigInt> {
+    async getTokenBalance(chain: SUPPORTED_CHAINS, account: string, token: string): Promise<{balance: BigInt, decimals?: number}> {
         try {
             // Put account and token in Hedera format
             let accountAddress = account;
@@ -51,11 +51,11 @@ export class HederaChainModel {
 
             for (const token of data.tokens) {
                 if (token.token_id.toLowerCase() === tokenID.toLowerCase()) {
-                    return BigInt(token.balance) / BigInt(Math.pow(10, token.decimals));
+                    return {balance: BigInt(token.balance), decimals: token.decimals};
                 }
             }
 
-            return BigInt(0);
+            return {balance: BigInt(0)};
         } catch (err) {
             logger.error("Error getting token balance on Hedera", { error: err, chain, account, token });
             throw new Error("Error getting token balance on Hedera");

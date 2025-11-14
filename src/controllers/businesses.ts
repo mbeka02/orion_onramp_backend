@@ -15,7 +15,7 @@ export class BusinessController {
         }
     }
 
-    async updateBusiness(businessId: string, updates: UpdateBusinessType | CreateBusinessType, actorId: string, model: BusinessModel) {
+    async updateBusiness(businessId: string, updates: UpdateBusinessType, actorId: string, model: BusinessModel) {
         try {
             const business = await model.getBusinessById(businessId);
             if (!business) throw new MyError(Errors.BUSINESS_NOT_FOUND);

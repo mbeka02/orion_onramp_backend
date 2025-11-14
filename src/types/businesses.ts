@@ -44,7 +44,7 @@ export const createBusinessSchema = z.object({
     registrationType: z.enum([BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]).optional(),
     generalEmail: z.email().optional(),
     supportEmail: z.email().optional(),
-    disputesmEmail: z.email().optional(),
+    disputesEmail: z.email().optional(),
     phoneNumber: z.string().optional(),
     website: z.string().optional(),
     twitterHandle: z.string().optional(),

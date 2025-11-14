@@ -2,7 +2,7 @@ import logger from "../lib/logger";
 import { db } from "../lib/db";
 import { businesses, businessUsers, invitations } from "../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS, BusinessType, Invitation, CreateBusinessType } from "../types/businesses";
+import { BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS, BusinessType, Invitation, CreateBusinessType, UpdateBusinessType } from "../types/businesses";
 
 export class BusinessModel {
     async createDraft(business: CreateBusinessType, ownerId: string): Promise<string> {
@@ -22,7 +22,7 @@ export class BusinessModel {
                 registrationtype: business.registrationType,
                 generalEmail: business.generalEmail,
                 supportEmail: business.supportEmail,
-                disputesemail: business.disputesmEmail,
+                disputesemail: business.disputesEmail,
                 phoneNumber: business.phoneNumber,
                 website: business.website,
                 twitterHandle: business.twitterHandle,
@@ -56,7 +56,7 @@ export class BusinessModel {
         }
     }
 
-    async updateBusiness(businessId: string, updates: any, actorId: string) {
+    async updateBusiness(businessId: string, updates: UpdateBusinessType, actorId: string) {
         try {
             // merge updates
             const updated = await db.update(businesses).set({
@@ -70,10 +70,10 @@ export class BusinessModel {
                 industryId: updates.industryId,
                 categoryId: updates.categoryId,
                 legalBusinessName: updates.legalBusinessName,
-                registrationtype: updates.registrationtype,
+                registrationtype: updates.registrationType,
                 generalEmail: updates.generalEmail,
                 supportEmail: updates.supportEmail,
-                disputesemail: updates.disputesemail,
+                disputesemail: updates.disputesEmail,
                 phoneNumber: updates.phoneNumber,
                 website: updates.website,
                 twitterHandle: updates.twitterHandle,
@@ -81,9 +81,9 @@ export class BusinessModel {
                 instagramHandle: updates.instagramHandle,
                 country: updates.country,
                 city: updates.city,
-                streetaddress: updates.streetaddress,
+                streetaddress: updates.streetAddress,
                 building: updates.building,
-                postalcode: updates.postalcode,
+                postalcode: updates.postalCode,
                 cryptoWalletAddress: updates.cryptoWalletAddress,
                 revenuePin: updates.revenuePin,
                 businessRegistrationCertificate: updates.businessRegistrationCertificate,
@@ -133,7 +133,7 @@ export class BusinessModel {
         try {
             const invite = await this.getInvitationById(invitationId);
             if (!invite) throw new Error("Invitation not found");
-            if (invite.status !== "Pending") throw new Error("Invitation not pending");
+            if (invite.status !== USER_INVITATION_STATUS.PENDING) throw new Error("Invitation not pending");
             if (invite.email !== userEmail) throw new Error("Invitation email does not match user email");
 
             // insert into business_users

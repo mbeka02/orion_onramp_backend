@@ -231,6 +231,10 @@ export const WEBHOOK_EVENTS = {
   TRANSFER_SUCCESS: "transfer.success",
   TRANSFER_FAILED: "transfer.failed",
   TRANSFER_REVERSED: "transfer.reversed",
+  CUSTOMER_IDENTIFICATION_SUCCESS: "customeridentification.success",
+  CUSTOMER_IDENTIFICATION_FAILED: "customeridentification.failed",
+  DEDICATED_ACCOUNT_ASSIGN_SUCCESS: "dedicatedaccount.assign.success",
+  DEDICATED_ACCOUNT_ASSIGN_FAILED: "dedicatedaccount.assign.failed",
 } as const;
 
 // Transaction status constants

@@ -1,4 +1,4 @@
-import { pgTable, primaryKey, pgEnum, text, timestamp, boolean, uuid, unique, serial,varchar,integer,jsonb, } from "drizzle-orm/pg-core";
+import { pgTable, primaryKey, pgEnum, text, timestamp, boolean, uuid, unique, serial, varchar, integer, jsonb, } from "drizzle-orm/pg-core";
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 import { TRANSACTION_STATUS } from "../../types/transactions";
 import { BUSINESS_TYPES, BUSINESS_REGISTRATION_TYPES, BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS } from "../../types/businesses";
@@ -43,7 +43,7 @@ export const environmentsTable = pgTable(
   },
   (t) => [unique().on(t.businessID, t.type)],
 );
-    
+
 export const transactionsTable = pgTable("transactions", {
   id: uuid("id").primaryKey().defaultRandom(),
   environmentID: uuid("environment_id")
@@ -199,15 +199,18 @@ export const businesses = pgTable("business", {
   createdAt: timestamp("created_at").defaultNow(),
 })
 export const businessUsers = pgTable("business_users", {
+  id: uuid("id").defaultRandom().primaryKey(),
   businessId: uuid("business_id")
     .notNull()
-    .references(() => businesses.id, { onDelete: "cascade" }).primaryKey(),
+    .references(() => businesses.id, { onDelete: "cascade" }),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   role: role(),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
-});
+},
+  (table) => [unique("business_user_unique").on(table.businessId, table.userId)]
+);
 export const invitations = pgTable("invitations", {
   id: uuid("id").defaultRandom().primaryKey(),
   businessId: uuid("business_id")

@@ -9,8 +9,9 @@ import axios, { AxiosError } from "axios";
 import { TransactionModel } from "../models/transactions";
 import { TOKEN_TYPE } from "../types/token";
 import logger from "../lib/logger";
-import { DrizzleQueryError } from "drizzle-orm";
-class TransactionController {
+import { DatabaseError } from "pg";
+import { DrizzleQueryError } from "drizzle-orm/errors";
+export class TransactionController {
   private apiKey: string;
   private MAX_TRANSACTION_AMOUNT = 500000;
   private transactionModel: TransactionModel;
@@ -87,26 +88,31 @@ class TransactionController {
       };
     } catch (err) {
       // Handle duplicate reference (idempotency)
-      if (err instanceof DrizzleQueryError && (err as any).code === "23505") {
-        // PostgreSQL unique violation
-        logger.info("Duplicate transaction request detected", { reference });
+      if (err instanceof DrizzleQueryError) {
+        if (err.cause instanceof DatabaseError) {
+          if (err.cause.code === "23505") {
+            // PostgreSQL unique violation
+            logger.info("Duplicate transaction request detected", {
+              reference,
+            });
 
-        const existingTransaction =
-          await this.transactionModel.getTransactionByReference(reference);
+            const existingTransaction =
+              await this.transactionModel.getTransactionByReference(reference);
 
-        if (!existingTransaction) {
-          throw new Error("Transaction exists but could not be retrieved");
+            if (!existingTransaction) {
+              throw new Error("Transaction exists but could not be retrieved");
+            }
+
+            // Return existing payment details
+            return {
+              reference: existingTransaction.reference,
+              authorization_url: existingTransaction.authorizationUrl || "",
+              access_code: existingTransaction.accessCode || "",
+              message: "Payment already initialized",
+            };
+          }
         }
-
-        // Return existing payment details
-        return {
-          reference: existingTransaction.reference,
-          authorization_url: existingTransaction.authorizationUrl || "",
-          access_code: existingTransaction.accessCode || "",
-          message: "Payment already initialized",
-        };
       }
-
       logger.error("Failed to initialize transaction", {
         error: err,
         reference,

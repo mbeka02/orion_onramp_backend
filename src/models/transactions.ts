@@ -4,6 +4,7 @@ import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
 import { DrizzleError, eq } from "drizzle-orm";
 import { TRANSACTION_STATUS } from "../types/transactions";
+import { DatabaseError } from "pg";
 interface createTransactionArgs {
   amount: number;
   email: string;
@@ -43,11 +44,15 @@ export class TransactionModel {
       return insertedTransaction;
     } catch (err) {
       // Re-throw with code for idempotency handling
-      if (err instanceof DrizzleError && (err as any).code === "23505") {
-        logger.warn("Duplicate transaction reference", {
-          reference: args.reference,
-        });
-        throw err; // Let controller handle this
+      if (err instanceof DrizzleError) {
+        if (err.cause instanceof DatabaseError) {
+          if (err.cause.code === "23505") {
+            logger.warn("Duplicate transaction reference", {
+              reference: args.reference,
+            });
+            throw err; // Let controller handle this
+          }
+        }
       }
       logger.error(
         "Transaction Model Error: Error creating transaction record",

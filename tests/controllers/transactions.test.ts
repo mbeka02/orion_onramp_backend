@@ -42,9 +42,6 @@ describe("Transaction Controller: Initialize Transaction Tests", () => {
       .spyOn(TransactionController.prototype as any, "generateReference")
       .mockReturnValue(mockReference);
   });
-afterEach(() => {
-    jest.restoreAllMocks();
-  });
   describe("Successful initialization", () => {
     it("should successfully initialize a new transaction", async () => {
       transactionModelMock.createTransaction = jest.fn().mockResolvedValue({
@@ -195,9 +192,6 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     transactionController = new TransactionController(transactionModelMock);
-  });
-afterEach(() => {
-    jest.restoreAllMocks();
   });
   describe("Already processed", () => {
     it("returns SUCCESSFUL from DB", async () => {

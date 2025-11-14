@@ -137,10 +137,6 @@ export interface FeesSplit {
   params?: any;
 }
 
-// ============================================
-// WEBHOOK TYPES
-// ============================================
-
 export interface PaystackWebhookPayload {
   event: WebhookEvent;
   data: WebhookChargeData;
@@ -183,10 +179,6 @@ export interface WebhookChargeData {
   requested_amount?: number; // For Pay with Transfer partial payments
 }
 
-// ============================================
-// LIST/PAGINATION TYPES
-// ============================================
-
 export interface ListTransactionsResponse {
   status: boolean;
   message: string;
@@ -203,25 +195,17 @@ export interface PaginationMeta {
   pageCount: number;
 }
 
-// ============================================
-// ERROR RESPONSE
-// ============================================
-
 export interface PaystackErrorResponse {
   status: false;
   message: string;
 }
-
-// ============================================
-// UTILITY TYPES
-// ============================================
 
 // Type guard for success responses
 export function isPaystackSuccess<T>(response: {
   status: boolean;
   data?: T;
 }): response is { status: true; data: T } {
-  return response.status === true;
+  return response.status === true && response.data !== undefined;
 }
 
 // Webhook event constants

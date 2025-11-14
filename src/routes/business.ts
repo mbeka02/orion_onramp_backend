@@ -3,7 +3,7 @@ import logger from "../lib/logger";
 import { authenticationMiddleware } from "../middleware/authenticationMiddleware";
 import businessController from "../controllers/businesses";
 import businessModel from "../models/businesses";
-import { createBusinessSchema, updateBusinessSchema, submitBusinessForApprovalSchema, inviteUserSchema } from "../types/businesses";
+import { createBusinessSchema, inviteUserSchema } from "../types/businesses";
 import { getAuthContext } from "../lib/auth/utils";
 import { Errors, MyError } from "../errors";
 
@@ -64,7 +64,7 @@ router.put("/:id", authenticationMiddleware, async (req, res) => {
         if (!userId) return res.status(401).json({ message: Errors.UNAUTHORIZED });
 
         const businessId = req.params.id;
-        await businessController.updateBusiness(businessId, parsed.data, userId, businessModel);
+        await businessController.updateBusiness(businessId, { ...parsed.data, id: businessId }, userId, businessModel);
         res.status(200).json({ message: "Business updated" });
     } catch (err) {
         logger.error("Error updating business in router", { error: err });
@@ -74,9 +74,9 @@ router.put("/:id", authenticationMiddleware, async (req, res) => {
 });
 
 // Submit business for approval (save and change status to pending)
-router.post("/submit/:id", authenticationMiddleware, async (req, res) => {
+router.put("/submit/:id", authenticationMiddleware, async (req, res) => {
     try {
-        const parsed = submitBusinessForApprovalSchema.safeParse(req.body);
+        const parsed = createBusinessSchema.safeParse(req.body);
         if (!parsed.success) {
             const error = parsed.error.issues[0].message;
             logger.error("Business Route: Invalid submit data", { data: req.body, error });
@@ -90,7 +90,7 @@ router.post("/submit/:id", authenticationMiddleware, async (req, res) => {
 
         const businessId = req.params.id;
         // Save updates first
-        await businessController.updateBusiness(businessId, parsed.data, userId, businessModel);
+        await businessController.updateBusiness(businessId, { ...parsed.data, id: businessId }, userId, businessModel);
         // Then submit for approval
         await businessController.submitForApproval(businessId, userId, businessModel);
 

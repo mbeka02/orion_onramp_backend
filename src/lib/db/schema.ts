@@ -7,7 +7,7 @@ import {
   boolean,
   uuid,
   unique,
-  serial,
+  bigint,
   varchar,
   integer,
   jsonb,
@@ -168,5 +168,5 @@ export const treasuryBalanceTable = pgTable("treasury_token_balances", {
   chain: chain_enum("chain").notNull(),
   treasuryAccount: text("treasury_account").notNull(),
   decimals: integer("token_decimals").notNull(),
-  balance: integer("balance").notNull()
+  balance: bigint({mode: "number"}).notNull()
 })

@@ -106,6 +106,7 @@ export class BusinessController {
             await model.acceptInvitation(invitationId, userId, userEmail);
         } catch (err) {
             logger.error("Business Controller: Error accepting invitation", { err, invitationId, userId });
+            if (err instanceof MyError) throw err;
             throw new Error(Errors.INTERNAL_SERVER_ERROR);
         }
     }

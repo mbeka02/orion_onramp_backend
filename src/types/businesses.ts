@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export enum BUSINESS_TYPES {
     STARTER = "Starter business",
     REGISTERED = "Registered Business",
@@ -27,8 +29,6 @@ export enum USER_INVITATION_STATUS {
     CANCELLED = "Cancelled",
 }
 
-// Zod schemas and request/response types for businesses
-import { z } from "zod";
 
 export const createBusinessSchema = z.object({
     tradingName: z.string().min(1).optional(),
@@ -38,13 +38,13 @@ export const createBusinessSchema = z.object({
     industry: z.string().optional(),
     category: z.string().optional(),
     businessType: z.enum([BUSINESS_TYPES.STARTER, BUSINESS_TYPES.REGISTERED]).optional(),
-    industryId: z.string().uuid().optional().nullable(),
-    categoryId: z.string().uuid().optional().nullable(),
+    industryId: z.uuid().optional().nullable(),
+    categoryId: z.uuid().optional().nullable(),
     legalBusinessName: z.string().optional(),
     registrationtype: z.enum([BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]).optional(),
-    generalEmail: z.string().email().optional(),
-    supportEmail: z.string().email().optional(),
-    disputesemail: z.string().email().optional(),
+    generalEmail: z.email().optional(),
+    supportEmail: z.email().optional(),
+    disputesemail: z.email().optional(),
     phoneNumber: z.string().optional(),
     website: z.string().optional(),
     twitterHandle: z.string().optional(),
@@ -67,15 +67,15 @@ export const submitBusinessForApprovalSchema = createBusinessSchema.extend({
     legalBusinessName: z.string().min(1),
     registrationtype: z.enum([BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]),
     businessRegistrationNumber: z.string().min(1),
-    generalEmail: z.string().email(),
+    generalEmail: z.email(),
 });
 
 export const updateBusinessSchema = createBusinessSchema.extend({
-    id: z.string().uuid()
+    id: z.uuid()
 });
 
 export const inviteUserSchema = z.object({
-    email: z.string().email(),
+    email: z.email(),
     role: z.enum([USER_ROLES.ADMIN, USER_ROLES.DEVELOPER, USER_ROLES.FINANCE, USER_ROLES.SUPPORT])
 });
 export interface BusinessType {

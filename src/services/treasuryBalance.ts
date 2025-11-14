@@ -1,4 +1,4 @@
-import { logger } from "better-auth";
+import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
 import liquidityModel from "../models/liquidityManager";
 import hederaChainModel from "../models/chain/hedera";
@@ -22,7 +22,7 @@ async function updateCachedTreasuryBalances() {
             }).where(eq(treasuryBalanceTable.token, token));
         }
     } catch(err) {
-        logger.error("Error updating cached treasury balance", err);
+        logger.error("Error updating cached treasury balance", {error: err});
     }
 }
 

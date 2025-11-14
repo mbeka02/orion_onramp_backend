@@ -1,4 +1,4 @@
-import { logger } from "better-auth";
+import logger from "../../lib/logger";
 import { API_NODES, hederaTokenBalanceSchema, SUPPORTED_CHAINS } from "../../types/chain";
 import { AccountId } from "@hiero-ledger/sdk";
 

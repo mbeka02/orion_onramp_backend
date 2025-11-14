@@ -99,7 +99,7 @@ export class BusinessModel {
     async submitForApproval(businessId: string, ownerId: string) {
         try {
             // set status to PENDING only if current status is DRAFT
-            await db.update(businesses).set({ status: BUSINESS_STATUS.PENDING }).where(and(eq(businesses.id, businessId)));
+            await db.update(businesses).set({ status: BUSINESS_STATUS.PENDING }).where(and(eq(businesses.id, businessId), eq(businesses.status, BUSINESS_STATUS.DRAFT)));
         } catch (err) {
             logger.error("Business Model Error: Error submitting business for approval", { error: err, businessId, ownerId });
             throw new Error("Error submitting business for approval");

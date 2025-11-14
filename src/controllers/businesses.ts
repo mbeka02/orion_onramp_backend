@@ -76,6 +76,7 @@ export class BusinessController {
 
             await model.deleteBusiness(businessId, actorId);
         } catch (err) {
+            if (err instanceof MyError) throw err;
             logger.error("Business Controller: Error deleting business", { err, businessId, actorId });
             throw new Error(Errors.INTERNAL_SERVER_ERROR);
         }

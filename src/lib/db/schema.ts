@@ -8,8 +8,8 @@ export const businessesTable = pgTable("businesses", {
 });
 
 export const environment = pgEnum("environment_types", [ENVIRONMENT_TYPES.LIVE, ENVIRONMENT_TYPES.TEST])
-
-// Put database schemas here
+export const role = pgEnum("user_role", [USER_ROLES.ADMIN, USER_ROLES.DEVELOPER, USER_ROLES.FINANCE, USER_ROLES.SUPPORT])
+export const invitationStatus = pgEnum("invitation_status", [USER_INVITATION_STATUS.PENDING, USER_INVITATION_STATUS.ACCEPTED, USER_INVITATION_STATUS.REJECTED, USER_INVITATION_STATUS.EXPIRED, USER_INVITATION_STATUS.CANCELLED])
 export const environmentsTable = pgTable("environments", {
   id: uuid("id").primaryKey().defaultRandom(),
   businessID: uuid("business_id").notNull().references(() => businessesTable.id, { onDelete: "cascade" }),
@@ -99,7 +99,7 @@ export const industries = pgTable("industries", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 export const categories = pgTable("categories", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: uuid("id").defaultRandom(),
   industryId: uuid("industry_id")
     .notNull()
     .references(() => industries.id, { onDelete: "cascade" }),
@@ -112,7 +112,7 @@ export const categories = pgTable("categories", {
 ]);
 export const businesses = pgTable("businesses", {
   id: uuid("id").primaryKey().defaultRandom(),
-  ownerId: uuid("owner_id")
+  ownerId: text("owner_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   tradingName: text("trading_name"),
@@ -151,28 +151,24 @@ export const businesses = pgTable("businesses", {
 export const businessUsers = pgTable("business_users", {
   businessId: uuid("business_id")
     .notNull()
-    .references(() => businesses.id, { onDelete: "cascade" }),
-  userId: uuid("user_id")
+    .references(() => businesses.id, { onDelete: "cascade" }).primaryKey(),
+  userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  role: pgEnum("role", [USER_ROLES.ADMIN, USER_ROLES.DEVELOPER, USER_ROLES.FINANCE, USER_ROLES.SUPPORT])(),
+  role: role(),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
-}, (table) => [
-  primaryKey({
-    columns: [table.businessId, table.userId],
-  }),]
-);
+});
 export const invitations = pgTable("invitations", {
   id: uuid("id").defaultRandom().primaryKey(),
   businessId: uuid("business_id")
     .notNull()
     .references(() => businesses.id, { onDelete: "cascade" }),
-  invitedBy: uuid("invited_by")
+  invitedBy: text("invited_by")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   email: text("email").notNull(),
-  role: pgEnum("role", [USER_ROLES.ADMIN, USER_ROLES.DEVELOPER, USER_ROLES.FINANCE, USER_ROLES.SUPPORT])().notNull(),
-  status: pgEnum("status", [USER_INVITATION_STATUS.PENDING, USER_INVITATION_STATUS.ACCEPTED, USER_INVITATION_STATUS.REJECTED, USER_INVITATION_STATUS.EXPIRED, USER_INVITATION_STATUS.CANCELLED])().default(USER_INVITATION_STATUS.PENDING).notNull(),
+  role: role().notNull(),
+  status: invitationStatus().default(USER_INVITATION_STATUS.PENDING).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

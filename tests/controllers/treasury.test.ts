@@ -6,11 +6,12 @@ describe("Treasury Business SDK Onramp Tests", () => {
     const existing_transaction_id = "existing";
     const non_existing_transaction_id = "not existing";
     const onramped_transaction_id = "onramped transaction";
+    const not_complete_transaction_id = "not_complete_transaction";
 
     beforeAll(async() => {
         treasuryModelMock.doesTransactionExist = jest.fn().mockImplementation((transaction_id: string) => {
             return new Promise((res, rej) => {
-                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id) {
+                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id || transaction_id === not_complete_transaction_id) {
                     res(true);
                 } else {
                     res(false);
@@ -21,6 +22,16 @@ describe("Treasury Business SDK Onramp Tests", () => {
         treasuryModelMock.hasTransactionAlreadyBeenOnramped = jest.fn().mockImplementation((transaction_id: string) => {
             return new Promise((res, rej) => {
                 if (transaction_id === onramped_transaction_id) {
+                    res(true);
+                } else {
+                    res(false);
+                }
+            })
+        });
+
+        treasuryModelMock.isFiatPaymentCompleted = jest.fn().mockImplementation((transaction_id: string) => {
+            return new Promise((res, rej) => {
+                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id) {
                     res(true);
                 } else {
                     res(false);
@@ -66,4 +77,23 @@ describe("Treasury Business SDK Onramp Tests", () => {
             }
         }
     });
+
+    it("should fail if transaction exists but the fiat payment was not successful", async () => {
+        try {
+            await treasuryController.businessOnramp(not_complete_transaction_id, treasuryModelMock);
+            expect(false).toBe(true);
+        } catch(err) {
+            if (err instanceof MyError) {
+                if (err.message === Errors.PAYMENT_NOT_COMPLETE) {
+                    expect(true).toBe(true);
+                } else {
+                    console.error("Unexpected error", err);
+                    expect(false).toBe(true);
+                }
+            } else {
+                console.error("Unexpected error", err);
+                expect(false).toBe(true);
+            }
+        }
+    })
 })

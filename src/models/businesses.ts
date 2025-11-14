@@ -169,14 +169,12 @@ export class BusinessModel {
     async getBusinessesForUser(userId: string): Promise<BusinessType[]> {
         try {
             const owned = await db.select().from(businesses).where(eq(businesses.ownerId, userId));
-
             // Get businesses where the user is a member via join
             const memberBusinesses = await db.select({ biz: businesses }).from(businesses)
                 .innerJoin(businessUsers, eq(businessUsers.businessId, businesses.id))
                 .where(eq(businessUsers.userId, userId));
 
             const memberBizRows = memberBusinesses.map((r: any) => r.biz);
-
             return [...owned, ...memberBizRows];
         } catch (err) {
             logger.error("Business Model Error: Error getting businesses for user", { error: err, userId });

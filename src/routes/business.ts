@@ -19,13 +19,13 @@ router.get("/", authenticationMiddleware, async (req, res) => {
         const businesses = await businessController.getAllUserBusinesses(userId, businessModel);
         res.status(200).json({ businesses });
     } catch (err) {
-        logger.error("Error getting businesses in router", { error: err });
+        logger.error("Error getting businesses in router");
         res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
     }
 });
 
 // Create draft business
-router.post("/", authenticationMiddleware, async (req, res) => {
+router.post("/create", authenticationMiddleware, async (req, res) => {
     try {
         const parsed = createBusinessSchema.safeParse(req.body);
         if (!parsed.success) {

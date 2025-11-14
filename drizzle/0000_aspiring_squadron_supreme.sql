@@ -1,3 +1,6 @@
+CREATE TYPE "public"."business_registration_type" AS ENUM('Sole Proprietorship', 'Registered Company');--> statement-breakpoint
+CREATE TYPE "public"."business_status" AS ENUM('Draft', 'Pending', 'Approved', 'Rejected', 'Suspended');--> statement-breakpoint
+CREATE TYPE "public"."business_type" AS ENUM('Starter business', 'Registered Business');--> statement-breakpoint
 CREATE TYPE "public"."environment_types" AS ENUM('live', 'test');--> statement-breakpoint
 CREATE TYPE "public"."invitation_status" AS ENUM('Pending', 'Accepted', 'Rejected', 'Expired', 'Cancelled');--> statement-breakpoint
 CREATE TYPE "public"."user_role" AS ENUM('Admin', 'Developer', 'Finance', 'Support');--> statement-breakpoint
@@ -24,17 +27,46 @@ CREATE TABLE "business_users" (
 	"joined_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "businesses" (
+CREATE TABLE "business" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"name" text NOT NULL
+	"owner_id" text NOT NULL,
+	"trading_name" text,
+	"description" text,
+	"staff_size" text,
+	"annual_sales_volume" text,
+	"industry" text,
+	"category" text,
+	"businessType" "business_type",
+	"industry_id" uuid,
+	"category_id" uuid,
+	"legal_business_name" text,
+	"registrationtype" "business_registration_type",
+	"general_email" text,
+	"support_email" text,
+	"disputes_email" text,
+	"phone_number" text,
+	"website" text,
+	"twitter_handle" text,
+	"facebook_page" text,
+	"instagram_handle" text,
+	"country" text,
+	"city" text,
+	"street_address" text,
+	"building" text,
+	"postal_code" text,
+	"crypto_wallet_address" text,
+	"revenue_pin" text,
+	"registration_certificate" text,
+	"registration_number" text,
+	"status" "business_status" DEFAULT 'Draft',
+	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE "categories" (
-	"id" uuid DEFAULT gen_random_uuid(),
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"industry_id" uuid NOT NULL,
 	"name" text NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "categories_id_industry_id_pk" PRIMARY KEY("id","industry_id")
+	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "environment_keys" (
@@ -111,11 +143,14 @@ CREATE TABLE "verification" (
 );
 --> statement-breakpoint
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "business_users" ADD CONSTRAINT "business_users_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "business_users" ADD CONSTRAINT "business_users_business_id_business_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."business"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "business_users" ADD CONSTRAINT "business_users_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "business" ADD CONSTRAINT "business_owner_id_user_id_fk" FOREIGN KEY ("owner_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "business" ADD CONSTRAINT "business_industry_id_industries_id_fk" FOREIGN KEY ("industry_id") REFERENCES "public"."industries"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "business" ADD CONSTRAINT "business_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "categories" ADD CONSTRAINT "categories_industry_id_industries_id_fk" FOREIGN KEY ("industry_id") REFERENCES "public"."industries"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "environment_keys" ADD CONSTRAINT "environment_keys_environment_id_environments_id_fk" FOREIGN KEY ("environment_id") REFERENCES "public"."environments"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "environments" ADD CONSTRAINT "environments_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "invitations" ADD CONSTRAINT "invitations_business_id_businesses_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."businesses"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "environments" ADD CONSTRAINT "environments_business_id_business_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."business"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_business_id_business_id_fk" FOREIGN KEY ("business_id") REFERENCES "public"."business"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_invited_by_user_id_fk" FOREIGN KEY ("invited_by") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;

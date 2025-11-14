@@ -1,5 +1,5 @@
 {
-  "id": "4e96fc15-ab2e-4587-9750-74bd6f5b3c56",
+  "id": "7971601e-dae1-4780-b055-e729b72074ad",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -143,10 +143,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "business_users_business_id_businesses_id_fk": {
-          "name": "business_users_business_id_businesses_id_fk",
+        "business_users_business_id_business_id_fk": {
+          "name": "business_users_business_id_business_id_fk",
           "tableFrom": "business_users",
-          "tableTo": "businesses",
+          "tableTo": "business",
           "columnsFrom": [
             "business_id"
           ],
@@ -176,8 +176,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.businesses": {
-      "name": "businesses",
+    "public.business": {
+      "name": "business",
       "schema": "",
       "columns": {
         "id": {
@@ -187,15 +187,240 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "name": {
-          "name": "name",
+        "owner_id": {
+          "name": "owner_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true
+        },
+        "trading_name": {
+          "name": "trading_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "staff_size": {
+          "name": "staff_size",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "annual_sales_volume": {
+          "name": "annual_sales_volume",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "industry": {
+          "name": "industry",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "businessType": {
+          "name": "businessType",
+          "type": "business_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "industry_id": {
+          "name": "industry_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "legal_business_name": {
+          "name": "legal_business_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registrationtype": {
+          "name": "registrationtype",
+          "type": "business_registration_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "general_email": {
+          "name": "general_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "support_email": {
+          "name": "support_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "disputes_email": {
+          "name": "disputes_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "twitter_handle": {
+          "name": "twitter_handle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "facebook_page": {
+          "name": "facebook_page",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "instagram_handle": {
+          "name": "instagram_handle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country": {
+          "name": "country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "street_address": {
+          "name": "street_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "building": {
+          "name": "building",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "postal_code": {
+          "name": "postal_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "crypto_wallet_address": {
+          "name": "crypto_wallet_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revenue_pin": {
+          "name": "revenue_pin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registration_certificate": {
+          "name": "registration_certificate",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registration_number": {
+          "name": "registration_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "business_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'Draft'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "business_owner_id_user_id_fk": {
+          "name": "business_owner_id_user_id_fk",
+          "tableFrom": "business",
+          "tableTo": "user",
+          "columnsFrom": [
+            "owner_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "business_industry_id_industries_id_fk": {
+          "name": "business_industry_id_industries_id_fk",
+          "tableFrom": "business",
+          "tableTo": "industries",
+          "columnsFrom": [
+            "industry_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "business_category_id_categories_id_fk": {
+          "name": "business_category_id_categories_id_fk",
+          "tableFrom": "business",
+          "tableTo": "categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -209,8 +434,8 @@
         "id": {
           "name": "id",
           "type": "uuid",
-          "primaryKey": false,
-          "notNull": false,
+          "primaryKey": true,
+          "notNull": true,
           "default": "gen_random_uuid()"
         },
         "industry_id": {
@@ -249,15 +474,7 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "categories_id_industry_id_pk": {
-          "name": "categories_id_industry_id_pk",
-          "columns": [
-            "id",
-            "industry_id"
-          ]
-        }
-      },
+      "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
@@ -384,10 +601,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "environments_business_id_businesses_id_fk": {
-          "name": "environments_business_id_businesses_id_fk",
+        "environments_business_id_business_id_fk": {
+          "name": "environments_business_id_business_id_fk",
           "tableFrom": "environments",
-          "tableTo": "businesses",
+          "tableTo": "business",
           "columnsFrom": [
             "business_id"
           ],
@@ -514,10 +731,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "invitations_business_id_businesses_id_fk": {
-          "name": "invitations_business_id_businesses_id_fk",
+        "invitations_business_id_business_id_fk": {
+          "name": "invitations_business_id_business_id_fk",
           "tableFrom": "invitations",
-          "tableTo": "businesses",
+          "tableTo": "business",
           "columnsFrom": [
             "business_id"
           ],
@@ -769,6 +986,33 @@
     }
   },
   "enums": {
+    "public.business_registration_type": {
+      "name": "business_registration_type",
+      "schema": "public",
+      "values": [
+        "Sole Proprietorship",
+        "Registered Company"
+      ]
+    },
+    "public.business_status": {
+      "name": "business_status",
+      "schema": "public",
+      "values": [
+        "Draft",
+        "Pending",
+        "Approved",
+        "Rejected",
+        "Suspended"
+      ]
+    },
+    "public.business_type": {
+      "name": "business_type",
+      "schema": "public",
+      "values": [
+        "Starter business",
+        "Registered Business"
+      ]
+    },
     "public.environment_types": {
       "name": "environment_types",
       "schema": "public",

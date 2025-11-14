@@ -2,17 +2,16 @@ import { pgTable, primaryKey, pgEnum, text, timestamp, boolean, uuid, unique } f
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 import { BUSINESS_TYPES, BUSINESS_REGISTRATION_TYPES, BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS } from "../../types/businesses";
 import { relations } from "drizzle-orm";
-export const businessesTable = pgTable("businesses", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull()
-});
 
 export const environment = pgEnum("environment_types", [ENVIRONMENT_TYPES.LIVE, ENVIRONMENT_TYPES.TEST])
 export const role = pgEnum("user_role", [USER_ROLES.ADMIN, USER_ROLES.DEVELOPER, USER_ROLES.FINANCE, USER_ROLES.SUPPORT])
 export const invitationStatus = pgEnum("invitation_status", [USER_INVITATION_STATUS.PENDING, USER_INVITATION_STATUS.ACCEPTED, USER_INVITATION_STATUS.REJECTED, USER_INVITATION_STATUS.EXPIRED, USER_INVITATION_STATUS.CANCELLED])
+export const businessType = pgEnum("business_type", [BUSINESS_TYPES.STARTER, BUSINESS_TYPES.REGISTERED]);
+export const businessRegistrationType = pgEnum("business_registration_type", [BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]);
+export const businessStatus = pgEnum("business_status", [BUSINESS_STATUS.DRAFT, BUSINESS_STATUS.PENDING, BUSINESS_STATUS.APPROVED, BUSINESS_STATUS.REJECTED, BUSINESS_STATUS.SUSPENDED]);
 export const environmentsTable = pgTable("environments", {
   id: uuid("id").primaryKey().defaultRandom(),
-  businessID: uuid("business_id").notNull().references(() => businessesTable.id, { onDelete: "cascade" }),
+  businessID: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
   type: environment().notNull(),
   webhookUrl: text("webhook_url"),
   callbackUrl: text("callback_url")
@@ -99,18 +98,14 @@ export const industries = pgTable("industries", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 export const categories = pgTable("categories", {
-  id: uuid("id").defaultRandom(),
+  id: uuid("id").defaultRandom().primaryKey(),
   industryId: uuid("industry_id")
     .notNull()
     .references(() => industries.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [
-  primaryKey({
-    columns: [table.id, table.industryId],
-  }),
-]);
-export const businesses = pgTable("businesses", {
+});
+export const businesses = pgTable("business", {
   id: uuid("id").primaryKey().defaultRandom(),
   ownerId: text("owner_id")
     .notNull()
@@ -121,13 +116,13 @@ export const businesses = pgTable("businesses", {
   annualSalesVolume: text("annual_sales_volume"),
   industry: text("industry"),
   category: text("category"),
-  businessType: pgEnum("business_type", [BUSINESS_TYPES.STARTER, BUSINESS_TYPES.REGISTERED])(),
+  businessType: businessType(),
   industryId: uuid("industry_id")
     .references(() => industries.id, { onDelete: "set null" }),
   categoryId: uuid("category_id")
     .references(() => categories.id, { onDelete: "set null" }),
   legalBusinessName: text("legal_business_name"),
-  registrationtype: pgEnum("business_registration_type", [BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY])(),
+  registrationtype: businessRegistrationType(),
   generalEmail: text("general_email"),
   supportEmail: text("support_email"),
   disputesemail: text("disputes_email"),
@@ -145,7 +140,7 @@ export const businesses = pgTable("businesses", {
   revenuePin: text("revenue_pin"),
   businessRegistrationCertificate: text("registration_certificate"),
   businessRegistrationNumber: text("registration_number"),
-  status: pgEnum("business_status", [BUSINESS_STATUS.DRAFT, BUSINESS_STATUS.PENDING, BUSINESS_STATUS.APPROVED, BUSINESS_STATUS.REJECTED, BUSINESS_STATUS.SUSPENDED])().default(BUSINESS_STATUS.DRAFT),
+  status: businessStatus().default(BUSINESS_STATUS.DRAFT),
   createdAt: timestamp("created_at").defaultNow(),
 })
 export const businessUsers = pgTable("business_users", {

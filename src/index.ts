@@ -6,7 +6,7 @@ import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import environmentRouter from "./routes/environment";
-
+import businessRouter from "./routes/business";
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -30,6 +30,7 @@ app.get("/", async (req, res) => {
   res.json("Orion API");
 });
 app.use("/api/environment", environmentRouter);
+app.use("/api/business", businessRouter);
 
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);

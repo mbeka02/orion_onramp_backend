@@ -41,10 +41,10 @@ export const createBusinessSchema = z.object({
     industryId: z.uuid().optional().nullable(),
     categoryId: z.uuid().optional().nullable(),
     legalBusinessName: z.string().optional(),
-    registrationtype: z.enum([BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]).optional(),
+    registrationType: z.enum([BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]).optional(),
     generalEmail: z.email().optional(),
     supportEmail: z.email().optional(),
-    disputesemail: z.email().optional(),
+    disputesmEmail: z.email().optional(),
     phoneNumber: z.string().optional(),
     website: z.string().optional(),
     twitterHandle: z.string().optional(),
@@ -52,9 +52,9 @@ export const createBusinessSchema = z.object({
     instagramHandle: z.string().optional(),
     country: z.string().optional(),
     city: z.string().optional(),
-    streetaddress: z.string().optional(),
+    streetAddress: z.string().optional(),
     building: z.string().optional(),
-    postalcode: z.string().optional(),
+    postalCode: z.string().optional(),
     cryptoWalletAddress: z.string().optional(),
     revenuePin: z.string().optional(),
     businessRegistrationCertificate: z.string().optional(),
@@ -94,7 +94,7 @@ export interface BusinessType {
     registrationtype?: BUSINESS_REGISTRATION_TYPES;
     generalEmail?: string;
     supportEmail?: string;
-    disputesemail?: string;
+    disputesEmail?: string;
     phoneNumber?: string;
     website?: string;
     twitterHandle?: string;
@@ -111,7 +111,7 @@ export interface BusinessType {
     businessRegistrationNumber?: string;
     status: BUSINESS_STATUS;
     createdAt: Date;
-    updatedAt: Date;
+    // updatedAt: Date;
 }
 export interface Invitation{
     id: string;

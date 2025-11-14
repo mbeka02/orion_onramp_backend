@@ -2,10 +2,10 @@ import logger from "../lib/logger";
 import { db } from "../lib/db";
 import { businesses, businessUsers, invitations } from "../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS, BusinessType, Invitation } from "../types/businesses";
+import { BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS, BusinessType, Invitation, CreateBusinessType } from "../types/businesses";
 
 export class BusinessModel {
-    async createDraft(business: any, ownerId: string): Promise<string> {
+    async createDraft(business: CreateBusinessType, ownerId: string): Promise<string> {
         try {
             const created = await db.insert(businesses).values({
                 ownerId,
@@ -19,10 +19,10 @@ export class BusinessModel {
                 industryId: business.industryId,
                 categoryId: business.categoryId,
                 legalBusinessName: business.legalBusinessName,
-                registrationtype: business.registrationtype,
+                registrationtype: business.registrationType,
                 generalEmail: business.generalEmail,
                 supportEmail: business.supportEmail,
-                disputesemail: business.disputesemail,
+                disputesemail: business.disputesmEmail,
                 phoneNumber: business.phoneNumber,
                 website: business.website,
                 twitterHandle: business.twitterHandle,
@@ -30,9 +30,9 @@ export class BusinessModel {
                 instagramHandle: business.instagramHandle,
                 country: business.country,
                 city: business.city,
-                streetaddress: business.streetaddress,
+                streetaddress: business.streetAddress,
                 building: business.building,
-                postalcode: business.postalcode,
+                postalcode: business.postalCode,
                 cryptoWalletAddress: business.cryptoWalletAddress,
                 revenuePin: business.revenuePin,
                 businessRegistrationCertificate: business.businessRegistrationCertificate,
@@ -184,7 +184,41 @@ export class BusinessModel {
 
     async getBusinessById(businessId: string): Promise<BusinessType | null> {
         try {
-            const rows = await db.select().from(businesses).where(eq(businesses.id, businessId));
+            const rows = await db.select(
+                {id: businesses.id,
+                ownerId: businesses.ownerId,
+                tradingName: businesses.tradingName,
+                description: businesses.description,
+                staffSize: businesses.staffSize,
+                annualSalesVolume: businesses.annualSalesVolume,
+                industry: businesses.industry,
+                category: businesses.category,
+                businessType: businesses.businessType,
+                industryId: businesses.industryId,
+                categoryId: businesses.categoryId,
+                legalBusinessName: businesses.legalBusinessName,
+                registrationType: businesses.registrationtype,
+                generalEmail: businesses.generalEmail,
+                supportEmail: businesses.supportEmail,
+                disputesEmail: businesses.disputesemail,
+                phoneNumber: businesses.phoneNumber,
+                website: businesses.website,
+                twitterHandle: businesses.twitterHandle,
+                facebookPage: businesses.facebookPage,
+                instagramHandle: businesses.instagramHandle,
+                country: businesses.country,
+                city: businesses.city,
+                streetAddress: businesses.streetaddress,
+                building: businesses.building,
+                postalCode: businesses.postalcode,
+                cryptoWalletAddress: businesses.cryptoWalletAddress,
+                revenuePin: businesses.revenuePin,
+                businessRegistrationCertificate: businesses.businessRegistrationCertificate,
+                businessRegistrationNumber: businesses.businessRegistrationNumber,
+                status: businesses.status,
+                createdAt: businesses.createdAt,
+                }
+            ).from(businesses).where(eq(businesses.id, businessId));
             return rows.length > 0 ? rows[0] as BusinessType : null;
         } catch (err) {
             logger.error("Business Model Error: Error getting business by id", { error: err, businessId });

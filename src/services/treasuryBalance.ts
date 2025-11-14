@@ -18,7 +18,7 @@ async function updateCachedTreasuryBalances() {
 
             // Update balance in db
             await db.update(treasuryBalanceTable).set({
-                balance: balance
+                balance: BigInt(balance.toString())
             }).where(eq(treasuryBalanceTable.token, token));
         }
     } catch(err) {

@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../lib/db";
 import logger from "../lib/logger";
 import { transactionsTable } from "../lib/db/schema";

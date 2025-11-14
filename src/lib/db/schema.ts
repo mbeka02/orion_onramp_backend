@@ -166,5 +166,5 @@ export const treasuryBalanceTable = pgTable("treasury_token_balances", {
   chain: chain_enum("chain").notNull(),
   treasuryAccount: text("treasury_account").notNull(),
   decimals: integer("token_decimals").notNull(),
-  balance: bigint({mode: "number"}).notNull()
+  balance: bigint("balance", {mode: "bigint"}).notNull()
 })

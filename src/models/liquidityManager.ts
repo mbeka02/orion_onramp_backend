@@ -7,7 +7,7 @@ import { HederaChainModel } from "./chain/hedera";
 import { SUPPORTED_CHAINS } from "../types/chain";
 
 export class LiquidityManagerModel {
-    async getCachedTreasuryTokenBalance(token_type: TOKEN_TYPE): Promise<number> {
+    async getCachedTreasuryTokenBalance(token_type: TOKEN_TYPE): Promise<BigInt> {
         try {
             const tokenBalance = await db.select({
                 balance: treasuryBalanceTable.balance
@@ -15,7 +15,7 @@ export class LiquidityManagerModel {
             .where(eq(treasuryBalanceTable.token, token_type));
 
             if (tokenBalance.length < 1) {
-                return 0;
+                return BigInt(0);
             } else {
                 return tokenBalance[0].balance;
             }
@@ -25,7 +25,7 @@ export class LiquidityManagerModel {
         }
     }
 
-    async getTreasuryBalanceFromOnchain(token_type: TOKEN_TYPE, hederaChainModel: HederaChainModel): Promise<number> {
+    async getTreasuryBalanceFromOnchain(token_type: TOKEN_TYPE, hederaChainModel: HederaChainModel): Promise<BigInt> {
         try {
             const tokenDetails = await db.select({
                 address: treasuryBalanceTable.address,
@@ -35,7 +35,7 @@ export class LiquidityManagerModel {
             .where(eq(treasuryBalanceTable.token, token_type));
 
             if (tokenDetails.length < 1) {
-                return 0;
+                return BigInt(0);
             } else {
                 const tokenDetail = tokenDetails[0];
                 if (tokenDetail.chain === SUPPORTED_CHAINS.HEDERA_MAINNET || tokenDetail.chain === SUPPORTED_CHAINS.HEDERA_TESTNET) {
@@ -43,7 +43,7 @@ export class LiquidityManagerModel {
                     return balance;
                 }
 
-                return 0;
+                return BigInt(0);
             }
         } catch(err) {
             logger.error("Error getting token balance on chain", {error: err, token_type});

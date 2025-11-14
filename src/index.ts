@@ -88,6 +88,7 @@ async function gracefulShutdown(signal: string): Promise<void> {
 }
 
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 initialize().then(() => {
   server = app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);

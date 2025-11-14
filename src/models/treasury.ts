@@ -36,6 +36,23 @@ export class TreasuryModel {
             throw new Error("Could not check if transaction has already been onramped");
         }
     }
+
+    async isFiatPaymentCompleted(transaction_id: string): Promise<boolean> {
+        try {
+            const isPaymentSuccessfulRes = await db.select({
+                id: transactionsTable.id
+            }).from(transactionsTable)
+            .where(and(
+                eq(transactionsTable.id, transaction_id),
+                eq(transactionsTable.transactionStatus, TRANSACTION_STATUS.SUCCESSFUL)
+            ));
+
+            return isPaymentSuccessfulRes.length > 0;
+        } catch(err) {
+            logger.error("Error checking if fiat payment was completed", {error: err, transaction_id});
+            throw new Error("Error checking if fiat payment completed");
+        }
+    }
 }
 
 const treasuryModel = new TreasuryModel();

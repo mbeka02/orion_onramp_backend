@@ -14,6 +14,11 @@ export class TreasuryController {
             if (transactionAlreadyOnramped === true) {
                 throw new MyError(Errors.PAYMENT_ALREADY_ONRAMPED);
             }
+
+            const isPaymentCompleteSuccessfully = await treasuryModel.isFiatPaymentCompleted(transaction_id);
+            if (isPaymentCompleteSuccessfully === false) {
+                throw new MyError(Errors.PAYMENT_NOT_COMPLETE);
+            }
         } catch(err) {
             logger.error("Error onramping funds from transaction", {error: err, transaction_id});
 

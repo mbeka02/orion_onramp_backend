@@ -64,12 +64,12 @@ export class BusinessModel {
 
             return id;
         } catch (err) {
-            logger.error("Business Model Error: Error creating draft", { error: err, business, ownerId });
+            logger.error("Business Model Error: Error creating draft", { error: err, ownerId });
             throw new Error("Error creating business draft");
         }
     }
 
-    async updateBusiness(businessId: string, updates: UpdateBusinessType, actorId: string) {
+    async updateBusiness(businessId: string, updates: UpdateBusinessType) {
         try {
             // Resolve industry/category ids if names are provided
             let finalIndustryId = updates.industryId ?? null;
@@ -116,7 +116,7 @@ export class BusinessModel {
             }).where(eq(businesses.id, businessId)).returning();
             return updated;
         } catch (err) {
-            logger.error("Business Model Error: Error updating business", { error: err, businessId, updates, actorId });
+            logger.error("Business Model Error: Error updating business", { error: err, businessId, updates });
             throw new Error("Error updating business");
         }
     }
@@ -150,7 +150,8 @@ export class BusinessModel {
     async submitForApproval(businessId: string, ownerId: string) {
         try {
             // set status to PENDING only if current status is DRAFT
-            await db.update(businesses).set({ status: BUSINESS_STATUS.PENDING }).where(and(eq(businesses.id, businessId), eq(businesses.status, BUSINESS_STATUS.DRAFT)));
+            const result = await db.update(businesses).set({ status: BUSINESS_STATUS.PENDING }).where(and(eq(businesses.id, businessId), eq(businesses.status, BUSINESS_STATUS.DRAFT))).returning();
+            return result;
         } catch (err) {
             logger.error("Business Model Error: Error submitting business for approval", { error: err, businessId, ownerId });
             throw new Error("Error submitting business for approval");

@@ -23,7 +23,7 @@ export class BusinessController {
             const allowed = await model.isUserOwnerOrAdmin(businessId, actorId);
             if (!allowed) throw new MyError(Errors.UNAUTHORIZED);
 
-            await model.updateBusiness(businessId, updates, actorId);
+            await model.updateBusiness(businessId, updates);
         } catch (err) {
             if (err instanceof MyError) throw err;
             logger.error("Business Controller: Error updating business", { err, businessId, updates, actorId });

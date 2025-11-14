@@ -41,8 +41,6 @@ export const environmentsTable = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
 
-    publicKey: text("public_key").notNull().unique(),
-    privateKey: text("private_key").notNull().unique(),
     type: environment().notNull(),
     businessID: uuid("business_id")
       .notNull()

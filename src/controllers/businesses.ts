@@ -17,6 +17,8 @@ export class BusinessController {
 
     async updateBusiness(businessId: string, updates: UpdateBusinessType | CreateBusinessType, actorId: string, model: BusinessModel) {
         try {
+            const business = await model.getBusinessById(businessId);
+            if (!business) throw new MyError(Errors.BUSINESS_NOT_FOUND);
             // Authorization: only owner or ADMIN may update
             const allowed = await model.isUserOwnerOrAdmin(businessId, actorId);
             if (!allowed) throw new MyError(Errors.UNAUTHORIZED);

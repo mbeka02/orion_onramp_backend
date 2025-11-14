@@ -12,6 +12,7 @@ export const businessModelMock: Partial<BusinessModel> = {
     getInvitationById: jest.fn(),
     acceptInvitation: jest.fn(),
     isRegistrationNumberTaken: jest.fn(),
+    listInvitationsForBusiness: jest.fn(),
 };
 
 export default businessModelMock as BusinessModel;

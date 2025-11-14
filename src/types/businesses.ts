@@ -111,7 +111,7 @@ export interface BusinessType {
     businessRegistrationNumber?: string;
     status: BUSINESS_STATUS;
     createdAt: Date;
-    // updatedAt: Date;
+    updatedAt?: Date;
 }
 export interface Invitation{
     id: string;

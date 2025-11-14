@@ -194,7 +194,7 @@ export const businesses = pgTable("business", {
   cryptoWalletAddress: text("crypto_wallet_address"),
   revenuePin: text("revenue_pin"),
   businessRegistrationCertificate: text("registration_certificate"),
-  businessRegistrationNumber: text("registration_number"),
+  businessRegistrationNumber: text("registration_number").unique(),
   status: businessStatus().default(BUSINESS_STATUS.DRAFT),
   createdAt: timestamp("created_at").defaultNow(),
 })

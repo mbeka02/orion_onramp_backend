@@ -36,7 +36,9 @@ describe("Business Controller", () => {
         try {
             (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(false);
 
-            await expect(businessController.updateBusiness(businessId, {}, otherUser, businessModelMock as any)).rejects.toThrow(MyError);
+            await expect(businessController.updateBusiness(businessId, {
+                id: ""
+            }, otherUser, businessModelMock as any)).rejects.toThrow(MyError);
         } catch (error) {
             testLogger.error(`Test '${testName}' failed:`, error);
             throw error;
@@ -49,8 +51,15 @@ describe("Business Controller", () => {
             (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(true);
             (businessModelMock.updateBusiness as jest.Mock).mockResolvedValue(undefined);
 
-            await businessController.updateBusiness(businessId, {}, ownerId, businessModelMock as any);
-            expect(businessModelMock.updateBusiness).toHaveBeenCalledWith(businessId, {}, ownerId);
+            // ensure the business exists
+            (businessModelMock.getBusinessById as jest.Mock).mockResolvedValue({ id: businessId });
+
+            await businessController.updateBusiness(businessId, {
+                id: ""
+            }, ownerId, businessModelMock as any);
+            expect(businessModelMock.updateBusiness).toHaveBeenCalledWith(businessId, {
+                id: ""
+            }, ownerId);
         } catch (error) {
             testLogger.error(`Test '${testName}' failed unexpectedly:`, error);
             throw error;

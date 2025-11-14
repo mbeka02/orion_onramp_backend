@@ -42,12 +42,16 @@ export class TransactionController {
         `Amount exceeds maximum transaction limit of ${this.MAX_TRANSACTION_AMOUNT}`,
       );
     }
-
+    // Get the orderID from metadata
+    const orderID = transactionRequest.metadata?.orderID;
+    if (!orderID || typeof orderID !== "string") {
+      throw new Error("Missing or invalid 'orderID' in metadata");
+    }
     // Convert amount to minor units (cents)
     const amountMinor = Math.round(transactionRequest.amount * 100);
 
     // Generate unique reference BEFORE inserting to DB
-    const reference = this.generateReference(environmentID, token);
+    const reference = this.generateReference(orderID, token);
 
     try {
       const transaction = await this.transactionModel.createTransaction({
@@ -185,15 +189,11 @@ export class TransactionController {
   /**
    * Generate unique reference for transaction
    */
-  private generateReference(environmentID: string, token: TOKEN_TYPE): string {
-    //Use timestamp + random string for uniqueness
-    const timestamp = Date.now();
-    const randomPart = crypto.randomUUID().slice(0, 8);
-
+  private generateReference(orderID: string, token: TOKEN_TYPE): string {
     // Include token type in reference for easier tracking
     const tokenPrefix = token === TOKEN_TYPE.KESy_MAINNET ? "MAIN" : "TEST";
 
-    return `TXN_${tokenPrefix}_${timestamp}_${randomPart}`;
+    return `TXN_${tokenPrefix}_${orderID}`;
   }
 
   /**

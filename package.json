@@ -19,6 +19,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.7.0",
   "dependencies": {
+    "@hiero-ledger/sdk": "^2.77.0",
     "@react-email/components": "^0.5.7",
     "@react-email/tailwind": "^1.2.2",
     "better-auth": "^1.3.34",

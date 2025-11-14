@@ -15,7 +15,8 @@ import {
 
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 import { TRANSACTION_STATUS } from "../../types/transactions";
-import { SUPPORTED_CHAINS, TOKEN_TYPE } from "../../types/token";
+import {TOKEN_TYPE} from "../../types/token";
+import { SUPPORTED_CHAINS } from "../../types/chain";
 export const businessesTable = pgTable("businesses", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),

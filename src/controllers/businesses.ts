@@ -33,7 +33,8 @@ export class BusinessController {
         try {
             const business = await model.getBusinessById(businessId);
             if (!business) throw new MyError(Errors.BUSINESS_NOT_FOUND);
-
+            const allowed = await model.isUserOwnerOrAdmin(businessId, actorId);
+            if (!allowed) throw new MyError(Errors.UNAUTHORIZED);
             if (business.businessRegistrationNumber) {
                 const taken = await model.isRegistrationNumberTaken(businessId, business.businessRegistrationNumber);
                 if (taken) throw new MyError(Errors.REGISTRATION_NUMBER_TAKEN);

@@ -11,6 +11,7 @@ import { TOKEN_TYPE } from "../types/token";
 import logger from "../lib/logger";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
+
 export class TransactionController {
   private apiKey: string;
   private MAX_TRANSACTION_AMOUNT = 500000;
@@ -21,7 +22,7 @@ export class TransactionController {
     const PAYSTACK_LIVE_SECRET = process.env.PAYSTACK_LIVE_SECRET_KEY;
     if (!PAYSTACK_TEST_SECRET || !PAYSTACK_LIVE_SECRET) {
       throw new Error(
-        "Invalid env setup , ensure that the paytack api keys have been configured",
+        "Invalid env setup,ensure that the Paystack API keys have been configured",
       );
     }
     this.apiKey =
@@ -35,7 +36,7 @@ export class TransactionController {
     environmentID: string,
     token: TOKEN_TYPE,
   ) {
-    // Validate amount (assuming amount is in major units like KES, NGN)
+    // Validate amount (assuming its in major units like KES, NGN , RAND)
     if (transactionRequest.amount > this.MAX_TRANSACTION_AMOUNT) {
       throw new Error(
         `Amount exceeds maximum transaction limit of ${this.MAX_TRANSACTION_AMOUNT}`,
@@ -122,7 +123,7 @@ export class TransactionController {
   }
 
   /**
-   * Verify transaction status (for callback)
+   * verifyTransaction() verifies transaction status
    */
   async verifyTransaction(reference: string) {
     try {
@@ -185,7 +186,7 @@ export class TransactionController {
    * Generate unique reference for transaction
    */
   private generateReference(environmentID: string, token: TOKEN_TYPE): string {
-    // Option: Use timestamp + random string for uniqueness
+    //Use timestamp + random string for uniqueness
     const timestamp = Date.now();
     const randomPart = crypto.randomUUID().slice(0, 8);
 
@@ -196,7 +197,7 @@ export class TransactionController {
   }
 
   /**
-   * Call Paystack initialize API
+   * callPaystackInitialize() is a helper that calls the paystack initialize API
    */
   private async callPaystackInitialize(
     request: InitializeTransactionRequest & { reference: string },
@@ -242,7 +243,7 @@ export class TransactionController {
   }
 
   /**
-   * Call Paystack verify API
+   callPaystackVerify() is a helper that calls the paystack verification API
    */
   private async callPaystackVerify(
     reference: string,
@@ -280,7 +281,7 @@ export class TransactionController {
   }
 
   /**
-   * Map Paystack status to internal status
+   mapPaystackStatusToInternal() is a helper that maps the paystack status to internal status
    */
   private mapPaystackStatusToInternal(
     paystackStatus: string,

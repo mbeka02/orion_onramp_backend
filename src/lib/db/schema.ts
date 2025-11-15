@@ -1,31 +1,19 @@
-import {
-  pgTable,
-  pgEnum,
-  primaryKey,
-  text,
-  timestamp,
-  boolean,
-  uuid,
-  unique,
-  bigint,
-  varchar,
-  integer,
-  jsonb,
-} from "drizzle-orm/pg-core";
-
+import { pgTable, primaryKey, pgEnum, text, timestamp, boolean, uuid, unique, serial, bigint, varchar, integer, jsonb, } from "drizzle-orm/pg-core";
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 import { TRANSACTION_STATUS } from "../../types/transactions";
-import {TOKEN_TYPE} from "../../types/token";
-import { SUPPORTED_CHAINS } from "../../types/chain";
-export const businessesTable = pgTable("businesses", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-});
+import { BUSINESS_TYPES, BUSINESS_REGISTRATION_TYPES, BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS } from "../../types/businesses";
+import { TOKEN_TYPE } from "../../types/token";
 
-export const environment = pgEnum("environment_types", [
-  ENVIRONMENT_TYPES.LIVE,
-  ENVIRONMENT_TYPES.TEST,
-]);
+import { relations } from "drizzle-orm";
+
+export const environment = pgEnum("environment_types", [ENVIRONMENT_TYPES.LIVE, ENVIRONMENT_TYPES.TEST])
+export const role = pgEnum("user_role", [USER_ROLES.ADMIN, USER_ROLES.DEVELOPER, USER_ROLES.FINANCE, USER_ROLES.SUPPORT])
+export const invitationStatus = pgEnum("invitation_status", [USER_INVITATION_STATUS.PENDING, USER_INVITATION_STATUS.ACCEPTED, USER_INVITATION_STATUS.REJECTED, USER_INVITATION_STATUS.EXPIRED, USER_INVITATION_STATUS.CANCELLED])
+export const businessType = pgEnum("business_type", [BUSINESS_TYPES.STARTER, BUSINESS_TYPES.REGISTERED]);
+export const businessRegistrationType = pgEnum("business_registration_type", [BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]);
+export const businessStatus = pgEnum("business_status", [BUSINESS_STATUS.DRAFT, BUSINESS_STATUS.PENDING, BUSINESS_STATUS.APPROVED, BUSINESS_STATUS.REJECTED, BUSINESS_STATUS.SUSPENDED]);
+import { SUPPORTED_CHAINS } from "../../types/chain";
+
 export const token_type = pgEnum("token", [
   TOKEN_TYPE.KESy_TESTNET,
   TOKEN_TYPE.KESy_MAINNET,
@@ -51,12 +39,13 @@ export const environmentsTable = pgTable(
     type: environment().notNull(),
     businessID: uuid("business_id")
       .notNull()
-      .references(() => businessesTable.id, { onDelete: "cascade" }),
+      .references(() => businesses.id, { onDelete: "cascade" }),
     webhookUrl: text("webhook_url"),
     callbackUrl: text("callback_url"),
   },
   (t) => [unique().on(t.businessID, t.type)],
 );
+
 export const transactionsTable = pgTable("transactions", {
   id: uuid("id").primaryKey().defaultRandom(),
   environmentID: uuid("environment_id")
@@ -159,6 +148,123 @@ export const verification = pgTable("verification", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+export const industries = pgTable("industries", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const categories = pgTable("categories", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  industryId: uuid("industry_id")
+    .notNull()
+    .references(() => industries.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const businesses = pgTable("business", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  tradingName: text("trading_name"),
+  description: text("description"),
+  staffSize: text("staff_size"),
+  annualSalesVolume: text("annual_sales_volume"),
+  businessType: businessType(),
+  industryId: uuid("industry_id")
+    .references(() => industries.id, { onDelete: "set null" }),
+  categoryId: uuid("category_id")
+    .references(() => categories.id, { onDelete: "set null" }),
+  legalBusinessName: text("legal_business_name"),
+  registrationtype: businessRegistrationType(),
+  generalEmail: text("general_email"),
+  supportEmail: text("support_email"),
+  disputesemail: text("disputes_email"),
+  phoneNumber: text("phone_number"),
+  website: text("website"),
+  twitterHandle: text("twitter_handle"),
+  facebookPage: text("facebook_page"),
+  instagramHandle: text("instagram_handle"),
+  country: text("country"),
+  city: text("city"),
+  streetaddress: text("street_address"),
+  building: text("building"),
+  postalcode: text("postal_code"),
+  cryptoWalletAddress: text("crypto_wallet_address").unique(),
+  revenuePin: text("revenue_pin").unique(),
+  businessRegistrationCertificate: text("registration_certificate").unique(),
+  businessRegistrationNumber: text("registration_number").unique(),
+  status: businessStatus().default(BUSINESS_STATUS.DRAFT),
+  createdAt: timestamp("created_at").defaultNow(),
+})
+export const businessUsers = pgTable("business_users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  businessId: uuid("business_id")
+    .notNull()
+    .references(() => businesses.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  role: role(),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+},
+  (table) => [unique("business_user_unique").on(table.businessId, table.userId)]
+);
+export const invitations = pgTable("invitations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  businessId: uuid("business_id")
+    .notNull()
+    .references(() => businesses.id, { onDelete: "cascade" }),
+  invitedBy: text("invited_by")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  role: role().notNull(),
+  status: invitationStatus().default(USER_INVITATION_STATUS.PENDING).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const industriesRelations = relations(industries, ({ many }) => ({
+  categories: many(categories),
+}));
+export const categoriesRelations = relations(categories, ({ one }) => ({
+  industry: one(industries, {
+    fields: [categories.industryId],
+    references: [industries.id],
+  }),
+}));
+
+export const businessesRelations = relations(businesses, ({ one, many }) => ({
+  industry: one(industries, {
+    fields: [businesses.industryId],
+    references: [industries.id],
+  }),
+  category: one(categories, {
+    fields: [businesses.categoryId],
+    references: [categories.id],
+  }),
+  owner: one(user, {
+    fields: [businesses.ownerId],
+    references: [user.id],
+  }),
+  members: many(businessUsers),
+}));
+
+export const usersRelations = relations(user, ({ many }) => ({
+  businesses: many(businessUsers),
+  ownedBusinesses: many(businesses),
+}));
+export const businessUsersRelations = relations(businessUsers, ({ one }) => ({
+  user: one(user, {
+    fields: [businessUsers.userId],
+    references: [user.id],
+  }),
+  business: one(businesses, {
+    fields: [businessUsers.businessId],
+    references: [businesses.id],
+  }),
+}));
 
 export const treasuryBalanceTable = pgTable("treasury_token_balances", {
   token: token_type("token").notNull().primaryKey(),
@@ -166,5 +272,5 @@ export const treasuryBalanceTable = pgTable("treasury_token_balances", {
   chain: chain_enum("chain").notNull(),
   treasuryAccount: text("treasury_account").notNull(),
   decimals: integer("token_decimals").notNull(),
-  balance: bigint("balance", {mode: "bigint"}).notNull()
+  balance: bigint("balance", { mode: "bigint" }).notNull()
 })

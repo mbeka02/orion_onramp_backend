@@ -6,6 +6,7 @@ import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import environmentRouter from "./routes/environment";
+import businessRouter from "./routes/business";
 import { Server } from "http";
 import { startCachedTreasuryBalanceUpdate, stopCachedTreasuryBalanceUpdates } from "./services/treasuryBalance";
 
@@ -32,6 +33,7 @@ app.get("/", async (req, res) => {
   res.json("Orion API");
 });
 app.use("/api/environment", environmentRouter);
+app.use("/api/business", businessRouter);
 
 let server: Server;
 let isShuttingDown = false;

@@ -5,5 +5,6 @@ export const environmentModelMock = {
     storeEnvironment: jest.fn(),
     createKeys: jest.fn(),
     rotateKey: jest.fn(),
-    getLatestValidBusinessEnvironmentKeys: jest.fn()
+    getLatestValidBusinessEnvironmentKeys: jest.fn(),
+    getBusinessEnvironments: jest.fn()
 } as EnvironmentModel

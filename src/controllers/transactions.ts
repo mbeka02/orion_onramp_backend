@@ -11,42 +11,51 @@ import { TOKEN_TYPE } from "../types/token";
 import logger from "../lib/logger";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
+import { MyError, Errors } from "../errors";
 
 export class TransactionController {
   private apiKey: string;
   private MAX_TRANSACTION_AMOUNT = 500000;
   private transactionModel: TransactionModel;
   private paystackBaseUrl = "https://api.paystack.co";
+
   constructor(tmodel: TransactionModel) {
     const PAYSTACK_TEST_SECRET = process.env.PAYSTACK_TEST_SECRET_KEY;
     const PAYSTACK_LIVE_SECRET = process.env.PAYSTACK_LIVE_SECRET_KEY;
+
     if (!PAYSTACK_TEST_SECRET || !PAYSTACK_LIVE_SECRET) {
       throw new Error(
-        "Invalid env setup,ensure that the Paystack API keys have been configured",
+        "Invalid env setup, ensure that the Paystack API keys have been configured",
       );
     }
+
     this.apiKey =
       process.env.NODE_ENV === "production"
         ? PAYSTACK_LIVE_SECRET
         : PAYSTACK_TEST_SECRET;
+
     this.transactionModel = tmodel;
   }
+
+  /**
+   * Initialize a new payment transaction
+   */
   async initializeTransaction(
     transactionRequest: InitializeTransactionRequest,
     environmentID: string,
     token: TOKEN_TYPE,
   ) {
-    // Validate amount (assuming its in major units like KES, NGN , RAND)
+    // Validate amount (in major units like KES, NGN, RAND)
     if (transactionRequest.amount > this.MAX_TRANSACTION_AMOUNT) {
-      throw new Error(
-        `Amount exceeds maximum transaction limit of ${this.MAX_TRANSACTION_AMOUNT}`,
-      );
+      throw new MyError(Errors.TRANSACTION_AMOUNT_EXCEEDS_LIMIT);
     }
+
     // Get the orderID from metadata
     const orderID = transactionRequest.metadata?.orderID;
     if (!orderID || typeof orderID !== "string") {
-      throw new Error("Missing or invalid 'orderID' in metadata");
+      throw new MyError(Errors.TRANSACTION_MISSING_ORDER_ID);
     }
+
     // Convert amount to minor units (cents)
     const amountMinor = Math.round(transactionRequest.amount * 100);
 
@@ -92,7 +101,6 @@ export class TransactionController {
         access_code: paystackResponse.data.access_code,
       };
     } catch (err) {
-      // Handle duplicate reference (idempotency)
       if (err instanceof DrizzleQueryError) {
         if (err.cause instanceof DatabaseError) {
           if (err.cause.code === "23505") {
@@ -105,7 +113,7 @@ export class TransactionController {
               await this.transactionModel.getTransactionByReference(reference);
 
             if (!existingTransaction) {
-              throw new Error("Transaction exists but could not be retrieved");
+              throw new MyError(Errors.TRANSACTION_CREATION_FAILED);
             }
 
             // Return existing payment details
@@ -113,30 +121,36 @@ export class TransactionController {
               reference: existingTransaction.reference,
               authorization_url: existingTransaction.authorizationUrl || "",
               access_code: existingTransaction.accessCode || "",
-              message: "Payment already initialized",
+              message: Errors.TRANSACTION_ALREADY_INITIALIZED,
             };
           }
         }
       }
+
       logger.error("Failed to initialize transaction", {
         error: err,
         reference,
       });
-      throw err;
+
+      if (err instanceof MyError) {
+        throw err;
+      }
+
+      // Wrap other errors
+      throw new MyError(Errors.TRANSACTION_CREATION_FAILED, { cause: err });
     }
   }
 
   /**
-   * verifyTransaction() verifies transaction status
+   * Verify transaction status
    */
   async verifyTransaction(reference: string) {
     try {
-      // Check database first
       const transaction =
         await this.transactionModel.getTransactionByReference(reference);
 
       if (!transaction) {
-        throw new Error(`Transaction not found: ${reference}`);
+        throw new MyError(Errors.TRANSACTION_NOT_FOUND);
       }
 
       // If already processed (webhook likely handled it)
@@ -154,14 +168,12 @@ export class TransactionController {
         };
       }
 
-      // If still pending, verify with Paystack API (fallback)
-      logger.info("Transaction pending, verifying with Paystack", {
+      logger.debug("Transaction pending, verifying with Paystack", {
         reference,
       });
 
       const paystackVerification = await this.callPaystackVerify(reference);
 
-      // Update transaction based on Paystack response
       const newStatus = this.mapPaystackStatusToInternal(
         paystackVerification.data.status,
       );
@@ -178,26 +190,31 @@ export class TransactionController {
         amount: paystackVerification.data.amount,
         email: paystackVerification.data.customer.email,
       };
-    } catch (error: any) {
+    } catch (err) {
       logger.error("Failed to verify transaction", {
-        error: error.message,
+        error: err,
         reference,
       });
-      throw error;
+
+      if (err instanceof MyError) {
+        throw err;
+      }
+
+      // Wrap other errors
+      throw new MyError(Errors.PAYSTACK_VERIFICATION_FAILED, { cause: err });
     }
   }
+
   /**
    * Generate unique reference for transaction
    */
   private generateReference(orderID: string, token: TOKEN_TYPE): string {
-    // Include token type in reference for easier tracking
     const tokenPrefix = token === TOKEN_TYPE.KESy_MAINNET ? "MAIN" : "TEST";
-
     return `TXN_${tokenPrefix}_${orderID}`;
   }
 
   /**
-   * callPaystackInitialize() is a helper that calls the paystack initialize API
+   * Call Paystack initialize API
    */
   private async callPaystackInitialize(
     request: InitializeTransactionRequest & { reference: string },
@@ -223,7 +240,9 @@ export class TransactionController {
       );
 
       if (!response.data.status) {
-        throw new Error(`Paystack API error: ${response.data.message}`);
+        throw new MyError(
+          `${Errors.PAYSTACK_API_ERROR}: ${response.data.message}`,
+        );
       }
 
       return response.data;
@@ -234,16 +253,24 @@ export class TransactionController {
           status: axiosError.response?.status,
           data: axiosError.response?.data,
         });
-        throw new Error(
-          `Paystack API error: ${axiosError.response?.data?.message || axiosError.message}`,
-        );
+
+        const message =
+          axiosError.response?.data?.message || axiosError.message;
+        throw new MyError(`${Errors.PAYSTACK_API_ERROR}: ${message}`, {
+          cause: error,
+        });
       }
-      throw error;
+
+      if (error instanceof MyError) {
+        throw error;
+      }
+
+      throw new MyError(Errors.PAYSTACK_API_ERROR, { cause: error });
     }
   }
 
   /**
-   callPaystackVerify() is a helper that calls the paystack verification API
+   * Call Paystack verify API
    */
   private async callPaystackVerify(
     reference: string,
@@ -259,8 +286,8 @@ export class TransactionController {
       );
 
       if (!response.data.status) {
-        throw new Error(
-          `Paystack verification failed: ${response.data.message}`,
+        throw new MyError(
+          `${Errors.PAYSTACK_VERIFICATION_FAILED}: ${response.data.message}`,
         );
       }
 
@@ -272,16 +299,26 @@ export class TransactionController {
           status: axiosError.response?.status,
           data: axiosError.response?.data,
         });
-        throw new Error(
-          `Paystack verify error: ${axiosError.response?.data?.message || axiosError.message}`,
+
+        const message =
+          axiosError.response?.data?.message || axiosError.message;
+        throw new MyError(
+          `${Errors.PAYSTACK_VERIFICATION_FAILED}: ${message}`,
+          {
+            cause: error,
+          },
         );
       }
-      throw error;
+      if (error instanceof MyError) {
+        throw error;
+      }
+
+      throw new MyError(Errors.PAYSTACK_VERIFICATION_FAILED, { cause: error });
     }
   }
 
   /**
-   mapPaystackStatusToInternal() is a helper that maps the paystack status to internal status
+   * Map Paystack status to internal status
    */
   private mapPaystackStatusToInternal(
     paystackStatus: string,

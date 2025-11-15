@@ -55,6 +55,7 @@ export class BusinessController {
             const businesses = await model.getBusinessesForUser(userId);
             return businesses;
         } catch (err) {
+            if (err instanceof MyError) throw err;
             logger.error("Business Controller: Error getting businesses", { err, userId });
             throw new Error(Errors.INTERNAL_SERVER_ERROR);
         }
@@ -94,9 +95,8 @@ export class BusinessController {
             const inviteId = await model.inviteUser(businessId, invitedBy, args.email, args.role as unknown as string);
             return { invite_id: inviteId };
         } catch (err) {
-            logger.error("Business Controller: Error inviting user", { err, businessId, invitedBy, args });
-            // Some test setups can cause instanceof checks to fail across module boundaries.
             if (err instanceof MyError || (err && (err as any).name === "MyError")) throw err;
+            logger.error("Business Controller: Error inviting user", { err, businessId, invitedBy, args });
             throw new Error(Errors.INVITATION_FAILED);
         }
     }

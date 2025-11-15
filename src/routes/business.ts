@@ -64,6 +64,8 @@ router.put("/:id", authenticationMiddleware, async (req, res) => {
         if (!userId) return res.status(401).json({ message: Errors.UNAUTHORIZED });
 
         const businessId = req.params.id;
+        const isAllowed = await businessModel.isUserOwnerOrAdmin(businessId, userId);
+        if (!isAllowed) return res.status(403).json({ message: Errors.UNAUTHORIZED });
         await businessController.updateBusiness(businessId, { ...parsed.data, id: businessId }, userId, businessModel);
         res.status(200).json({ message: "Business updated" });
     } catch (err) {
@@ -140,6 +142,7 @@ router.post("/invitations/:inviteId/accept", authenticationMiddleware, async (re
         res.status(200).json({ message: "Invitation accepted" });
     } catch (err) {
         logger.error("Error accepting invitation in router", { error: err });
+        if (err instanceof MyError) return res.status(400).json({ message: err.message });
         res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
     }
 });

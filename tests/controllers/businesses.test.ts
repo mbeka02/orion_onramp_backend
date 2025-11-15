@@ -48,7 +48,7 @@ describe("Business Controller", () => {
         }, ownerId, businessModelMock as any);
         expect(businessModelMock.updateBusiness).toHaveBeenCalledWith(businessId, {
             id: ""
-    });
+        });
 
     });
 
@@ -61,14 +61,12 @@ describe("Business Controller", () => {
         await expect(businessController.submitForApproval(businessId, ownerId, businessModelMock as any)).rejects.toThrow(MyError);
 
     });
-
-    it("invites user only when owner/admin", async () => {
-        const testName = "invites user only when owner/admin";
-        // Test the rejection path first
+    it("blocks invite when not owner/admin", async () => {
         (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(false);
         await expect(businessController.inviteUser(businessId, ownerId, { email: "a@b.com", role: "Admin" } as any, businessModelMock as any)).rejects.toThrow(MyError);
+    });
+    it("invites user only when owner/admin", async () => {
 
-        // Reset mock and test the success path
         (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(true);
         (businessModelMock.inviteUser as jest.Mock).mockResolvedValue("invite-id");
         const res = await businessController.inviteUser(businessId, ownerId, { email: "a@b.com", role: "Admin" } as any, businessModelMock as any);

@@ -48,7 +48,7 @@ describe("Business Controller", () => {
         }, ownerId, businessModelMock as any);
         expect(businessModelMock.updateBusiness).toHaveBeenCalledWith(businessId, {
             id: ""
-        }, ownerId);
+    });
 
     });
 

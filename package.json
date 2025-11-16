@@ -12,6 +12,7 @@
     "migrate": "pnpm drizzle-kit migrate",
     "studio": "pnpm drizzle-kit studio",
     "test": "jest",
+    "seed:industries": "tsx src/lib/seedIndustries.ts",
     "email": "email dev --dir src/lib/emails/templates -p 3001"
   },
   "keywords": [],

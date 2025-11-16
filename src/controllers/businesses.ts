@@ -110,6 +110,16 @@ export class BusinessController {
             throw new Error(Errors.INTERNAL_SERVER_ERROR);
         }
     }
+    async getIndustriesAndCategories(model: BusinessModel) {
+        try {
+            const industries = await model.getIndustriesAndCategories();
+            return industries;
+        } catch (err) {
+            logger.error("Business Controller: Error getting industries and categories", { err });
+            if (err instanceof MyError) throw err;
+            throw new Error(Errors.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
 
 const businessController = new BusinessController();

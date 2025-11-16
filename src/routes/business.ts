@@ -182,4 +182,17 @@ router.get("/:id", authenticationMiddleware, async (req, res) => {
     }
 });
 
+//Get industries and categories
+router.get("/industries", authenticationMiddleware, async (req, res) => {
+    try {
+        const industries = await businessController.getIndustriesAndCategories(businessModel);
+        res.status(200).json({ industries });
+    }
+    catch (err) {
+        logger.error("Error getting industries in router", { error: err });
+        if (err instanceof MyError) return res.status(400).json({ message: err.message });
+        res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+    }
+});
+
 export default router;

@@ -2,7 +2,7 @@ import logger from "../lib/logger";
 import { db } from "../lib/db";
 import { businesses, businessUsers, invitations, industries, categories } from "../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS, BusinessType, Invitation, CreateBusinessType, UpdateBusinessType } from "../types/businesses";
+import { BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS, BusinessType, Invitation, CreateBusinessType, UpdateBusinessType, Industry, Category } from "../types/businesses";
 
 export class BusinessModel {
     async createDraft(business: CreateBusinessType, ownerId: string): Promise<string> {
@@ -315,6 +315,36 @@ export class BusinessModel {
         } catch (err) {
             logger.error("Business Model Error: Error listing invitations", { error: err, businessId });
             throw new Error("Error listing invitations");
+        }
+    }
+    async getIndustriesAndCategories(): Promise<Industry[]> {
+        try {
+            const industriesWithCategories = await db.select({ industry: industries, categories: categories })
+                .from(industries)
+                .leftJoin(categories, eq(categories.industryId, industries.id))
+                .orderBy(desc(industries.name));
+            const results: Industry[] = [];
+            industriesWithCategories.forEach(row => {
+                const industry = results.find(i => i.id === row.industry.id);
+                if (industry) {
+                    // add category to existing industry
+                    if (row.categories) {
+                        industry.categories.push({ id: row.categories.id, name: row.categories.name });
+                    }
+                } else {
+                    // create new industry entry
+                    results.push({
+                        id: row.industry.id,
+                        name: row.industry.name,
+                        categories: row.categories ? [{ id: row.categories.id, name: row.categories.name }] : [],
+                    });
+                }
+            });
+            return results;
+        }
+        catch (error) {
+            logger.error("Business Model Error: Error getting industries and categories", { error });
+            throw new Error("Error getting industries and categories");
         }
     }
 }

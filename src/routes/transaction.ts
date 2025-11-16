@@ -8,6 +8,7 @@ import {
 } from "../types/transactions";
 import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
+import { defaults } from "axios";
 const router: Router = Router();
 
 const transactionModel = new TransactionModel();
@@ -103,3 +104,4 @@ router.get(
     }
   },
 );
+export default router;

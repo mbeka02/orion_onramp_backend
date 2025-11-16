@@ -10,6 +10,7 @@ import { authenticationMiddleware } from "../middleware/authenticationMiddleware
 import { SuccessMessage } from "../success";
 import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
+import { auth } from "../lib/auth";
 const router: Router = Express.Router();
 
 // GET all environments for a business
@@ -39,7 +40,7 @@ router.get("/", authenticationMiddleware, async (req, res) => {
 });
 
 // Create new environment
-router.post("/", async (req, res) => {
+router.post("/", authenticationMiddleware, async (req, res) => {
   try {
     const parsed = createEnvironmentSchema.safeParse(req.body);
     if (parsed.success) {

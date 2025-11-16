@@ -13,6 +13,7 @@ import {
   startCachedTreasuryBalanceUpdate,
   stopCachedTreasuryBalanceUpdates,
 } from "./services/treasuryBalance";
+import { authenticationMiddleware } from "./middleware/authenticationMiddleware";
 
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -38,7 +39,7 @@ app.get("/", async (req, res) => {
 });
 app.use("/api/environment", environmentRouter);
 app.use("/api/business", businessRouter);
-app.use("/api/transaction", transactionRouter);
+app.use("/api/transaction", authenticationMiddleware, transactionRouter);
 let server: Server;
 let isShuttingDown = false;
 // Start background job

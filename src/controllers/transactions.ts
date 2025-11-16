@@ -150,7 +150,7 @@ export class TransactionController {
         await this.transactionModel.getTransactionByReference(reference);
 
       if (!transaction) {
-        throw new MyError(Errors.TRANSACTION_NOT_FOUND);
+        throw new MyError(`${Errors.TRANSACTION_NOT_FOUND}: ${reference}`);
       }
 
       // If already processed (webhook likely handled it)

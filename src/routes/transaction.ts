@@ -15,8 +15,11 @@ const router: Router = Router();
 // Rate limiter for transaction verification endpoints
 const verifyTransactionLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10,             // Limit each IP to 10 requests per minute
-  message: { message: "Too many verification requests from this IP, please try again later." },
+  max: 10, // Limit each IP to 10 requests per minute
+  message: {
+    message:
+      "Too many verification requests from this IP, please try again later.",
+  },
 });
 
 const transactionModel = new TransactionModel();
@@ -72,45 +75,4 @@ router.post(
   },
 );
 
-/**
- * GET /api/transaction/verify/:reference
- * Verify the status of a transaction
- *
- * Params:
- * - reference: string (transaction reference, e.g., TXN_TEST_ORDER123)
- */
-router.get(
-  "/verify/:reference",
-  validateParams(verifyTransactionParamsSchema),
-  verifyTransactionLimiter,
-  async (req: Request, res: Response) => {
-    try {
-      const { reference } = req.params;
-
-      const result = await transactionController.verifyTransaction(reference);
-
-      logger.info("Transaction verified via API", {
-        reference,
-        status: result.status,
-      });
-
-      res.status(200).json({
-        success: true,
-        message: "Transaction verified successfully",
-        data: result,
-      });
-    } catch (err) {
-      logger.error("Error verifying transaction in router", {
-        error: err,
-        reference: req.params.reference,
-      });
-
-      if (err instanceof MyError) {
-        return res.status(400).json({ message: err.message });
-      }
-
-      res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
-    }
-  },
-);
 export default router;

@@ -10,7 +10,7 @@ import { Errors, MyError } from "../errors";
 const router: Router = Express.Router();
 
 // Get all businesses for authenticated user
-router.get("/", authenticationMiddleware, async (req, res) => {
+router.get("/user", authenticationMiddleware, async (req, res) => {
     try {
         const session = await getAuthContext(req as any);
         const userId = session?.user?.id;
@@ -165,7 +165,7 @@ router.delete("/:id", authenticationMiddleware, async (req, res) => {
 });
 
 // Get business by id
-router.get("/:id", authenticationMiddleware, async (req, res) => {
+router.get("/one/:id", authenticationMiddleware, async (req, res) => {
     try {
         const businessId = req.params.id;
         const session = await getAuthContext(req as any);

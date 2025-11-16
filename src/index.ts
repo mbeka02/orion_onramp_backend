@@ -7,8 +7,13 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import environmentRouter from "./routes/environment";
 import businessRouter from "./routes/business";
+import transactionRouter from "./routes/transaction";
 import { Server } from "http";
-import { startCachedTreasuryBalanceUpdate, stopCachedTreasuryBalanceUpdates } from "./services/treasuryBalance";
+import {
+  startCachedTreasuryBalanceUpdate,
+  stopCachedTreasuryBalanceUpdates,
+} from "./services/treasuryBalance";
+import { authenticationMiddleware } from "./middleware/authenticationMiddleware";
 
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -34,7 +39,7 @@ app.get("/", async (req, res) => {
 });
 app.use("/api/environment", environmentRouter);
 app.use("/api/business", businessRouter);
-
+app.use("/api/transaction", authenticationMiddleware, transactionRouter);
 let server: Server;
 let isShuttingDown = false;
 // Start background job
@@ -44,7 +49,9 @@ async function initialize(): Promise<void> {
     startCachedTreasuryBalanceUpdate("0 * * * *");
     logger.info("Cached treasury balance updates initialized successfully");
   } catch (err) {
-    logger.error(`Failed to initialize cached treasury balance update service:${err}`);
+    logger.error(
+      `Failed to initialize cached treasury balance update service:${err}`,
+    );
     process.exit(1);
   }
 }

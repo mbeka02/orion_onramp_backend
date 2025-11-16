@@ -112,7 +112,7 @@ export interface BusinessType {
     createdAt: Date;
     updatedAt?: Date;
 }
-export interface Invitation{
+export interface Invitation {
     id: string;
     businessId: string;
     invitedBy: string;
@@ -121,11 +121,11 @@ export interface Invitation{
     status: USER_INVITATION_STATUS;
     createdAt: Date;
 }
-export interface Category{
+export interface Category {
     id: string;
     name: string;
 }
-export interface Industry{
+export interface Industry {
     id: string;
     name: string;
     categories: Category[];

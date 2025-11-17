@@ -3,13 +3,15 @@ import { LiquidityManagerModel } from "../models/liquidityManager";
 import { TOKEN_TYPE } from "../types/token";
 
 export class LiquidityManagerController {
-    async getCachedTreasuryBalance(token: TOKEN_TYPE, liquidityModel: LiquidityManagerModel): Promise<number> {
+    async doesTreasuryHaveBalance(token: TOKEN_TYPE, amount: number, liquidityModel: LiquidityManagerModel): Promise<boolean> {
         try {
             const balance = await liquidityModel.getCachedTreasuryTokenBalance(token);
-            return balance;
+            if (balance < amount) {
+                return false;
+            }
         } catch(err) {
-            logger.error("Error getting treasury balance", {error: err, token});
-            throw new Error("Error getting treasury balance");
+            logger.error("Error checking if treasury has balance", {error: err, token, amount});
+            throw new Error("Error checking if token has balance");
         }
     }
 }

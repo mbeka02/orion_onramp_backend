@@ -235,7 +235,7 @@ describe("Environment Controller: Rotate Key Tests", () => {
                     expect(true).toBe(true);
                 } else {
                     console.error("Unexpected error", err);
-                    expect(false).toBe(false)
+                    expect(false).toBe(true)
                 }
             } else {
                 console.error("Unexpected error", err);

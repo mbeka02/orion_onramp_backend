@@ -59,7 +59,7 @@ const pinoLogger = pino({
     err: pino.stdSerializers.err,
     error: pino.stdSerializers.err,
   },
-  transport: env.NODE_ENV === "development"
+  transport: env.NODE_ENV === "development" || env.NODE_ENV === 'test'
     ? {
         target: "pino-pretty",
         options: {
@@ -75,15 +75,21 @@ const pinoLogger = pino({
 const logger: Logger = {
   fatal(message: string, context?: LogContext) {
     pinoLogger.fatal(context, message);
-    postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+    if (env.NODE_ENV === 'production') {
+      postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+    }
   },
   error(message: string, context?: LogContext) {
     pinoLogger.error(context, message);
-    postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+    if (env.NODE_ENV === "production") {
+      postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+    }
   },
   warn(message: string, context?: LogContext) {
     pinoLogger.warn(context, message);
-    postHogLogger.sendEvent(PostHogEventTypes.WARNING, message, {context});
+    if (env.NODE_ENV === "production") {
+      postHogLogger.sendEvent(PostHogEventTypes.WARNING, message, {context});
+    }
   },
   info(message: string, context?: LogContext) {
     pinoLogger.info(context, message);

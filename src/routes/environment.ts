@@ -11,15 +11,24 @@ import { SuccessMessage } from "../success";
 import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
 import { auth } from "../lib/auth";
+import { getAuthContext } from "../lib/auth/utils";
+import businessModel from "../models/businesses";
 const router: Router = Express.Router();
 
 // GET all environments for a business
-router.get("/", authenticationMiddleware, async (req, res) => {
+router.get("/:business", authenticationMiddleware, async (req, res) => {
   try {
-    // TODO: Add code for getting business id from request
+    const session = await getAuthContext(req);
+    if (!session?.user.id) {
+      res.status(403).json({message: Errors.UNAUTHORIZED});
+      return;
+    }
+
     const environments = await environmentController.getAllBusinessEnvironments(
-      "0588a8a2-4f34-4bc4-a228-d79bc2baa887",
+      req.params.business,
+      session.user.id,
       environmentModel,
+      businessModel
     );
 
     const formattedEnvironments = environments.map((env) => ({
@@ -35,6 +44,15 @@ router.get("/", authenticationMiddleware, async (req, res) => {
     });
   } catch (err) {
     logger.error("Error getting environments in router", { error: err });
+    if (err instanceof MyError) {
+      if (err.message === Errors.UNAUTHORIZED) {
+        res.status(403).json({message: err.message});
+        return;
+      }
+
+      res.status(400).json({message: err.message});
+      return;
+    }
     res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
   }
 });
@@ -45,13 +63,20 @@ router.post("/", authenticationMiddleware, async (req, res) => {
     const parsed = createEnvironmentSchema.safeParse(req.body);
     if (parsed.success) {
       const data = parsed.data;
-      // TODO: Add code for getting business id from request
+      const session = await getAuthContext(req);
+
+      if (!session?.user.id) {
+        res.status(403).json({message: Errors.UNAUTHORIZED});
+        return;
+      }
+
       const encryptionService = new EncryptionService();
       const result = await environmentController.create(
         data,
-        "0588a8a2-4f34-4bc4-a228-d79bc2baa887",
+        session?.user.id,
         environmentModel,
         encryptionService,
+        businessModel
       );
 
       res.status(201).json({
@@ -75,6 +100,11 @@ router.post("/", authenticationMiddleware, async (req, res) => {
   } catch (err) {
     logger.error("Error creating environment in router", { error: err });
     if (err instanceof MyError) {
+      if (err.message === Errors.UNAUTHORIZED) {
+        res.status(403).json({message: err.message});
+        return;
+      }
+
       res.status(400).json({ message: err.message });
       return;
     }
@@ -88,14 +118,21 @@ router.post("/new", authenticationMiddleware, async (req, res) => {
     const parsed = rotateKeysSchema.safeParse(req.body);
     if (parsed.success) {
       const data = parsed.data;
+      const session = await getAuthContext(req);
+      if (!session?.user.id) {
+        res.status(403).json({message: Errors.UNAUTHORIZED});
+        return;
+      }
 
-      // TODO: Add code for getting business id from request
+      const userID = session.user.id;
       const encryptionService = new EncryptionService();
       const result = await environmentController.rotateKeys(
-        "355b6a4f-b4e8-41bc-8673-578afb8e11d6",
+        data.businessID,
+        userID,
         data.type,
         environmentModel,
         encryptionService,
+        businessModel
       );
 
       res.status(201).json({
@@ -115,6 +152,11 @@ router.post("/new", authenticationMiddleware, async (req, res) => {
   } catch (err) {
     logger.error("Error rotating key in router", { error: err });
     if (err instanceof MyError) {
+      if (err.message === Errors.UNAUTHORIZED) {
+        res.status(403).json({message: err.message});
+        return;
+      }
+
       res.status(400).json({ message: err.message });
       return;
     }

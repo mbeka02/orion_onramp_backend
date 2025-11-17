@@ -3,11 +3,17 @@ import { EnvironmentModel } from "../models/environments";
 import { CreateEnvironmentType, ENVIRONMENT_TYPES } from "../types/environments";
 import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
+import { BusinessModel } from "../models/businesses";
 
 export class EnvironmentsController {
-    async create(args: CreateEnvironmentType, business_id: string, environmentModel: EnvironmentModel, encryption_service: EncryptionService) {
+    async create(args: CreateEnvironmentType, user_id: string, environmentModel: EnvironmentModel, encryption_service: EncryptionService, businessModel: BusinessModel) {
         try {
-            const doesBusinessAlreadyHaveEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(business_id, args.type);
+            const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(args.businessID, user_id);
+            if (isUserOwnerOrAdmin === false) {
+                throw new MyError(Errors.UNAUTHORIZED);
+            }
+
+            const doesBusinessAlreadyHaveEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(args.businessID, args.type);
             if (doesBusinessAlreadyHaveEnvironment === true) {
                 throw new MyError(Errors.BUSINESS_ALREADY_HAS_ENVIRONMENT);
             }
@@ -21,7 +27,7 @@ export class EnvironmentsController {
                 type: args.type,
                 private_key: encryptedPrivateKey,
                 public_key,
-                business_id
+                business_id: args.businessID
             });
 
             // Return the keys for immediate display
@@ -41,8 +47,13 @@ export class EnvironmentsController {
         }
     }
 
-    async rotateKeys(business_id: string, environment_type: ENVIRONMENT_TYPES, environmentModel: EnvironmentModel, encryption_service: EncryptionService) {
+    async rotateKeys(business_id: string, user_id: string, environment_type: ENVIRONMENT_TYPES, environmentModel: EnvironmentModel, encryption_service: EncryptionService, businessModel: BusinessModel) {
         try {
+            const isAdminUserOrOwner = await businessModel.isUserOwnerOrAdmin(business_id, user_id);
+            if (isAdminUserOrOwner === false) {
+                throw new MyError(Errors.UNAUTHORIZED);
+            }
+
             // Should check if business has the environment
             const businessHasEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(business_id, environment_type);
 
@@ -85,12 +96,19 @@ export class EnvironmentsController {
         }
     }
 
-    async getAllBusinessEnvironments(business_id: string, environmentModel: EnvironmentModel) {
+    async getAllBusinessEnvironments(business_id: string, user_id: string, environmentModel: EnvironmentModel, businessModel: BusinessModel) {
         try {
+            const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(business_id, user_id);
+            if (isUserOwnerOrAdmin === false) {
+                throw new MyError(Errors.UNAUTHORIZED);
+            }
             const environments = await environmentModel.getBusinessEnvironments(business_id);
             return environments;
         } catch(err) {
             logger.error("Environment Controller: Error getting environments", {err, business_id});
+            if (err instanceof MyError) {
+                throw err;
+            }
             throw new Error("Error getting environments");
         }
     }

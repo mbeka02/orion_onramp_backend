@@ -1,6 +1,7 @@
 import environmentController from "../../src/controllers/environments";
 import { Errors, MyError } from "../../src/errors";
 import { CreateEnvironmentType, ENVIRONMENT_TYPES } from "../../src/types/environments";
+import businessModelMock from "../mocks/business_model_mock";
 import { encryption_service_mock } from "../mocks/encryption_mock";
 import { environmentModelMock } from "../mocks/environment_model_mock";
 
@@ -45,6 +46,16 @@ describe("Environment Controller: Create Key Tests", () => {
                 }
 
                 return encrypted_private_key;
+            });
+
+            businessModelMock.isUserOwnerOrAdmin = jest.fn().mockImplementation((business_id: string, user_id: string) => {
+                return new Promise((res, rej) => {
+                    if (user_id === adminUser && business_id === business) {
+                        res(true);
+                    } else {
+                        res(false);
+                    }
+                })
             })
         } catch(err) {
             console.error("Error setting up mocks");
@@ -57,7 +68,7 @@ describe("Environment Controller: Create Key Tests", () => {
                 type: existing_environment,
                 businessID: business
             };
-            await environmentController.create(args, nonAdminUser, environmentModelMock, encryption_service_mock);
+            await environmentController.create(args, nonAdminUser, environmentModelMock, encryption_service_mock, businessModelMock);
             expect(false).toBe(true);
         } catch(err) {
             if (err instanceof MyError) {
@@ -74,6 +85,29 @@ describe("Environment Controller: Create Key Tests", () => {
         }
     });
 
+    it("should fail if user is not owner or admin of business", async() => {
+        try {
+            const args: CreateEnvironmentType = {
+                type: non_existing_environment,
+                businessID: business
+            }
+            await environmentController.create(args, nonAdminUser, environmentModelMock, encryption_service_mock, businessModelMock);
+            expect(false).toBe(true);
+        } catch(err) {
+            if (err instanceof MyError) {
+                if (err.message === Errors.UNAUTHORIZED) {
+                    expect(true).toBe(true);
+                } else {
+                    console.error("Unexpected error", err);
+                    expect(false).toBe(true);
+                }
+            } else {
+                console.error("Unexpected error", err);
+                expect(false).toBe(true);
+            }
+        }
+    })
+
     it("should create the environment", async () => {
         try {
             const args: CreateEnvironmentType = {
@@ -81,7 +115,7 @@ describe("Environment Controller: Create Key Tests", () => {
                 businessID: business
             };
 
-            const environmentDetails = await environmentController.create(args, adminUser, environmentModelMock, encryption_service_mock);
+            const environmentDetails = await environmentController.create(args, adminUser, environmentModelMock, encryption_service_mock, businessModelMock);
 
             expect(environmentModelMock.createKeys).toHaveBeenCalled();
             expect(encryption_service_mock.encrypt).toHaveBeenCalledWith(private_key)

@@ -75,15 +75,21 @@ const pinoLogger = pino({
 const logger: Logger = {
   fatal(message: string, context?: LogContext) {
     pinoLogger.fatal(context, message);
-    postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+    if (env.NODE_ENV !== "development") {
+      postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+    }
   },
   error(message: string, context?: LogContext) {
     pinoLogger.error(context, message);
-    postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+    if (env.NODE_ENV !== "development") {
+      postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+    }
   },
   warn(message: string, context?: LogContext) {
     pinoLogger.warn(context, message);
-    postHogLogger.sendEvent(PostHogEventTypes.WARNING, message, {context});
+    if (env.NODE_ENV !== "development") {
+      postHogLogger.sendEvent(PostHogEventTypes.WARNING, message, {context});
+    }
   },
   info(message: string, context?: LogContext) {
     pinoLogger.info(context, message);

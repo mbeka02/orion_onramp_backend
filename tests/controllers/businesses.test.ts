@@ -81,4 +81,13 @@ describe("Business Controller", () => {
         expect(businessModelMock.acceptInvitation).toHaveBeenCalledWith("invite-id", otherUser, "guest@example.com");
 
     });
+    it("gets industries and categories", async () => {
+        const mockIndustries = [
+            { id: "1", name: "Industry 1", categories: [{ id: "1.1", name: "Category 1" }] },
+            { id: "2", name: "Industry 2", categories: [{ id: "2.1", name: "Category 2" }] }
+        ];
+        (businessModelMock.getIndustriesAndCategories as jest.Mock).mockResolvedValue(mockIndustries);
+        const res = await businessController.getIndustriesAndCategories(businessModelMock as any);
+        expect(res).toEqual(mockIndustries);
+    });
 });

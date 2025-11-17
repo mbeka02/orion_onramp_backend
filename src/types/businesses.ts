@@ -112,7 +112,7 @@ export interface BusinessType {
     createdAt: Date;
     updatedAt?: Date;
 }
-export interface Invitation{
+export interface Invitation {
     id: string;
     businessId: string;
     invitedBy: string;
@@ -121,7 +121,15 @@ export interface Invitation{
     status: USER_INVITATION_STATUS;
     createdAt: Date;
 }
-
+export interface Category {
+    id: string;
+    name: string;
+}
+export interface Industry {
+    id: string;
+    name: string;
+    categories: Category[];
+}
 export type CreateBusinessType = z.infer<typeof createBusinessSchema>;
 export type SubmitBusinessType = z.infer<typeof submitBusinessForApprovalSchema>;
 export type UpdateBusinessType = z.infer<typeof updateBusinessSchema>;

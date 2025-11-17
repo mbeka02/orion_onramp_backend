@@ -10,7 +10,7 @@ import { Errors, MyError } from "../errors";
 const router: Router = Express.Router();
 
 // Get all businesses for authenticated user
-router.get("/", authenticationMiddleware, async (req, res) => {
+router.get("/user", authenticationMiddleware, async (req, res) => {
     try {
         const session = await getAuthContext(req as any);
         const userId = session?.user?.id;
@@ -165,7 +165,7 @@ router.delete("/:id", authenticationMiddleware, async (req, res) => {
 });
 
 // Get business by id
-router.get("/:id", authenticationMiddleware, async (req, res) => {
+router.get("/one/:id", authenticationMiddleware, async (req, res) => {
     try {
         const businessId = req.params.id;
         const session = await getAuthContext(req as any);
@@ -178,6 +178,19 @@ router.get("/:id", authenticationMiddleware, async (req, res) => {
     } catch (err) {
         logger.error("Error getting business in router", { error: err });
         if (err instanceof MyError) return res.status(404).json({ message: err.message });
+        res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+    }
+});
+
+//Get industries and categories
+router.get("/industries", authenticationMiddleware, async (req, res) => {
+    try {
+        const industries = await businessController.getIndustriesAndCategories(businessModel);
+        res.status(200).json({ industries });
+    }
+    catch (err) {
+        logger.error("Error getting industries in router", { error: err });
+        if (err instanceof MyError) return res.status(400).json({ message: err.message });
         res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
     }
 });

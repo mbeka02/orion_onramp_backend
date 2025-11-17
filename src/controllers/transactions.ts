@@ -60,7 +60,7 @@ export class TransactionController {
     const amountMinor = Math.round(transactionRequest.amount * 100);
 
     // Generate unique reference BEFORE inserting to DB
-    const reference = this.generateReference(orderID, token);
+    const reference = this.generateReference(orderID, environmentID, token);
 
     try {
       const transaction = await this.transactionModel.createTransaction({
@@ -206,11 +206,15 @@ export class TransactionController {
   }
 
   /**
-   * Generate unique reference for transaction
+   * Generate unique reference for the DApp transaction
    */
-  private generateReference(orderID: string, token: TOKEN_TYPE): string {
+  private generateReference(
+    orderID: string,
+    environmentID: string,
+    token: TOKEN_TYPE,
+  ): string {
     const tokenPrefix = token === TOKEN_TYPE.KESy_MAINNET ? "MAIN" : "TEST";
-    return `TXN_${tokenPrefix}_${orderID}`;
+    return `TXN_${tokenPrefix}_${environmentID}_${orderID}`;
   }
 
   /**

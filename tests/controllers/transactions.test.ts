@@ -86,7 +86,7 @@ describe("Transaction Controller: Initialize Transaction Tests", () => {
 
       expect(
         (TransactionController.prototype as any).generateReference,
-      ).toHaveBeenCalledWith(mockOrderID, mockToken);
+      ).toHaveBeenCalledWith(mockOrderID, mockEnvironmentID, mockToken);
       expect(transactionModelMock.createTransaction).toHaveBeenCalledWith(
         expect.objectContaining({
           reference: mockReference,

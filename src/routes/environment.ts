@@ -16,11 +16,10 @@ import businessModel from "../models/businesses";
 const router: Router = Express.Router();
 
 // GET all environments for a business
-router.get("/", authenticationMiddleware, async (req, res) => {
+router.get("/:business", authenticationMiddleware, async (req, res) => {
   try {
-    // TODO: Add code for getting business id from request
     const environments = await environmentController.getAllBusinessEnvironments(
-      "0588a8a2-4f34-4bc4-a228-d79bc2baa887",
+      req.params.business,
       environmentModel,
     );
 

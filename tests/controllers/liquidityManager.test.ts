@@ -22,5 +22,13 @@ describe("Liquidity Managers Tests: Treasury Balance checker", () => {
     it("should return false if treasury does not have balance", async () => {
         const isEnough = await liquidityManagerController.doesTreasuryHaveBalance(token, tooMuch, liquidityModelMock);
         expect(isEnough).toBe(false);
+        expect(liquidityModelMock.deductCachedTreasuryBalance).toHaveBeenCalledTimes(0);
     });
+
+    it("should return true if treasury has balance and deduct from cache", async () => {
+        const isEnough = await liquidityManagerController.doesTreasuryHaveBalance(token, enough, liquidityModelMock);
+
+        expect(isEnough).toBe(true);
+        expect(liquidityModelMock.deductCachedTreasuryBalance).toHaveBeenCalledWith(token, enough);
+    })
 })

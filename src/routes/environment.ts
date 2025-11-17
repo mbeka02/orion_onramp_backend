@@ -119,7 +119,6 @@ router.post("/new", authenticationMiddleware, async (req, res) => {
     if (parsed.success) {
       const data = parsed.data;
       const session = await getAuthContext(req);
-      console.log(session);
       if (!session?.user.id) {
         res.status(403).json({message: Errors.UNAUTHORIZED});
         return;
@@ -153,6 +152,11 @@ router.post("/new", authenticationMiddleware, async (req, res) => {
   } catch (err) {
     logger.error("Error rotating key in router", { error: err });
     if (err instanceof MyError) {
+      if (err.message === Errors.UNAUTHORIZED) {
+        res.status(403).json({message: err.message});
+        return;
+      }
+
       res.status(400).json({ message: err.message });
       return;
     }

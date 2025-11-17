@@ -18,9 +18,17 @@ const router: Router = Express.Router();
 // GET all environments for a business
 router.get("/:business", authenticationMiddleware, async (req, res) => {
   try {
+    const session = await getAuthContext(req);
+    if (!session?.user.id) {
+      res.status(403).json({message: Errors.UNAUTHORIZED});
+      return;
+    }
+
     const environments = await environmentController.getAllBusinessEnvironments(
       req.params.business,
+      session.user.id,
       environmentModel,
+      businessModel
     );
 
     const formattedEnvironments = environments.map((env) => ({
@@ -36,6 +44,15 @@ router.get("/:business", authenticationMiddleware, async (req, res) => {
     });
   } catch (err) {
     logger.error("Error getting environments in router", { error: err });
+    if (err instanceof MyError) {
+      if (err.message === Errors.UNAUTHORIZED) {
+        res.status(403).json({message: err.message});
+        return;
+      }
+
+      res.status(400).json({message: err.message});
+      return;
+    }
     res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
   }
 });

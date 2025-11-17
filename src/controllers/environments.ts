@@ -96,12 +96,19 @@ export class EnvironmentsController {
         }
     }
 
-    async getAllBusinessEnvironments(business_id: string, environmentModel: EnvironmentModel) {
+    async getAllBusinessEnvironments(business_id: string, user_id: string, environmentModel: EnvironmentModel, businessModel: BusinessModel) {
         try {
+            const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(business_id, user_id);
+            if (isUserOwnerOrAdmin === false) {
+                throw new MyError(Errors.UNAUTHORIZED);
+            }
             const environments = await environmentModel.getBusinessEnvironments(business_id);
             return environments;
         } catch(err) {
             logger.error("Environment Controller: Error getting environments", {err, business_id});
+            if (err instanceof MyError) {
+                throw err;
+            }
             throw new Error("Error getting environments");
         }
     }

@@ -68,7 +68,7 @@ describe("Environment Controller: Create Key Tests", () => {
                 type: existing_environment,
                 businessID: business
             };
-            await environmentController.create(args, nonAdminUser, environmentModelMock, encryption_service_mock, businessModelMock);
+            await environmentController.create(args, adminUser, environmentModelMock, encryption_service_mock, businessModelMock);
             expect(false).toBe(true);
         } catch(err) {
             if (err instanceof MyError) {
@@ -208,7 +208,7 @@ describe("Environment Controller: Rotate Key Tests", () => {
 
     it("should fail if business does not have the environment", async () => {
         try {
-            await environmentController.rotateKeys(business, nonAdminUser, non_existing_environment, environmentModelMock, encryption_service_mock, businessModelMock);
+            await environmentController.rotateKeys(business, adminUser, non_existing_environment, environmentModelMock, encryption_service_mock, businessModelMock);
             expect(false).toBe(true);
         } catch(err) {
             if (err instanceof MyError) {

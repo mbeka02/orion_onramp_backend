@@ -8,14 +8,14 @@ import { BusinessModel } from "../models/businesses";
 export class EnvironmentsController {
     async create(args: CreateEnvironmentType, user_id: string, environmentModel: EnvironmentModel, encryption_service: EncryptionService, businessModel: BusinessModel) {
         try {
-            const doesBusinessAlreadyHaveEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(args.businessID, args.type);
-            if (doesBusinessAlreadyHaveEnvironment === true) {
-                throw new MyError(Errors.BUSINESS_ALREADY_HAS_ENVIRONMENT);
-            }
-
             const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(args.businessID, user_id);
             if (isUserOwnerOrAdmin === false) {
                 throw new MyError(Errors.UNAUTHORIZED);
+            }
+
+            const doesBusinessAlreadyHaveEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(args.businessID, args.type);
+            if (doesBusinessAlreadyHaveEnvironment === true) {
+                throw new MyError(Errors.BUSINESS_ALREADY_HAS_ENVIRONMENT);
             }
 
             // Create keys for environment
@@ -49,17 +49,17 @@ export class EnvironmentsController {
 
     async rotateKeys(business_id: string, user_id: string, environment_type: ENVIRONMENT_TYPES, environmentModel: EnvironmentModel, encryption_service: EncryptionService, businessModel: BusinessModel) {
         try {
+            const isAdminUserOrOwner = await businessModel.isUserOwnerOrAdmin(business_id, user_id);
+            if (isAdminUserOrOwner === false) {
+                throw new MyError(Errors.UNAUTHORIZED);
+            }
+
             // Should check if business has the environment
             const businessHasEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(business_id, environment_type);
 
             // If not throw error
             if (businessHasEnvironment === false) {
                 throw new MyError(Errors.BUSINESS_DOES_NOT_HAVE_ENVIRONMENT);
-            }
-
-            const isAdminUserOrOwner = await businessModel.isUserOwnerOrAdmin(business_id, user_id);
-            if (isAdminUserOrOwner === false) {
-                throw new MyError(Errors.UNAUTHORIZED);
             }
 
             // Get old key

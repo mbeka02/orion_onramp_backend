@@ -8,6 +8,11 @@ export class LiquidityManagerController {
             const balance = await liquidityModel.getCachedTreasuryTokenBalance(token);
             if (balance < amount) {
                 return false;
+            } else {
+                // Optimistically deduct balance
+                await liquidityModel.deductCachedTreasuryBalance(token, amount);
+
+                return true;
             }
         } catch(err) {
             logger.error("Error checking if treasury has balance", {error: err, token, amount});

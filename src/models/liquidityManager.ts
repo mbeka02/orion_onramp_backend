@@ -22,7 +22,7 @@ export class LiquidityManagerModel {
                 return divideBigIntWithDecimals(tokenBalance[0].balance, BigInt(Math.pow(10, tokenBalance[0].decimals)));
             }
         } catch(err) {
-            logger.error("Error getting cached treasury balance", {error: err, token_type});
+            logger.error("Liquidity Model: Error getting cached treasury balance", {error: err, token_type});
             throw new Error("Error getting cached treasury balance");
         }
     }
@@ -49,8 +49,32 @@ export class LiquidityManagerModel {
                 return {balance: BigInt(0), decimals: tokenDetail.decimals};
             }
         } catch(err) {
-            logger.error("Error getting token balance on chain", {error: err, token_type});
+            logger.error("Liquidity Model: Error getting token balance on chain", {error: err, token_type});
             throw new Error("Error getting token balance on chain");
+        }
+    }
+
+    async deductCachedTreasuryBalance(token: TOKEN_TYPE, amount: number) {
+        try {
+            const currentBalance = await db.select({
+                balance: treasuryBalanceTable.balance,
+                decimals: treasuryBalanceTable.decimals
+            }).from(treasuryBalanceTable)
+            .where(eq(treasuryBalanceTable.token, token));
+
+            if (currentBalance.length > 0) {
+                const balance = currentBalance[0];
+                const amountSubract = BigInt(amount * Math.pow(10, balance.decimals));
+                
+                if (balance.balance >= amountSubract) {
+                    await db.update(treasuryBalanceTable).set({
+                        balance: balance.balance - amountSubract
+                    }).where(eq(treasuryBalanceTable.token, token));
+                }
+            }
+        } catch(err) {
+            logger.error("Liquidity Model: Error deducting cached treasury balance", {error: err, token, amount});
+            throw new Error("Error deducting from cached treasury balance");
         }
     }
 }

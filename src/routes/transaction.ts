@@ -1,26 +1,12 @@
 import { Router, Request, Response } from "express";
-import rateLimit from "express-rate-limit";
 import { TransactionController } from "../controllers/transactions";
 import { TransactionModel } from "../models/transactions";
-import { validateBody, validateParams } from "../middleware/validation";
-import {
-  initializeTransactionSchema,
-  verifyTransactionParamsSchema,
-} from "../types/transactions";
+import { validateBody } from "../middleware/validation";
+import { initializeTransactionSchema } from "../types/transactions";
 import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
-import { defaults } from "axios";
-const router: Router = Router();
 
-// Rate limiter for transaction verification endpoints
-const verifyTransactionLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // Limit each IP to 10 requests per minute
-  message: {
-    message:
-      "Too many verification requests from this IP, please try again later.",
-  },
-});
+const router: Router = Router();
 
 const transactionModel = new TransactionModel();
 const transactionController = new TransactionController(transactionModel);

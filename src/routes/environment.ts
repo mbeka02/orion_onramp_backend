@@ -102,6 +102,7 @@ router.post("/new", authenticationMiddleware, async (req, res) => {
     if (parsed.success) {
       const data = parsed.data;
       const session = await getAuthContext(req);
+      console.log(session);
       if (!session?.user.id) {
         res.status(403).json({message: Errors.UNAUTHORIZED});
         return;
@@ -110,7 +111,7 @@ router.post("/new", authenticationMiddleware, async (req, res) => {
       const userID = session.user.id;
       const encryptionService = new EncryptionService();
       const result = await environmentController.rotateKeys(
-        "355b6a4f-b4e8-41bc-8673-578afb8e11d6",
+        data.businessID,
         userID,
         data.type,
         environmentModel,

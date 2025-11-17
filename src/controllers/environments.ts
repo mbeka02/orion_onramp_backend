@@ -3,13 +3,19 @@ import { EnvironmentModel } from "../models/environments";
 import { CreateEnvironmentType, ENVIRONMENT_TYPES } from "../types/environments";
 import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
+import { BusinessModel } from "../models/businesses";
 
 export class EnvironmentsController {
-    async create(args: CreateEnvironmentType, user_id: string, environmentModel: EnvironmentModel, encryption_service: EncryptionService) {
+    async create(args: CreateEnvironmentType, user_id: string, environmentModel: EnvironmentModel, encryption_service: EncryptionService, businessModel: BusinessModel) {
         try {
             const doesBusinessAlreadyHaveEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(args.businessID, args.type);
             if (doesBusinessAlreadyHaveEnvironment === true) {
                 throw new MyError(Errors.BUSINESS_ALREADY_HAS_ENVIRONMENT);
+            }
+
+            const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(args.businessID, user_id);
+            if (isUserOwnerOrAdmin === false) {
+                throw new MyError(Errors.UNAUTHORIZED);
             }
 
             // Create keys for environment

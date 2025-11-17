@@ -11,6 +11,8 @@ import { SuccessMessage } from "../success";
 import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
 import { auth } from "../lib/auth";
+import { getAuthContext } from "../lib/auth/utils";
+import businessModel from "../models/businesses";
 const router: Router = Express.Router();
 
 // GET all environments for a business
@@ -45,13 +47,20 @@ router.post("/", authenticationMiddleware, async (req, res) => {
     const parsed = createEnvironmentSchema.safeParse(req.body);
     if (parsed.success) {
       const data = parsed.data;
-      // TODO: Add code for getting business id from request
+      const session = await getAuthContext(req);
+
+      if (!session?.user.id) {
+        res.status(403).json({message: Errors.UNAUTHORIZED});
+        return;
+      }
+
       const encryptionService = new EncryptionService();
       const result = await environmentController.create(
         data,
-        "0588a8a2-4f34-4bc4-a228-d79bc2baa887",
+        session?.user.id,
         environmentModel,
         encryptionService,
+        businessModel
       );
 
       res.status(201).json({
@@ -75,6 +84,11 @@ router.post("/", authenticationMiddleware, async (req, res) => {
   } catch (err) {
     logger.error("Error creating environment in router", { error: err });
     if (err instanceof MyError) {
+      if (err.message === Errors.UNAUTHORIZED) {
+        res.status(403).json({message: err.message});
+        return;
+      }
+      
       res.status(400).json({ message: err.message });
       return;
     }

@@ -140,6 +140,8 @@ describe("Environment Controller: Create Key Tests", () => {
 
 describe("Environment Controller: Rotate Key Tests", () => {
     const business = "existing id";
+    const adminUser = "admin";
+    const nonAdminUser = "non admin";
     const non_existing_environment = ENVIRONMENT_TYPES.LIVE;
     const existing_environment = ENVIRONMENT_TYPES.TEST;
     const old_public_key = "old_publick";
@@ -188,6 +190,16 @@ describe("Environment Controller: Rotate Key Tests", () => {
                 }
 
                 return encrypted_private_key;
+            });
+
+            businessModelMock.isUserOwnerOrAdmin = jest.fn().mockImplementation((business_id: string, user_id: string) => {
+                return new Promise((res, rej) => {
+                    if (user_id === adminUser && business_id === business) {
+                        res(true);
+                    } else {
+                        res(false);
+                    }
+                })
             })
         } catch(err) {
             console.error("Error setting up mocks");
@@ -196,7 +208,7 @@ describe("Environment Controller: Rotate Key Tests", () => {
 
     it("should fail if business does not have the environment", async () => {
         try {
-            await environmentController.rotateKeys(business, non_existing_environment, environmentModelMock, encryption_service_mock);
+            await environmentController.rotateKeys(business, nonAdminUser, non_existing_environment, environmentModelMock, encryption_service_mock, businessModelMock);
             expect(false).toBe(true);
         } catch(err) {
             if (err instanceof MyError) {
@@ -213,9 +225,28 @@ describe("Environment Controller: Rotate Key Tests", () => {
         }
     });
 
+    it("should fail if user calling is not admin or owner", async () => {
+        try {
+            await environmentController.rotateKeys(business, nonAdminUser, existing_environment, environmentModelMock, encryption_service_mock, businessModelMock);
+            expect(false).toBe(true);
+        } catch(err) {
+            if (err instanceof MyError) {
+                if (err.message === Errors.UNAUTHORIZED) {
+                    expect(true).toBe(true);
+                } else {
+                    console.error("Unexpected error", err);
+                    expect(false).toBe(false)
+                }
+            } else {
+                console.error("Unexpected error", err);
+                expect(false).toBe(true);
+            }
+        }
+    })
+
     it("should create the new key", async () => {
         try {
-            const newKeys = await environmentController.rotateKeys(business, existing_environment, environmentModelMock, encryption_service_mock);
+            const newKeys = await environmentController.rotateKeys(business, adminUser, existing_environment, environmentModelMock, encryption_service_mock, businessModelMock);
             
             // Test that new keys were created
             expect(environmentModelMock.createKeys).toHaveBeenCalled();

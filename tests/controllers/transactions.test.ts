@@ -25,7 +25,7 @@ describe("Transaction Controller: Initialize Transaction Tests", () => {
   const mockAmount = 1000;
   const mockAmountMinor = 100000;
   const mockOrderID = "ord-12345-abc";
-  const mockReference = `TXN_TEST_${mockOrderID}`;
+  const mockReference = `TXN_TEST_${mockEnvironmentID}_${mockOrderID}`;
   const mockTransactionId = "txn-uuid-123";
   const mockValidRequest = {
     amount: mockAmount,

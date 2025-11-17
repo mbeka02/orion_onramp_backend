@@ -6,6 +6,8 @@ import { environmentModelMock } from "../mocks/environment_model_mock";
 
 describe("Environment Controller: Create Key Tests", () => {
     const business = "existing id";
+    const adminUser = "admin";
+    const nonAdminUser = "not admin";
     const non_existing_environment = ENVIRONMENT_TYPES.LIVE;
     const existing_environment = ENVIRONMENT_TYPES.TEST;
     const created_environment_id = "created environment";
@@ -52,9 +54,10 @@ describe("Environment Controller: Create Key Tests", () => {
     it("should fail if business already has an environment of the same type", async () => {
         try {
             const args: CreateEnvironmentType = {
-                type: existing_environment
+                type: existing_environment,
+                businessID: business
             };
-            await environmentController.create(args, business, environmentModelMock, encryption_service_mock);
+            await environmentController.create(args, nonAdminUser, environmentModelMock, encryption_service_mock);
             expect(false).toBe(true);
         } catch(err) {
             if (err instanceof MyError) {
@@ -74,10 +77,11 @@ describe("Environment Controller: Create Key Tests", () => {
     it("should create the environment", async () => {
         try {
             const args: CreateEnvironmentType = {
-                type: non_existing_environment
+                type: non_existing_environment,
+                businessID: business
             };
 
-            const environmentDetails = await environmentController.create(args, business, environmentModelMock, encryption_service_mock);
+            const environmentDetails = await environmentController.create(args, adminUser, environmentModelMock, encryption_service_mock);
 
             expect(environmentModelMock.createKeys).toHaveBeenCalled();
             expect(encryption_service_mock.encrypt).toHaveBeenCalledWith(private_key)

@@ -5,9 +5,9 @@ import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
 
 export class EnvironmentsController {
-    async create(args: CreateEnvironmentType, business_id: string, environmentModel: EnvironmentModel, encryption_service: EncryptionService) {
+    async create(args: CreateEnvironmentType, user_id: string, environmentModel: EnvironmentModel, encryption_service: EncryptionService) {
         try {
-            const doesBusinessAlreadyHaveEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(business_id, args.type);
+            const doesBusinessAlreadyHaveEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(args.businessID, args.type);
             if (doesBusinessAlreadyHaveEnvironment === true) {
                 throw new MyError(Errors.BUSINESS_ALREADY_HAS_ENVIRONMENT);
             }
@@ -21,7 +21,7 @@ export class EnvironmentsController {
                 type: args.type,
                 private_key: encryptedPrivateKey,
                 public_key,
-                business_id
+                business_id: args.businessID
             });
 
             // Return the keys for immediate display

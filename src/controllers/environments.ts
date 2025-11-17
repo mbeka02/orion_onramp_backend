@@ -47,7 +47,7 @@ export class EnvironmentsController {
         }
     }
 
-    async rotateKeys(business_id: string, environment_type: ENVIRONMENT_TYPES, environmentModel: EnvironmentModel, encryption_service: EncryptionService) {
+    async rotateKeys(business_id: string, user_id: string, environment_type: ENVIRONMENT_TYPES, environmentModel: EnvironmentModel, encryption_service: EncryptionService, businessModel: BusinessModel) {
         try {
             // Should check if business has the environment
             const businessHasEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(business_id, environment_type);
@@ -55,6 +55,11 @@ export class EnvironmentsController {
             // If not throw error
             if (businessHasEnvironment === false) {
                 throw new MyError(Errors.BUSINESS_DOES_NOT_HAVE_ENVIRONMENT);
+            }
+
+            const isAdminUserOrOwner = await businessModel.isUserOwnerOrAdmin(business_id, user_id);
+            if (isAdminUserOrOwner === false) {
+                throw new MyError(Errors.UNAUTHORIZED);
             }
 
             // Get old key

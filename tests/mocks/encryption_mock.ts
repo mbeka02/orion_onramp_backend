@@ -6,5 +6,6 @@ export const encryption_service_mock = {
     secretKey: "mocked",
     algorithm: "mocked",
     encrypt: jest.fn(),
+    hash: jest.fn(),
     decrypt: jest.fn()
 } as EncryptionService

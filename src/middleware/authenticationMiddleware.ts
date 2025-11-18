@@ -3,6 +3,7 @@ import { getAuthContext } from "../lib/auth/utils";
 import { NextFunction, Request, Response } from "express";
 import environmentModel from "../models/environments";
 import logger from "../lib/logger";
+import { EncryptionService } from "../lib/encryption";
 
 
 export async function authenticationMiddleware(
@@ -37,7 +38,8 @@ export async function validatePrivateKey(
       return res.status(401).json({ error: Errors.UNAUTHORIZED });
     }
 
-    const environment_id = await environmentModel.doesPrivateKeyExist(privateKey);
+    const encryptionService = new EncryptionService();
+    const environment_id = await environmentModel.doesPrivateKeyExist(privateKey, encryptionService);
     if (!environment_id) {
       return res.status(401).json({ error: Errors.UNAUTHORIZED });
     }

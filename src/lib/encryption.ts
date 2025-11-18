@@ -1,5 +1,6 @@
 import "dotenv/config";
 import crypto from "crypto";
+import {sha3_256} from "js-sha3";
 
 export class EncryptionService {
     secretKey: string;
@@ -23,6 +24,10 @@ export class EncryptionService {
         encrypted += cipher.final("hex");
 
         return this.iv.toString("hex") + encrypted;
+    }
+
+    hash(data: string): string {
+        return sha3_256(data);
     }
 
     decrypt(data: string): string {

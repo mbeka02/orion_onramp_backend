@@ -4,6 +4,7 @@ import { db } from "../lib/db";
 import { environmentKeysTable, environmentsTable } from "../lib/db/schema";
 import { eq, and, desc, isNull, gt, or } from "drizzle-orm";
 import { generateKeyPairSync } from "crypto";
+import { EncryptionService } from "../lib/encryption";
 
 export class EnvironmentModel {
     async doesBusinessAlreadyHaveEnvironment(businessID: string, environmentType: ENVIRONMENT_TYPES): Promise<boolean> {
@@ -23,7 +24,7 @@ export class EnvironmentModel {
         }
     }
 
-    async storeEnvironment(environment: { type: ENVIRONMENT_TYPES, public_key: string, private_key: string, business_id: string }): Promise<string> {
+    async storeEnvironment(environment: { type: ENVIRONMENT_TYPES, public_key: string, encrypted_private_key: string, hashed_private_key: string, business_id: string }): Promise<string> {
         try {
             let environment_id: string | null = null;
             await db.transaction(async (tx) => {
@@ -40,7 +41,8 @@ export class EnvironmentModel {
                 await tx.insert(environmentKeysTable).values({
                     environmentID: environment_id,
                     publicKey: environment.public_key,
-                    privateKey: environment.private_key
+                    encryptedPrivateKey: environment.encrypted_private_key,
+                    privateKeyHash: environment.hashed_private_key
                 });
             })
 
@@ -85,7 +87,7 @@ export class EnvironmentModel {
     async getLatestValidBusinessEnvironmentKeys(business_id: string, environment_type: ENVIRONMENT_TYPES): Promise<{public_key: string, encrypted_private_key: string} | null> {
         try {
             const environmentKeys = await db.select({
-                encrypted_private_key: environmentKeysTable.privateKey,
+                encrypted_private_key: environmentKeysTable.encryptedPrivateKey,
                 public_key: environmentKeysTable.publicKey
             }).from(environmentKeysTable)
             .innerJoin(environmentsTable, eq(environmentsTable.id, environmentKeysTable.environmentID))
@@ -120,7 +122,7 @@ export class EnvironmentModel {
                 id: environmentsTable.id,
                 type: environmentsTable.type,
                 public_key: environmentKeysTable.publicKey,
-                encrypted_private_key: environmentKeysTable.privateKey,
+                encrypted_private_key: environmentKeysTable.encryptedPrivateKey,
                 created_at: environmentKeysTable.createdAt
             }).from(environmentsTable)
             .innerJoin(environmentKeysTable, eq(environmentsTable.id, environmentKeysTable.environmentID))
@@ -145,9 +147,8 @@ export class EnvironmentModel {
     }
 
     // Assumes that business with environment exists
-    async rotateKey(business_id: string, environment_type: ENVIRONMENT_TYPES, new_public_key: string, new_private_key: string, old_public_key: string) {
+    async rotateKey(business_id: string, environment_type: ENVIRONMENT_TYPES, new_public_key: string, new_encrypted_private_key: string, old_public_key: string, hashed_private_key: string) {
         try {
-            
             await db.transaction(async (tx) => {
                 const environmentID = await tx.select({
                     id: environmentsTable.id
@@ -165,7 +166,8 @@ export class EnvironmentModel {
                 await tx.insert(environmentKeysTable).values({
                     environmentID: environmentID[0].id,
                     publicKey: new_public_key,
-                    privateKey: new_private_key
+                    encryptedPrivateKey: new_encrypted_private_key,
+                    privateKeyHash: hashed_private_key
                 });
 
                 const expiresAt = new Date();
@@ -186,14 +188,15 @@ export class EnvironmentModel {
         }
     }
 
-    async doesPrivateKeyExist(private_key: string): Promise<string | null> {
+    async doesPrivateKeyExist(private_key: string, encryption_service: EncryptionService): Promise<string | null> {
         try {
             const now = new Date();
+            const hashedPrivateKey = encryption_service.hash(private_key);
             const exists = await db.select({
                 environment: environmentKeysTable.environmentID
             }).from(environmentKeysTable)
             .where(and(
-                eq(environmentKeysTable.privateKey, private_key),
+                eq(environmentKeysTable.privateKeyHash, hashedPrivateKey),
                 or(isNull(environmentKeysTable.expiresAt), gt(environmentKeysTable.expiresAt, now))
             ))
             .limit(1);

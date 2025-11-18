@@ -75,13 +75,14 @@ export const environmentKeysTable = pgTable(
       .references(() => environmentsTable.id, { onDelete: "cascade" })
       .notNull(),
     publicKey: text("public_key").notNull().unique(),
-    privateKey: text("private_key").notNull().unique(),
+    encryptedPrivateKey: text("encrypted_private_key").notNull().unique(),
+    privateKeyHash: text("private_key_hash").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     expiresAt: timestamp("expires_at"), // If set it means a new key has been created for environment
   },
   (table) => [
     primaryKey({
-      columns: [table.environmentID, table.privateKey, table.publicKey],
+      columns: [table.environmentID, table.encryptedPrivateKey, table.publicKey],
     }),
   ],
 );

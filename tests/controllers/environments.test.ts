@@ -15,6 +15,7 @@ describe("Environment Controller: Create Key Tests", () => {
     const public_key = "publick";
     const private_key = "private";
     const encrypted_private_key = "encrypted_private";
+    const hashed_private_key = "hashed_private";
 
     beforeAll(async () => {
         try {
@@ -47,6 +48,14 @@ describe("Environment Controller: Create Key Tests", () => {
 
                 return encrypted_private_key;
             });
+
+            encryption_service_mock.hash = jest.fn().mockImplementation((text: string) => {
+                if (text !== private_key) {
+                    throw new Error("Invalid arguement");
+                }
+
+                return hashed_private_key;
+            })
 
             businessModelMock.isUserOwnerOrAdmin = jest.fn().mockImplementation((business_id: string, user_id: string) => {
                 return new Promise((res, rej) => {
@@ -119,10 +128,12 @@ describe("Environment Controller: Create Key Tests", () => {
 
             expect(environmentModelMock.createKeys).toHaveBeenCalled();
             expect(encryption_service_mock.encrypt).toHaveBeenCalledWith(private_key)
+            expect(encryption_service_mock.hash).toHaveBeenCalledWith(private_key);
             expect(environmentModelMock.storeEnvironment).toHaveBeenCalledWith({ 
                 type: args.type, 
                 public_key: public_key, 
-                private_key: encrypted_private_key, 
+                encrypted_private_key: encrypted_private_key, 
+                hashed_private_key: hashed_private_key,
                 business_id: business 
             });
             expect(environmentDetails).toEqual({
@@ -149,6 +160,7 @@ describe("Environment Controller: Rotate Key Tests", () => {
     const public_key = "publick";
     const private_key = "private";
     const encrypted_private_key = "encrypted_private";
+    const hashed_private_key = "hashed_private";
 
     beforeAll(async () => {
         try {
@@ -191,6 +203,14 @@ describe("Environment Controller: Rotate Key Tests", () => {
 
                 return encrypted_private_key;
             });
+
+            encryption_service_mock.hash = jest.fn().mockImplementation((text: string) => {
+                if (text !== private_key) {
+                    throw new Error("Invalid arguement");
+                }
+
+                return hashed_private_key;
+            })
 
             businessModelMock.isUserOwnerOrAdmin = jest.fn().mockImplementation((business_id: string, user_id: string) => {
                 return new Promise((res, rej) => {
@@ -252,8 +272,10 @@ describe("Environment Controller: Rotate Key Tests", () => {
             expect(environmentModelMock.createKeys).toHaveBeenCalled();
             // Test that new keys were encrypted
             expect(encryption_service_mock.encrypt).toHaveBeenCalledWith(private_key);
+            // Test that the key is hashed
+            expect(encryption_service_mock.hash).toHaveBeenCalledWith(private_key);
             // Test that new keys were stored and the old one added a validUntil Date
-            expect(environmentModelMock.rotateKey).toHaveBeenCalledWith(business, existing_environment, public_key, encrypted_private_key, old_public_key)
+            expect(environmentModelMock.rotateKey).toHaveBeenCalledWith(business, existing_environment, public_key, encrypted_private_key, old_public_key, hashed_private_key)
             expect(newKeys).toEqual({
                 public_key,
                 private_key

@@ -346,7 +346,11 @@ export class TransactionController {
         .createHmac('sha512', secret)
         .update(body, 'utf8')
         .digest('hex');
-      return hash === paystackSignature;
+      const hashBuffer = Buffer.from(hash, 'hex');
+      const sigBuffer = Buffer.from(paystackSignature, 'hex');
+      if (hashBuffer.length !== sigBuffer.length) return false;
+      return crypto.timingSafeEqual(hashBuffer, sigBuffer);
+
     }
     catch (error) {
       logger.error("Error validating Paystack signature", { error: error });

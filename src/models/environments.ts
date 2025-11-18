@@ -195,7 +195,8 @@ export class EnvironmentModel {
             .where(and(
                 eq(environmentKeysTable.privateKey, private_key),
                 or(isNull(environmentKeysTable.expiresAt), gt(environmentKeysTable.expiresAt, now))
-            ));
+            ))
+            .limit(1);
 
             if (exists.length > 0) {
                 return exists[0].environment;

@@ -12,7 +12,8 @@ import logger from "../lib/logger";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import { MyError, Errors } from "../errors";
-
+import * as crypto from 'crypto';
+import { WebhookEvent, WebhookChargeData, WEBHOOK_EVENTS } from "../types/paystack";
 export class TransactionController {
   private apiKey: string;
   private MAX_TRANSACTION_AMOUNT = 500000;
@@ -338,4 +339,87 @@ export class TransactionController {
         return TRANSACTION_STATUS.PENDING;
     }
   }
+  isSignatureValid(body: string, paystackSignature: string): boolean {
+    try {
+      const secret = this.apiKey;
+      const hash = crypto
+        .createHmac('sha512', secret)
+        .update(body, 'utf8')
+        .digest('hex');
+      return hash === paystackSignature;
+    }
+    catch (error) {
+      logger.error("Error validating Paystack signature", { error: error });
+      return false;
+    }
+  }
+  async handlePaystackWebhook(event: WebhookEvent, data: WebhookChargeData) {
+    try {
+      switch (event) {
+        case WEBHOOK_EVENTS.CHARGE_SUCCESS:
+          await this.processChargeSuccess(data);
+          break;
+        case WEBHOOK_EVENTS.CHARGE_FAILED:
+          await this.processChargeFailed(data);
+          break;
+        default:
+          logger.info("Unhandled Paystack webhook event", { event });
+          return;
+      }
+    }
+    catch (error) {
+      logger.error("Error handling Paystack webhook", { error });
+    }
+  }
+  async processChargeSuccess(data: WebhookChargeData) {
+    try {
+      const reference = data.reference;
+      const transaction =
+        await this.transactionModel.getTransactionByReference(reference);
+      if (!transaction) {
+        logger.warn("Transaction not found for charge.success webhook", { reference });
+        return;
+      }
+      if (transaction.transactionStatus === TRANSACTION_STATUS.SUCCESSFUL) {
+        logger.info("Transaction already marked successful", { reference });
+        return;
+      }
+      await this.transactionModel.updateTransactionStatus(
+        reference,
+        TRANSACTION_STATUS.SUCCESSFUL,
+        data,
+      );
+      logger.info("Transaction marked successful via webhook", { reference });
+      //TODO: Treasury logic goes here
+    }
+    catch (error) {
+      logger.error("Error processing charge success webhook", { error });
+    }
+  }
+  async processChargeFailed(data: WebhookChargeData) {
+    try {
+      const reference = data.reference;
+      const transaction =
+        await this.transactionModel.getTransactionByReference(reference);
+      if (!transaction) {
+        logger.warn("Transaction not found for charge.failed webhook", { reference });
+        return;
+      }
+      if (transaction.transactionStatus === TRANSACTION_STATUS.FAILED) {
+        logger.info("Transaction already marked failed", { reference });
+        return;
+      }
+      await this.transactionModel.updateTransactionStatus(
+        reference,
+        TRANSACTION_STATUS.FAILED,
+        data,
+      );
+      logger.info("Transaction marked failed via webhook", { reference });
+      //TODO: Treasury logic goes here
+    }
+    catch (error) {
+      logger.error("Error processing charge failed webhook", { error });
+    }
+  }
+
 }

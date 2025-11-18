@@ -378,6 +378,10 @@ export class TransactionController {
   async processChargeSuccess(data: WebhookChargeData) {
     try {
       const reference = data.reference;
+      if (!data?.reference) {
+        logger.error("Missing reference in charge.success webhook data", { data });
+        return;
+      }
       const transaction =
         await this.transactionModel.getTransactionByReference(reference);
       if (!transaction) {
@@ -403,6 +407,10 @@ export class TransactionController {
   async processChargeFailed(data: WebhookChargeData) {
     try {
       const reference = data.reference;
+      if (!data?.reference) {
+        logger.error("Missing reference in charge.success webhook data", { data });
+        return;
+      }
       const transaction =
         await this.transactionModel.getTransactionByReference(reference);
       if (!transaction) {

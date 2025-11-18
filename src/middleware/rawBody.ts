@@ -11,6 +11,7 @@ export function preserveRawBody(req: Request, res: Response, next: NextFunction)
             (req as any).rawBody = data;
             next();
         });
+        req.on('error', (err) => { next(err); });
     } else {
         next();
     }

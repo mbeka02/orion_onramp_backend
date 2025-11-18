@@ -72,6 +72,10 @@ router.post("/paystack", async (req: Request, res: Response) => {
       return res.status(400).send("Invalid request");
     }
     const paystackSignature = req.headers['x-paystack-signature'] as string;
+    if (!paystackSignature) {
+      logger.warn("Missing Paystack webhook signature");
+      return res.status(400).send("Missing signature");
+    }
     const isValid = transactionController.isSignatureValid(body, paystackSignature);
     if (!isValid) {
       logger.warn("Invalid Paystack webhook signature");

@@ -21,11 +21,13 @@ export class EnvironmentsController {
             // Create keys for environment
             const {public_key, private_key} = environmentModel.createKeys();
             const encryptedPrivateKey = encryption_service.encrypt(private_key);
+            const privateKeyHash = encryption_service.hash(private_key);
 
             // Store environment
             const environment_id = await environmentModel.storeEnvironment({
                 type: args.type,
-                private_key: encryptedPrivateKey,
+                encrypted_private_key: encryptedPrivateKey,
+                hashed_private_key: privateKeyHash,
                 public_key,
                 business_id: args.businessID
             });
@@ -71,6 +73,7 @@ export class EnvironmentsController {
             // If so generate a new key
             const {public_key, private_key} = environmentModel.createKeys();
             const encryptedPrivateKey = encryption_service.encrypt(private_key);
+            const hashedPrivateKey = encryption_service.hash(private_key);
 
             // Store new key
             await environmentModel.rotateKey(
@@ -78,7 +81,8 @@ export class EnvironmentsController {
                 environment_type,
                 public_key,
                 encryptedPrivateKey,
-                oldKeys.public_key
+                oldKeys.public_key,
+                hashedPrivateKey
             );
 
             // Return the new keys for immediate display

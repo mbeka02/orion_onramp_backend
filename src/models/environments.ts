@@ -23,7 +23,7 @@ export class EnvironmentModel {
         }
     }
 
-    async storeEnvironment(environment: { type: ENVIRONMENT_TYPES, public_key: string, private_key: string, business_id: string }): Promise<string> {
+    async storeEnvironment(environment: { type: ENVIRONMENT_TYPES, public_key: string, encrypted_private_key: string, hashed_private_key: string, business_id: string }): Promise<string> {
         try {
             let environment_id: string | null = null;
             await db.transaction(async (tx) => {
@@ -40,7 +40,8 @@ export class EnvironmentModel {
                 await tx.insert(environmentKeysTable).values({
                     environmentID: environment_id,
                     publicKey: environment.public_key,
-                    encryptedPrivateKey: environment.private_key
+                    encryptedPrivateKey: environment.encrypted_private_key,
+                    privateKeyHash: environment.hashed_private_key
                 });
             })
 
@@ -145,9 +146,8 @@ export class EnvironmentModel {
     }
 
     // Assumes that business with environment exists
-    async rotateKey(business_id: string, environment_type: ENVIRONMENT_TYPES, new_public_key: string, new_private_key: string, old_public_key: string) {
+    async rotateKey(business_id: string, environment_type: ENVIRONMENT_TYPES, new_public_key: string, new_encrypted_private_key: string, old_public_key: string, hashed_private_key: string) {
         try {
-            
             await db.transaction(async (tx) => {
                 const environmentID = await tx.select({
                     id: environmentsTable.id
@@ -165,7 +165,8 @@ export class EnvironmentModel {
                 await tx.insert(environmentKeysTable).values({
                     environmentID: environmentID[0].id,
                     publicKey: new_public_key,
-                    encryptedPrivateKey: new_private_key
+                    encryptedPrivateKey: new_encrypted_private_key,
+                    privateKeyHash: hashed_private_key
                 });
 
                 const expiresAt = new Date();

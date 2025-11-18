@@ -40,7 +40,7 @@ export class EnvironmentModel {
                 await tx.insert(environmentKeysTable).values({
                     environmentID: environment_id,
                     publicKey: environment.public_key,
-                    privateKey: environment.private_key
+                    encryptedPrivateKey: environment.private_key
                 });
             })
 
@@ -85,7 +85,7 @@ export class EnvironmentModel {
     async getLatestValidBusinessEnvironmentKeys(business_id: string, environment_type: ENVIRONMENT_TYPES): Promise<{public_key: string, encrypted_private_key: string} | null> {
         try {
             const environmentKeys = await db.select({
-                encrypted_private_key: environmentKeysTable.privateKey,
+                encrypted_private_key: environmentKeysTable.encryptedPrivateKey,
                 public_key: environmentKeysTable.publicKey
             }).from(environmentKeysTable)
             .innerJoin(environmentsTable, eq(environmentsTable.id, environmentKeysTable.environmentID))
@@ -120,7 +120,7 @@ export class EnvironmentModel {
                 id: environmentsTable.id,
                 type: environmentsTable.type,
                 public_key: environmentKeysTable.publicKey,
-                encrypted_private_key: environmentKeysTable.privateKey,
+                encrypted_private_key: environmentKeysTable.encryptedPrivateKey,
                 created_at: environmentKeysTable.createdAt
             }).from(environmentsTable)
             .innerJoin(environmentKeysTable, eq(environmentsTable.id, environmentKeysTable.environmentID))
@@ -165,7 +165,7 @@ export class EnvironmentModel {
                 await tx.insert(environmentKeysTable).values({
                     environmentID: environmentID[0].id,
                     publicKey: new_public_key,
-                    privateKey: new_private_key
+                    encryptedPrivateKey: new_private_key
                 });
 
                 const expiresAt = new Date();
@@ -193,7 +193,7 @@ export class EnvironmentModel {
                 environment: environmentKeysTable.environmentID
             }).from(environmentKeysTable)
             .where(and(
-                eq(environmentKeysTable.privateKey, private_key),
+                eq(environmentKeysTable.encryptedPrivateKey, private_key),
                 or(isNull(environmentKeysTable.expiresAt), gt(environmentKeysTable.expiresAt, now))
             ))
             .limit(1);

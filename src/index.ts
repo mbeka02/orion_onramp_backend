@@ -40,6 +40,7 @@ app.get("/", async (req, res) => {
 app.use("/api/environment", environmentRouter);
 app.use("/api/business", businessRouter);
 app.use("/api/transaction", authenticationMiddleware, transactionRouter);
+app.use("/api/webhook", transactionRouter);
 let server: Server;
 let isShuttingDown = false;
 // Start background job

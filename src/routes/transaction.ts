@@ -64,7 +64,7 @@ router.post(
  * Paystack webhook
  * Handles incoming webhook events from Paystack
  */
-router.post("/webhook/paystack", async (req: Request, res: Response) => {
+router.post("/paystack", async (req: Request, res: Response) => {
   try {
     const body = (req as any).rawBody;
     if (!body) {
@@ -77,7 +77,7 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
       logger.warn("Invalid Paystack webhook signature");
       return res.status(400).send("Invalid signature");
     }
-    const { event, data } = req.body as PaystackWebhookPayload;
+    const { event, data } = JSON.parse(body) as PaystackWebhookPayload;
     await transactionController.handlePaystackWebhook(event, data);
     return res.status(200).send("Webhook received");
   } catch (error) {

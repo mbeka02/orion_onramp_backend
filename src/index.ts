@@ -14,7 +14,7 @@ import {
   stopCachedTreasuryBalanceUpdates,
 } from "./services/treasuryBalance";
 import { authenticationMiddleware } from "./middleware/authenticationMiddleware";
-
+import { preserveRawBody } from "./middleware/rawBody";
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -30,7 +30,7 @@ app.use("/", cors({ origin: FRONTEND_URL, credentials: true }));
 // api/auth/sign-up/email
 // api/auth/sign-in/email
 app.all("/api/auth/{*any}", toNodeHandler(auth));
-
+app.use(preserveRawBody);
 // Mount express json middleware after Better Auth handler
 // or only apply it to routes that don't interact with Better Auth
 app.use("/", express.json());
@@ -40,6 +40,7 @@ app.get("/", async (req, res) => {
 app.use("/api/environment", environmentRouter);
 app.use("/api/business", businessRouter);
 app.use("/api/transaction", authenticationMiddleware, transactionRouter);
+app.use("/api/webhook", transactionRouter);
 let server: Server;
 let isShuttingDown = false;
 // Start background job

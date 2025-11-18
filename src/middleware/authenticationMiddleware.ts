@@ -29,6 +29,11 @@ export async function validatePrivateKey(
   }
 
   const privateKey = authorizationHeader.split(' ')[1];
+
+  if (!privateKey || privateKey.trim().length === 0) {
+    return res.status(401).json({error: Errors.UNAUTHORIZED});
+  }
+
   const doesPrivateKeyExist = await environmentModel.doesPrivateKeyExist(privateKey);
   if (doesPrivateKeyExist === false) {
     return res.status(401).json({error: Errors.UNAUTHORIZED});

@@ -199,7 +199,7 @@ export class EnvironmentModel {
 
             return exists.length > 0;
         } catch(err) {
-            logger.error("Environment Model: Error checking if private key exists", {error: err, private_key});
+            logger.error("Environment Model: Error checking if private key exists", {error: err});
             throw new Error("Error checking if private key exists");
         }
     }

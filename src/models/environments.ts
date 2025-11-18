@@ -2,7 +2,7 @@ import logger from "../lib/logger";
 import { ENVIRONMENT_TYPES } from "../types/environments";
 import { db } from "../lib/db";
 import { environmentKeysTable, environmentsTable } from "../lib/db/schema";
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc, isNull, gt, or } from "drizzle-orm";
 import { generateKeyPairSync } from "crypto";
 
 export class EnvironmentModel {
@@ -183,6 +183,24 @@ export class EnvironmentModel {
         } catch(err) {
             logger.error("Error storing new keys", {error: err});
             throw new Error("Could not store new keys");
+        }
+    }
+
+    async doesPrivateKeyExist(private_key: string): Promise<boolean> {
+        try {
+            const now = new Date();
+            const exists = await db.select({
+                environment: environmentKeysTable.environmentID
+            }).from(environmentKeysTable)
+            .where(and(
+                eq(environmentKeysTable.privateKey, private_key),
+                or(isNull(environmentKeysTable.expiresAt), gt(environmentKeysTable.expiresAt, now))
+            ));
+
+            return exists.length > 0;
+        } catch(err) {
+            logger.error("Environment Model: Error checking if private key exists", {error: err, private_key});
+            throw new Error("Error checking if private key exists");
         }
     }
 }

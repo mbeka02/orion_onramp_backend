@@ -1,6 +1,8 @@
 import { Errors } from "../errors";
 import { getAuthContext } from "../lib/auth/utils";
 import { NextFunction, Request, Response } from "express";
+import environmentModel from "../models/environments";
+
 export async function authenticationMiddleware(
   req: Request,
   res: Response,
@@ -23,9 +25,13 @@ export async function validatePrivateKey(
 ) {
   const authorizationHeader = req.headers.authorization;
   if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-    return res.status(401).json({message: Errors.UNAUTHORIZED});
+    return res.status(401).json({error: Errors.UNAUTHORIZED});
   }
 
-  console.log(authorizationHeader);
+  const privateKey = authorizationHeader.split(' ')[1];
+  const doesPrivateKeyExist = await environmentModel.doesPrivateKeyExist(privateKey);
+  if (doesPrivateKeyExist === false) {
+    return res.status(401).json({error: Errors.UNAUTHORIZED});
+  }
   next();
 }

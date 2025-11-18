@@ -2,6 +2,8 @@ import { Errors } from "../errors";
 import { getAuthContext } from "../lib/auth/utils";
 import { NextFunction, Request, Response } from "express";
 import environmentModel from "../models/environments";
+import logger from "../lib/logger";
+
 
 export async function authenticationMiddleware(
   req: Request,
@@ -23,20 +25,27 @@ export async function validatePrivateKey(
   res: Response,
   next: NextFunction
 ) {
-  const authorizationHeader = req.headers.authorization;
-  if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-    return res.status(401).json({error: Errors.UNAUTHORIZED});
-  }
+  try {
+    const authorizationHeader = req.headers.authorization;
+    if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: Errors.UNAUTHORIZED });
+    }
 
-  const privateKey = authorizationHeader.split(' ')[1];
+    const privateKey = authorizationHeader.split(' ')[1];
 
-  if (!privateKey || privateKey.trim().length === 0) {
-    return res.status(401).json({error: Errors.UNAUTHORIZED});
-  }
+    if (!privateKey || privateKey.trim().length === 0) {
+      return res.status(401).json({ error: Errors.UNAUTHORIZED });
+    }
 
-  const doesPrivateKeyExist = await environmentModel.doesPrivateKeyExist(privateKey);
-  if (doesPrivateKeyExist === false) {
-    return res.status(401).json({error: Errors.UNAUTHORIZED});
+    const environment_id = await environmentModel.doesPrivateKeyExist(privateKey);
+    if (!environment_id) {
+      return res.status(401).json({ error: Errors.UNAUTHORIZED });
+    }
+
+    req.environment_id = environment_id;
+    next();
+  } catch (err) {
+    logger.error("Validate private key middleware: Could not validate private key", {error: err});
+    return res.status(500).json({error: Errors.INTERNAL_SERVER_ERROR});
   }
-  next();
 }

@@ -33,7 +33,13 @@ router.post(
   validateBody(initializeTransactionSchema),
   async (req: Request, res: Response) => {
     try {
-      const { environmentID, token, ...transactionRequest } = req.body;
+      if (!req.environment_id) {
+        res.status(401).json({error: Errors.UNAUTHORIZED});
+        return;
+      }
+
+      const environmentID = req.environment_id;
+      const { token, ...transactionRequest } = req.body;
 
       const result = await transactionController.initializeTransaction(
         transactionRequest,

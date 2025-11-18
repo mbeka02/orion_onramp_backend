@@ -186,7 +186,7 @@ export class EnvironmentModel {
         }
     }
 
-    async doesPrivateKeyExist(private_key: string): Promise<boolean> {
+    async doesPrivateKeyExist(private_key: string): Promise<string | null> {
         try {
             const now = new Date();
             const exists = await db.select({
@@ -197,7 +197,11 @@ export class EnvironmentModel {
                 or(isNull(environmentKeysTable.expiresAt), gt(environmentKeysTable.expiresAt, now))
             ));
 
-            return exists.length > 0;
+            if (exists.length > 0) {
+                return exists[0].environment;
+            }
+
+            return null;
         } catch(err) {
             logger.error("Environment Model: Error checking if private key exists", {error: err});
             throw new Error("Error checking if private key exists");

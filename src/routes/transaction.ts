@@ -20,7 +20,6 @@ const transactionController = new TransactionController(transactionModel);
  * Body:
  * - amount: number (in major units, e.g., KES 1000)
  * - email: string
- * - environmentID: string (UUID)
  * - token: "KESy_MAINNET" | "KESy_TESTNET"
  * - metadata: { orderID: string, ...other fields }
  * - currency?: string (default: "KES")

@@ -13,7 +13,6 @@ import {
   startCachedTreasuryBalanceUpdate,
   stopCachedTreasuryBalanceUpdates,
 } from "./services/treasuryBalance";
-import { authenticationMiddleware } from "./middleware/authenticationMiddleware";
 import { preserveRawBody } from "./middleware/rawBody";
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -34,13 +33,16 @@ app.use(preserveRawBody);
 // Mount express json middleware after Better Auth handler
 // or only apply it to routes that don't interact with Better Auth
 app.use("/", express.json());
-app.get("/", async (req, res) => {
-  res.json("Orion API");
+app.get("/health", async (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    service: "Orion",
+  });
 });
 app.use("/api/environment", environmentRouter);
 app.use("/api/business", businessRouter);
-app.use("/api/transaction", authenticationMiddleware, transactionRouter);
-app.use("/api/webhook", transactionRouter);
+app.use("/api/transaction", transactionRouter);
 let server: Server;
 let isShuttingDown = false;
 // Start background job

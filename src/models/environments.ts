@@ -4,6 +4,7 @@ import { db } from "../lib/db";
 import { environmentKeysTable, environmentsTable } from "../lib/db/schema";
 import { eq, and, desc, isNull, gt, or } from "drizzle-orm";
 import { generateKeyPairSync } from "crypto";
+import { EncryptionService } from "../lib/encryption";
 
 export class EnvironmentModel {
     async doesBusinessAlreadyHaveEnvironment(businessID: string, environmentType: ENVIRONMENT_TYPES): Promise<boolean> {
@@ -187,14 +188,15 @@ export class EnvironmentModel {
         }
     }
 
-    async doesPrivateKeyExist(private_key: string): Promise<string | null> {
+    async doesPrivateKeyExist(private_key: string, encryption_service: EncryptionService): Promise<string | null> {
         try {
             const now = new Date();
+            const hashedPrivateKey = encryption_service.hash(private_key);
             const exists = await db.select({
                 environment: environmentKeysTable.environmentID
             }).from(environmentKeysTable)
             .where(and(
-                eq(environmentKeysTable.encryptedPrivateKey, private_key),
+                eq(environmentKeysTable.privateKeyHash, hashedPrivateKey),
                 or(isNull(environmentKeysTable.expiresAt), gt(environmentKeysTable.expiresAt, now))
             ))
             .limit(1);

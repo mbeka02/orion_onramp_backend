@@ -42,9 +42,9 @@ export const createBusinessSchema = z.object({
     categoryId: z.uuid().optional().nullable(),
     legalBusinessName: z.string().optional(),
     registrationType: z.enum([BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]).optional(),
-    generalEmail: z.email().optional(),
-    supportEmail: z.email().optional(),
-    disputesEmail: z.email().optional(),
+    generalEmail: z.email().optional().or(z.literal('')),
+    supportEmail: z.email().optional().or(z.literal('')),
+    disputesEmail: z.email().optional().or(z.literal('')),
     phoneNumber: z.string().optional(),
     website: z.string().optional(),
     twitterHandle: z.string().optional(),
@@ -65,7 +65,7 @@ export const createBusinessSchema = z.object({
 export const submitBusinessForApprovalSchema = createBusinessSchema.extend({
     tradingName: z.string().min(1),
     legalBusinessName: z.string().min(1),
-    registrationtype: z.enum([BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]),
+    registrationType: z.enum([BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]),
     businessRegistrationNumber: z.string().min(1),
     generalEmail: z.email(),
 });

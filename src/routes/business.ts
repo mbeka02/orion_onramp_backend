@@ -3,7 +3,7 @@ import logger from "../lib/logger";
 import { authenticationMiddleware } from "../middleware/authenticationMiddleware";
 import businessController from "../controllers/businesses";
 import businessModel from "../models/businesses";
-import { createBusinessSchema, inviteUserSchema } from "../types/businesses";
+import { createBusinessSchema, submitBusinessForApprovalSchema, inviteUserSchema } from "../types/businesses";
 import { getAuthContext } from "../lib/auth/utils";
 import { Errors, MyError } from "../errors";
 
@@ -78,7 +78,7 @@ router.put("/:id", authenticationMiddleware, async (req, res) => {
 // Submit business for approval (save and change status to pending)
 router.put("/submit/:id", authenticationMiddleware, async (req, res) => {
     try {
-        const parsed = createBusinessSchema.safeParse(req.body);
+        const parsed = submitBusinessForApprovalSchema.safeParse(req.body);
         if (!parsed.success) {
             const error = parsed.error.issues[0].message;
             logger.error("Business Route: Invalid submit data", { data: req.body, error });

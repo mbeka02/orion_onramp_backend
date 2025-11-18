@@ -64,19 +64,22 @@ router.post(
  * Paystack webhook
  * Handles incoming webhook events from Paystack
  */
-router.post("/paystack", async (req: Request, res: Response) => {
+router.post("/webhook/paystack", async (req: Request, res: Response) => {
   try {
     const body = (req as any).rawBody;
     if (!body) {
       logger.error("Raw body not available for webhook signature validation");
       return res.status(400).send("Invalid request");
     }
-    const paystackSignature = req.headers['x-paystack-signature'] as string;
+    const paystackSignature = req.headers["x-paystack-signature"] as string;
     if (!paystackSignature) {
       logger.warn("Missing Paystack webhook signature");
       return res.status(400).send("Missing signature");
     }
-    const isValid = transactionController.isSignatureValid(body, paystackSignature);
+    const isValid = transactionController.isSignatureValid(
+      body,
+      paystackSignature,
+    );
     if (!isValid) {
       logger.warn("Invalid Paystack webhook signature");
       return res.status(400).send("Invalid signature");

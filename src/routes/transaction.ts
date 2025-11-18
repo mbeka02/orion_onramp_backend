@@ -5,7 +5,7 @@ import { validateBody } from "../middleware/validation";
 import { initializeTransactionSchema } from "../types/transactions";
 import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
-
+import { PaystackWebhookPayload } from "../types/paystack";
 const router: Router = Router();
 
 const transactionModel = new TransactionModel();
@@ -60,5 +60,26 @@ router.post(
     }
   },
 );
+/**
+ * Paystack webhook
+ * Handles incoming webhook events from Paystack
+ */
+router.post("/webhook/paystack", async (req: Request, res: Response) => {
+  try {
+    const body = JSON.stringify(req.body);
+    const paystackSignature = req.headers['x-paystack-signature'] as string;
+    const isValid = transactionController.isSignatureValid(body, paystackSignature);
+    if (!isValid) {
+      logger.warn("Invalid Paystack webhook signature");
+      return res.status(400).send("Invalid signature");
+    }
+    const { event, data } = req.body as PaystackWebhookPayload;
+    await transactionController.handlePaystackWebhook(event, data);
+    return res.status(200).send("Webhook received");
+  } catch (error) {
+    logger.error("Error handling Paystack webhook", { error });
+    return res.status(500).send("Internal Server Error");
+  }
+});
 
 export default router;

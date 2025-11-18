@@ -66,7 +66,11 @@ router.post(
  */
 router.post("/webhook/paystack", async (req: Request, res: Response) => {
   try {
-    const body = JSON.stringify(req.body);
+    const body = (req as any).rawBody;
+    if (!body) {
+      logger.error("Raw body not available for webhook signature validation");
+      return res.status(400).send("Invalid request");
+    }
     const paystackSignature = req.headers['x-paystack-signature'] as string;
     const isValid = transactionController.isSignatureValid(body, paystackSignature);
     if (!isValid) {

@@ -6,6 +6,7 @@ import { initializeTransactionSchema } from "../types/transactions";
 import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
 import { PaystackWebhookPayload } from "../types/paystack";
+import { authenticationMiddleware } from "../middleware/authenticationMiddleware";
 const router: Router = Router();
 
 const transactionModel = new TransactionModel();
@@ -27,6 +28,7 @@ const transactionController = new TransactionController(transactionModel);
  */
 router.post(
   "/initialize",
+  authenticationMiddleware,
   validateBody(initializeTransactionSchema),
   async (req: Request, res: Response) => {
     try {

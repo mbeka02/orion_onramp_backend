@@ -26,10 +26,6 @@ export const TokenTypeEnum = z.enum(["KESy_MAINNET", "KESy_TESTNET"]);
 
 // Initialize transaction schema
 export const initializeTransactionSchema = z.object({
-  environmentID: z
-    .uuid("Invalid environment ID format")
-    .min(1, "Environment ID is required"),
-
   token: TokenTypeEnum,
   amount: z
     .number()

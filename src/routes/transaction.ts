@@ -6,7 +6,8 @@ import { initializeTransactionSchema } from "../types/transactions";
 import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
 import { PaystackWebhookPayload } from "../types/paystack";
-import { authenticationMiddleware } from "../middleware/authenticationMiddleware";
+import { validatePrivateKey } from "../middleware/authenticationMiddleware";
+
 const router: Router = Router();
 
 const transactionModel = new TransactionModel();
@@ -19,7 +20,6 @@ const transactionController = new TransactionController(transactionModel);
  * Body:
  * - amount: number (in major units, e.g., KES 1000)
  * - email: string
- * - environmentID: string (UUID)
  * - token: "KESy_MAINNET" | "KESy_TESTNET"
  * - metadata: { orderID: string, ...other fields }
  * - currency?: string (default: "KES")
@@ -28,11 +28,17 @@ const transactionController = new TransactionController(transactionModel);
  */
 router.post(
   "/initialize",
-  authenticationMiddleware,
+  validatePrivateKey,
   validateBody(initializeTransactionSchema),
   async (req: Request, res: Response) => {
     try {
-      const { environmentID, token, ...transactionRequest } = req.body;
+      if (!req.environment_id) {
+        res.status(401).json({error: Errors.UNAUTHORIZED});
+        return;
+      }
+
+      const environmentID = req.environment_id;
+      const { token, ...transactionRequest } = req.body;
 
       const result = await transactionController.initializeTransaction(
         transactionRequest,

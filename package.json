@@ -21,6 +21,7 @@
   "packageManager": "pnpm@10.7.0",
   "dependencies": {
     "@hiero-ledger/sdk": "^2.77.0",
+    "@infisical/sdk": "^4.0.6",
     "@react-email/components": "^0.5.7",
     "@react-email/tailwind": "^1.2.2",
     "axios": "^1.13.2",

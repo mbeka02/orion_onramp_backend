@@ -1,6 +1,11 @@
 import logger from "../../lib/logger";
 import { API_NODES, hederaTokenBalanceSchema, SUPPORTED_CHAINS } from "../../types/chain";
-import { AccountId } from "@hiero-ledger/sdk";
+import { AccountId, Client, Key, KeyList, PrivateKey, PublicKey, TransferTransaction } from "@hiero-ledger/sdk";
+import "dotenv/config";
+import { TOKEN_TYPE } from "../../types/token";
+import infisical, { InfisicalKeys } from "../../lib/infisical";
+import { error } from "console";
+import e from "express";
 
 export class HederaChainModel {
     _isHederaFormatAddress(address: string): boolean {
@@ -8,7 +13,100 @@ export class HederaChainModel {
         return hederaAddressFormatRegex.test(address);
     }
 
-    async getTokenBalance(chain: SUPPORTED_CHAINS, account: string, token: string): Promise<{balance: BigInt, decimals?: number}> {
+    async _getKeys(tokenType: TOKEN_TYPE): Promise<{public: PublicKey, private: PrivateKey}[]> {
+        try {
+            if (tokenType === TOKEN_TYPE.KESy_TESTNET) {
+                if (!process.env.KESy_TESTNET_PRIVATE_KEY || !process.env.KESy_TESTNET_KEY_ACCOUNT_ID) {
+                    throw new Error("Invalid env, setup KESy_TESTNET_PRIVATE_KEY and KESy_TESTNET_KEY_ACCOUNT_ID in env");
+                }
+
+                const key1 = PrivateKey.fromStringECDSA(process.env.KESy_TESTNET_PRIVATE_KEY);
+                const privateKey2 = await infisical.getSecret(InfisicalKeys.KESy_TESTNET_PRIVATE_KEY, "staging");
+                const key2 = PrivateKey.fromStringECDSA(privateKey2);
+                
+                return [{private: key1, public: key1.publicKey}, {private: key2, public: key2.publicKey}]
+            } else {
+                throw new Error("Unsupported token type");
+            }
+        } catch (err) {
+            logger.error("Hedera Chain Model: Could not get multi signature key", { error: err });
+            throw new Error("Could not get multi signature account");
+        }
+    }
+
+    _getClient(network: "test" | "main"): Client {
+        try {
+            if (!process.env.HEDERA_BACKEND_ACCOUNT_ID || !process.env.HEDERA_BACKEND_PRIVATE_KEY) {
+                throw new Error("Invalid env setup, set HEDERA_BACKEND_ACCOUNT_ID and HEDERA_BACKEND_PRIVATE_KEY in env");
+            }
+
+            const accountID = AccountId.fromString(process.env.HEDERA_BACKEND_ACCOUNT_ID);
+            const privateKey = PrivateKey.fromStringECDSA(process.env.HEDERA_BACKEND_PRIVATE_KEY);
+
+            if (network === 'test') {
+                const client = Client.forTestnet();
+                client.setOperator(accountID, privateKey);
+                return client;
+            } else {    
+                throw new Error("Network not yet supported")
+            }
+        } catch(err) {
+            logger.error("Hedera Chain Model: Could not get client for network");
+            throw error;
+        }
+    }
+
+    async transferTokenFromTreasuryToAccount(tokenType: TOKEN_TYPE, treasuryAccount: string, token: string, receiverAccount: string, amount: number) {
+        try {
+            if (tokenType === TOKEN_TYPE.KESy_TESTNET) {
+                let treasuryAccountID: AccountId;
+                if (this._isHederaFormatAddress(treasuryAccount)) {
+                    treasuryAccountID = AccountId.fromString(treasuryAccount)
+                } else {
+                    treasuryAccountID = AccountId.fromEvmAddress(0, 0, treasuryAccount);
+                }
+
+                let tokenID: AccountId;
+                if (this._isHederaFormatAddress(token)) {
+                    tokenID = AccountId.fromString(token);
+                } else {
+                    tokenID = AccountId.fromEvmAddress(0, 0, token);
+                }
+
+                let receiverID: AccountId;
+                if (this._isHederaFormatAddress(receiverAccount)) {
+                    receiverID = AccountId.fromString(receiverAccount);
+                } else {
+                    receiverID = AccountId.fromEvmAddress(0, 0, receiverAccount);
+                }
+
+                const keys = await this._getKeys(tokenType);
+
+                const nodeAccountID = [new AccountId(5), new AccountId(6)]
+                
+                const client = this._getClient("test");
+                const transferTx = new TransferTransaction()
+                    .addTokenTransfer(tokenID, treasuryAccountID, -amount)
+                    .addTokenTransfer(tokenID, receiverID, amount)
+                    .setNodeAccountIds(nodeAccountID);
+
+                const transaction = await transferTx.freezeWith(client);
+                const signature1 = keys[0].private.signTransaction(transaction);
+                const signature2 = keys[1].private.signTransaction(transaction);
+
+                const signedTransaction = transaction.addSignature(keys[0].public, signature1).addSignature(keys[1].public, signature2);
+                const submitTx = await signedTransaction.execute(client);
+                const txID = submitTx.transactionId.toString();
+                console.log("Transaction id", txID);
+            } else {
+                throw new Error("Token not supported");
+            }
+        } catch (err) {
+            logger.error("Hedera Chain Model")
+        }
+    }
+
+    async getTokenBalance(chain: SUPPORTED_CHAINS, account: string, token: string): Promise<{ balance: BigInt, decimals?: number }> {
         try {
             // Put account and token in Hedera format
             let accountAddress = account;
@@ -52,17 +150,17 @@ export class HederaChainModel {
             // Process data
             const parsed = hederaTokenBalanceSchema.safeParse(response);
             if (parsed.error) {
-                throw new Error("Could not parse data from hedera", {cause: parsed.error.issues});
+                throw new Error("Could not parse data from hedera", { cause: parsed.error.issues });
             }
             const data = parsed.data;
 
             for (const token of data.tokens) {
                 if (token.token_id.toLowerCase() === tokenID.toLowerCase()) {
-                    return {balance: BigInt(token.balance), decimals: token.decimals};
+                    return { balance: BigInt(token.balance), decimals: token.decimals };
                 }
             }
 
-            return {balance: BigInt(0)};
+            return { balance: BigInt(0) };
         } catch (err) {
             logger.error("Error getting token balance on Hedera", { error: err, chain, account, token });
             throw new Error("Error getting token balance on Hedera");

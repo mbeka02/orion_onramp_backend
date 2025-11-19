@@ -1,0 +1,6 @@
+import { LiquidityManagerController } from "../../src/controllers/liquidityManager";
+
+export const liquidityManagerControllerMock = {
+    doesTreasuryHaveBalance: jest.fn(),
+    getMoreTokens: jest.fn()
+} as LiquidityManagerController

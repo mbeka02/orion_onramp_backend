@@ -31,7 +31,7 @@ export class TreasuryController {
             }
 
             // Check if treasury has enough
-            const isEnough = await liquidityManagerController.doesTreasuryHaveBalance(transaction.token, transaction.amount / 100, liquidityModel);
+            const isEnough = await liquidityManagerController.doesTreasuryHaveBalance(transaction.token, transaction.amount / 100, liquidityModel, emailService);
             if (isEnough === false) {
                 // Send request for more tokens
                 await liquidityManagerController.getMoreTokens(transaction.token, emailService, transaction.amount / 100);

@@ -3,8 +3,10 @@ import logger from "../lib/logger";
 import { LiquidityManagerModel } from "../models/liquidityManager";
 import { TOKEN_TYPE } from "../types/token";
 
+const MINIMUM_TOKEN_BALANCE_TREASURY = 300000;
+
 export class LiquidityManagerController {
-    async doesTreasuryHaveBalance(token: TOKEN_TYPE, amount: number, liquidityModel: LiquidityManagerModel): Promise<boolean> {
+    async doesTreasuryHaveBalance(token: TOKEN_TYPE, amount: number, liquidityModel: LiquidityManagerModel, emailService: EmailService): Promise<boolean> {
         try {
             const balance = await liquidityModel.getCachedTreasuryTokenBalance(token);
             if (balance < amount) {
@@ -13,6 +15,9 @@ export class LiquidityManagerController {
                 // Optimistically deduct balance
                 await liquidityModel.deductCachedTreasuryBalance(token, amount);
 
+                if ((balance - amount) <= MINIMUM_TOKEN_BALANCE_TREASURY) {
+                    await this.getMoreTokens(token, emailService);
+                }
                 return true;
             }
         } catch(err) {

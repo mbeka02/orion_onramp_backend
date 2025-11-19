@@ -19,6 +19,7 @@ export enum Errors {
   UNAUTHORIZED_PAYMENT = "Unauthorized payment",
   PAYMENT_ALREADY_ONRAMPED = "Payment already onramped",
   PAYMENT_NOT_COMPLETE = "Payment not complete",
+  TREASURY_DOES_NOT_HAVE_ENOUGH = "Treasury does not have enough",
   INTERNAL_SERVER_ERROR = "Internal Server Error",
 
   // transactions

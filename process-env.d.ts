@@ -22,6 +22,7 @@ declare global {
       INFISICAL_PROJECT_ID: string;
       INFISICAL_CLIENT_ID: string;
       INFISICAL_CLIENT_SECRET: string;
+      TREASURY_OVERLOOK_EMAIL: string;
     }
   }
 }

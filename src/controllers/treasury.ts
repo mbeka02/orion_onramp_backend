@@ -1,13 +1,13 @@
 import { Errors, MyError } from "../errors";
+import { EmailService } from "../lib/emails/email.util";
 import logger from "../lib/logger";
-import treasuryBalanceQueue from "../lib/queue/treasuryBalanceQueue";
 import { LiquidityManagerModel } from "../models/liquidityManager";
 import { TransactionModel } from "../models/transactions";
 import { TreasuryModel } from "../models/treasury";
 import { LiquidityManagerController } from "./liquidityManager";
 
 export class TreasuryController {
-    async businessOnramp(transaction_id: string, treasuryModel: TreasuryModel, liquidityManagerController: LiquidityManagerController, transactionModel: TransactionModel, liquidityModel: LiquidityManagerModel) {
+    async businessOnramp(transaction_id: string, treasuryModel: TreasuryModel, liquidityManagerController: LiquidityManagerController, transactionModel: TransactionModel, liquidityModel: LiquidityManagerModel, emailService: EmailService) {
         try {
             const doesTransactionExist = await treasuryModel.doesTransactionExist(transaction_id);
             if (doesTransactionExist === false) {
@@ -30,10 +30,12 @@ export class TreasuryController {
                 throw new Error("Could not get transaction");
             }
 
-            // Queue treasury balance checks
-            const isEnough = await treasuryBalanceQueue.add(() => liquidityManagerController.doesTreasuryHaveBalance(transaction.token, transaction.amount / 100, liquidityModel)) // convert amount from cents to shillings
-            if (isEnough) {
-                // Something
+            // Check if treasury has enough
+            const isEnough = await liquidityManagerController.doesTreasuryHaveBalance(transaction.token, transaction.amount / 100, liquidityModel);
+            if (isEnough === false) {
+                // Send request for more tokens
+                await liquidityManagerController.getMoreTokens(transaction.token, emailService, transaction.amount / 100);
+                throw new MyError(Errors.TREASURY_DOES_NOT_HAVE_ENOUGH);
             }
         } catch(err) {
             logger.error("Treasury Controller: Error onramping funds from transaction", {error: err, transaction_id});

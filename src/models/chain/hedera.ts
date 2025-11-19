@@ -1,11 +1,11 @@
 import logger from "../../lib/logger";
-import { API_NODES, hederaTokenBalanceSchema, SUPPORTED_CHAINS } from "../../types/chain";
-import { AccountId, Client, Key, KeyList, PrivateKey, PublicKey, TransferTransaction } from "@hiero-ledger/sdk";
+import { API_NODES, hederaAccountDetailsSchema, hederaTokenBalanceSchema, SUPPORTED_CHAINS } from "../../types/chain";
+import { AccountId, Client,PrivateKey, PublicKey, TransferTransaction } from "@hiero-ledger/sdk";
 import "dotenv/config";
 import { TOKEN_TYPE } from "../../types/token";
 import infisical, { InfisicalKeys } from "../../lib/infisical";
 import { error } from "console";
-import e from "express";
+import { Errors, MyError } from "../../errors";
 
 export class HederaChainModel {
     _isHederaFormatAddress(address: string): boolean {
@@ -13,7 +13,7 @@ export class HederaChainModel {
         return hederaAddressFormatRegex.test(address);
     }
 
-    async _getKeys(tokenType: TOKEN_TYPE): Promise<{public: PublicKey, private: PrivateKey}[]> {
+    async _getKeys(tokenType: TOKEN_TYPE): Promise<{ public: PublicKey, private: PrivateKey }[]> {
         try {
             if (tokenType === TOKEN_TYPE.KESy_TESTNET) {
                 if (!process.env.KESy_TESTNET_PRIVATE_KEY || !process.env.KESy_TESTNET_KEY_ACCOUNT_ID) {
@@ -23,8 +23,8 @@ export class HederaChainModel {
                 const key1 = PrivateKey.fromStringECDSA(process.env.KESy_TESTNET_PRIVATE_KEY);
                 const privateKey2 = await infisical.getSecret(InfisicalKeys.KESy_TESTNET_PRIVATE_KEY, "staging");
                 const key2 = PrivateKey.fromStringECDSA(privateKey2);
-                
-                return [{private: key1, public: key1.publicKey}, {private: key2, public: key2.publicKey}]
+
+                return [{ private: key1, public: key1.publicKey }, { private: key2, public: key2.publicKey }]
             } else {
                 throw new Error("Unsupported token type");
             }
@@ -47,18 +47,69 @@ export class HederaChainModel {
                 const client = Client.forTestnet();
                 client.setOperator(accountID, privateKey);
                 return client;
-            } else {    
+            } else {
                 throw new Error("Network not yet supported")
             }
-        } catch(err) {
+        } catch (err) {
             logger.error("Hedera Chain Model: Could not get client for network");
             throw error;
+        }
+    }
+
+    async _checkIfAssociated(tokenType: TOKEN_TYPE, token: string, accountid: string): Promise<boolean> {
+        try {
+            if (tokenType === TOKEN_TYPE.KESy_TESTNET) {
+                if (!process.env.HEDERA_TESTNET_MIRROR_NODE_API) {
+                    throw new Error("Invalid env setup, set HEDERA_TESTNET_MIRROR_NODE_API in env");
+                }
+                const baseUrl = process.env.HEDERA_TESTNET_MIRROR_NODE_API;
+                let nextLink: string | null = `/api/v1/accounts/${accountid}/tokens?limit=100`;
+
+                let tokenAddress = token;
+                if (!this._isHederaFormatAddress(token)) {
+                    tokenAddress = AccountId.fromEvmAddress(0, 0, token).toString();
+                }
+
+                while (nextLink) {
+                    const res = await fetch(`${baseUrl}${nextLink}`, {method: 'GET'});
+                    if (res.status === 200) {
+                        const json = await res.json();
+                        const parsed = hederaAccountDetailsSchema.safeParse(json);
+                        if (parsed.success) {
+                            const data = parsed.data;
+                            const isTokenAssociated = data.tokens.find((t) => t.token_id.toLowerCase() === tokenAddress.toLowerCase());
+                            if (isTokenAssociated) {
+                                return true;
+                            } else {
+                                nextLink = data.links.next;
+                            }
+                        } else {
+                            break;
+                        }
+                    } else {
+                        break
+                    }
+                }
+
+                return false;
+            } else {
+                throw new Error("Unsupported token type");
+            }
+        } catch (err) {
+            console.error("Error checking if account has associated token", err);
+            logger.error("Hedera Contract: Error checking if account has associated", { error: err, token, accountid });
+            throw new Error("Error checking if account has associated");
         }
     }
 
     async transferTokenFromTreasuryToAccount(tokenType: TOKEN_TYPE, treasuryAccount: string, token: string, receiverAccount: string, amount: number) {
         try {
             if (tokenType === TOKEN_TYPE.KESy_TESTNET) {
+                const hasReceiverAssociated = await this._checkIfAssociated(tokenType, token, receiverAccount);
+                if (hasReceiverAssociated === false) {
+                    throw new MyError(Errors.RECEIVER_NOT_ASSOCIATED);
+                }
+
                 let treasuryAccountID: AccountId;
                 if (this._isHederaFormatAddress(treasuryAccount)) {
                     treasuryAccountID = AccountId.fromString(treasuryAccount)
@@ -83,7 +134,7 @@ export class HederaChainModel {
                 const keys = await this._getKeys(tokenType);
 
                 const nodeAccountID = [new AccountId(5), new AccountId(6)]
-                
+
                 const client = this._getClient("test");
                 const transferTx = new TransferTransaction()
                     .addTokenTransfer(tokenID, treasuryAccountID, -amount)
@@ -97,12 +148,15 @@ export class HederaChainModel {
                 const signedTransaction = transaction.addSignature(keys[0].public, signature1).addSignature(keys[1].public, signature2);
                 const submitTx = await signedTransaction.execute(client);
                 const txID = submitTx.transactionId.toString();
-                console.log("Transaction id", txID);
             } else {
                 throw new Error("Token not supported");
             }
         } catch (err) {
+            if (err instanceof MyError) {
+                throw err;
+            }
             logger.error("Hedera Chain Model")
+            throw err;
         }
     }
 

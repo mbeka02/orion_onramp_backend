@@ -85,7 +85,7 @@ export class EmailService {
     }
   }
 
-  private validateEmailAddress(email: string): boolean {
+  validateEmailAddress(email: string): boolean {
     if (typeof email !== "string" || !email) return false;
     if (email.trim() === "") return false;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

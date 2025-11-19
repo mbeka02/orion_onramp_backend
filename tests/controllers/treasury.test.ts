@@ -147,7 +147,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
             if (err instanceof MyError) {
                 if (err.message === Errors.TREASURY_DOES_NOT_HAVE_ENOUGH) {
                     expect(true).toBe(true);
-                    expect(liquidityManagerControllerMock.doesTreasuryHaveBalance).toHaveBeenCalledWith(testToken, too_much_amount, liquidityModelMock);
+                    expect(liquidityManagerControllerMock.doesTreasuryHaveBalance).toHaveBeenCalledWith(testToken, too_much_amount, liquidityModelMock, emailServiceMock);
                     expect(liquidityManagerControllerMock.getMoreTokens).toHaveBeenCalledWith(testToken, emailServiceMock, too_much_amount);
                 } else {
                     console.error("Unexpected error", err);
@@ -158,5 +158,5 @@ describe("Treasury Business SDK Onramp Tests", () => {
                 expect(false).toBe(true);
             }
         }
-    })
+    });
 })

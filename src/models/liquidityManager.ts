@@ -3,7 +3,7 @@ import { db } from "../lib/db";
 import { businesses, environmentsTable, treasuryBalanceTable } from "../lib/db/schema";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
-import { HederaChainModel } from "./chain/hedera";
+import hederaChainModel, { HederaChainModel } from "./chain/hedera";
 import { SUPPORTED_CHAINS } from "../types/chain";
 import { divideBigIntWithDecimals } from "../lib/bigIntDivision";
 import { Errors, MyError } from "../errors";
@@ -132,6 +132,32 @@ export class LiquidityManagerModel {
                 throw err;
             }
             throw new Error("Could not get transaction details needed for business transfer");
+        }
+    }
+
+    async sendTokensToAccount(details: BusinessTransactionDetails) {
+        try {
+            if (details.token_type === TOKEN_TYPE.KESy_TESTNET) {
+                await hederaChainModel.transferTokenFromTreasuryToAccount(
+                    details.token_type, 
+                    details.treasury_account, 
+                    details.token_address, 
+                    details.business_crypto_account, 
+                    details.amount_with_decimals
+                );
+            } else {
+                throw new Error("Token type not supported");
+            }
+        } catch(err) {
+            logger.error("Liquidity Manager Model: Error sending tokens to account", {error: err, details});
+            if (err instanceof MyError) {
+                if (err.message === Errors.RECEIVER_NOT_ASSOCIATED) {
+                    throw new MyError(Errors.BUSINESS_NOT_ASSOCIATED);
+                }
+                
+                throw err;
+            }
+            throw new Error("Could not send tokens");
         }
     }
 }

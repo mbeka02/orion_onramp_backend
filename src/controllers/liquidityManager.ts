@@ -40,6 +40,7 @@ export class LiquidityManagerController {
         try {
             // Get transaction details
             const details = await liquidityModel.getTransactionDetailsForBusinessTransfer(environment_id, token_type, amount);
+            await liquidityModel.sendTokensToAccount(details);
         } catch(err) {
             logger.error("Liquidity Manager Controller: Error sending tokens to business", {error: err});
             if (err instanceof MyError) {

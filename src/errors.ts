@@ -22,6 +22,7 @@ export enum Errors {
   TREASURY_DOES_NOT_HAVE_ENOUGH = "Treasury does not have enough",
   RECEIVER_NOT_ASSOCIATED = "Receiver has not associated",
   BUSINESS_NOT_SET_WALLET = "Business has not set wallet",
+  BUSINESS_NOT_ASSOCIATED = "Business has not associated",
   INTERNAL_SERVER_ERROR = "Internal Server Error",
 
   // transactions

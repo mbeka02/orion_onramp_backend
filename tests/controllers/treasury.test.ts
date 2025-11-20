@@ -97,6 +97,8 @@ describe("Treasury Business SDK Onramp Tests", () => {
                     res(enough_transaction);
                 } else if (id === failing_transaction_id) {
                     res(failing_transaction);
+                } else {
+                    rej(new Error("Unexpected transaction id"));
                 }
             })
         });

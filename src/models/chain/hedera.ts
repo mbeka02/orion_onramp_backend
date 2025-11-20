@@ -1,6 +1,6 @@
 import logger from "../../lib/logger";
 import { API_NODES, hederaAccountDetailsSchema, hederaTokenBalanceSchema, SUPPORTED_CHAINS } from "../../types/chain";
-import { AccountId, Client,PrivateKey, PublicKey, TransferTransaction } from "@hiero-ledger/sdk";
+import { AccountId, Client,PrivateKey, PublicKey, ReceiptStatusError, TransferTransaction } from "@hiero-ledger/sdk";
 import "dotenv/config";
 import { TOKEN_TYPE } from "../../types/token";
 import infisical, { InfisicalKeys } from "../../lib/infisical";
@@ -147,15 +147,25 @@ export class HederaChainModel {
 
                 const signedTransaction = transaction.addSignature(keys[0].public, signature1).addSignature(keys[1].public, signature2);
                 const submitTx = await signedTransaction.execute(client);
+                const receiptTransferTxn = await submitTx.getReceipt(client);
+                const status = receiptTransferTxn.status;
+                if (status.toString() !== "SUCCESS") {
+                    throw new Error("Could not send tokens");
+                }
                 const txID = submitTx.transactionId.toString();
             } else {
                 throw new Error("Token not supported");
             }
         } catch (err) {
+            if (err instanceof ReceiptStatusError) {
+                if (err.status._code === 178) {
+                    throw new MyError(Errors.TREASURY_DOES_NOT_HAVE_ENOUGH);
+                }
+            }
             if (err instanceof MyError) {
                 throw err;
             }
-            logger.error("Hedera Chain Model")
+            logger.error("Hedera Chain Model", {error: err});
             throw err;
         }
     }

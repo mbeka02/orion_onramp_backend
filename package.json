@@ -34,7 +34,6 @@
     "luxon": "^3.7.2",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.10",
-    "p-queue": "^9.0.0",
     "pg": "^8.16.3",
     "pino": "^10.1.0",
     "posthog-node": "^5.10.4",

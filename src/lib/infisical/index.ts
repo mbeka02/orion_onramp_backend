@@ -30,7 +30,7 @@ class Infisical {
         }
     }
 
-    async getSecret(key: InfisicalKeys, environment: "dev" | "prod" | "stg"): Promise<string> {
+    async getSecret(key: InfisicalKeys, environment: "dev" | "prod" | "staging"): Promise<string> {
         try {
             await this._login();
             const secret = await this.client.secrets().getSecret({

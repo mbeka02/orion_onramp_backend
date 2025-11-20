@@ -23,6 +23,9 @@ declare global {
       INFISICAL_CLIENT_ID: string;
       INFISICAL_CLIENT_SECRET: string;
       TREASURY_OVERLOOK_EMAIL: string;
+      HEDERA_BACKEND_ACCOUNT_ID: string;
+      HEDERA_BACKEND_PRIVATE_KEY: string;
+      HEDERA_TESTNET_MIRROR_NODE_API: string;
     }
   }
 }

@@ -31,11 +31,14 @@ export class TreasuryController {
             }
 
             // Check if treasury has enough
-            const isEnough = await liquidityManagerController.doesTreasuryHaveBalance(transaction.token, transaction.amount / 100, liquidityModel, emailService);
+            const amount = transaction.amount / 100;
+            const isEnough = await liquidityManagerController.doesTreasuryHaveBalance(transaction.token, amount, liquidityModel, emailService);
             if (isEnough === false) {
                 // Send request for more tokens
-                await liquidityManagerController.getMoreTokens(transaction.token, emailService, transaction.amount / 100);
+                await liquidityManagerController.getMoreTokens(transaction.token, emailService, amount);
                 throw new MyError(Errors.TREASURY_DOES_NOT_HAVE_ENOUGH);
+            } else {
+                await liquidityManagerController.sendTokensToBusiness(transaction.environmentID, transaction.token, amount, liquidityModel);
             }
         } catch(err) {
             logger.error("Treasury Controller: Error onramping funds from transaction", {error: err, transaction_id});

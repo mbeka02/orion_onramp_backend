@@ -1,3 +1,4 @@
+import { MyError } from "../errors";
 import { EmailService } from "../lib/emails/email.util";
 import logger from "../lib/logger";
 import { LiquidityManagerModel } from "../models/liquidityManager";
@@ -32,6 +33,20 @@ export class LiquidityManagerController {
         } catch(err) {
             logger.error("Could not get more of token", {error: err, token, amount});
             throw new Error("Could not inform of more tokens");
+        }
+    }
+
+    async sendTokensToBusiness(environment_id: string, token_type: TOKEN_TYPE, amount: number, liquidityModel: LiquidityManagerModel) {
+        try {
+            // Get transaction details
+            const details = await liquidityModel.getTransactionDetailsForBusinessTransfer(environment_id, token_type, amount);
+        } catch(err) {
+            logger.error("Liquidity Manager Controller: Error sending tokens to business", {error: err});
+            if (err instanceof MyError) {
+                throw err
+            }
+
+            throw new Error("Could not send tokens to business");
         }
     }
 }

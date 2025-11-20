@@ -20,6 +20,8 @@ export enum Errors {
   PAYMENT_ALREADY_ONRAMPED = "Payment already onramped",
   PAYMENT_NOT_COMPLETE = "Payment not complete",
   TREASURY_DOES_NOT_HAVE_ENOUGH = "Treasury does not have enough",
+  RECEIVER_NOT_ASSOCIATED = "Receiver has not associated",
+  BUSINESS_NOT_SET_WALLET = "Business has not set wallet",
   INTERNAL_SERVER_ERROR = "Internal Server Error",
 
   // transactions

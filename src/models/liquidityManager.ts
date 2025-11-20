@@ -1,11 +1,20 @@
 import { eq } from "drizzle-orm";
 import { db } from "../lib/db";
-import { treasuryBalanceTable } from "../lib/db/schema";
+import { businesses, environmentsTable, treasuryBalanceTable } from "../lib/db/schema";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
 import { HederaChainModel } from "./chain/hedera";
 import { SUPPORTED_CHAINS } from "../types/chain";
 import { divideBigIntWithDecimals } from "../lib/bigIntDivision";
+import { Errors, MyError } from "../errors";
+
+interface BusinessTransactionDetails {
+    token_type: TOKEN_TYPE,
+    treasury_account: string,
+    token_address: string,
+    business_crypto_account: string,
+    amount_with_decimals: number
+}
 
 export class LiquidityManagerModel {
     async getCachedTreasuryTokenBalance(token_type: TOKEN_TYPE): Promise<number> {
@@ -75,6 +84,54 @@ export class LiquidityManagerModel {
         } catch(err) {
             logger.error("Liquidity Model: Error deducting cached treasury balance", {error: err, token, amount});
             throw new Error("Error deducting from cached treasury balance");
+        }
+    }
+
+    async getTransactionDetailsForBusinessTransfer(environment_id: string, tokenType: TOKEN_TYPE, amount: number): Promise<BusinessTransactionDetails> {
+        try {
+            const businessDetails = await db.select({
+                business_crypto_account: businesses.cryptoWalletAddress
+            }).from(environmentsTable)
+            .innerJoin(businesses, eq(environmentsTable.businessID, businesses.id))
+            .where(eq(environmentsTable.id, environment_id))
+            .limit(1);
+
+            if (businessDetails.length < 1) {
+                throw new Error("Could not get business details");
+            }
+
+            const business = businessDetails[0];
+            if (!business.business_crypto_account) {
+                throw new MyError(Errors.BUSINESS_NOT_SET_WALLET);
+            }
+
+            const tokenDetails = await db.select({
+                treasury_account: treasuryBalanceTable.treasuryAccount,
+                token_address: treasuryBalanceTable.address,
+                decimals: treasuryBalanceTable.decimals
+            }).from(treasuryBalanceTable)
+            .where(eq(treasuryBalanceTable.token, tokenType))
+            .limit(1);
+
+            if (tokenDetails.length < 1) {
+                throw new Error("Could not get token details");
+            }
+
+            const token = tokenDetails[0];
+
+            return {
+                token_type: tokenType,
+                treasury_account: token.treasury_account,
+                token_address: token.token_address,
+                business_crypto_account: business.business_crypto_account,
+                amount_with_decimals: amount * Math.pow(10, token.decimals)
+            }
+        } catch(err) {
+            logger.error("Liquidity Manager Model: Could not get details needed for business transfer", {error: err, tokenType});
+            if (err instanceof MyError) {
+                throw err;
+            }
+            throw new Error("Could not get transaction details needed for business transfer");
         }
     }
 }

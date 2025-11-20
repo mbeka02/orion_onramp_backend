@@ -36,11 +36,22 @@ describe("Treasury Business SDK Onramp Tests", () => {
         email: "enough",
         transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
     }
+    const failing_transaction_id = "failing_transaction";
+    const failingEnvironment = "failing";
+    const failing_transaction = {
+        id: failing_transaction_id,
+        environmentID: failingEnvironment,
+        reference: "enough",
+        token: testToken,
+        amount: enough_amount * 100,
+        email: "enough",
+        transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
+    }
 
     beforeAll(async () => {
         treasuryModelMock.doesTransactionExist = jest.fn().mockImplementation((transaction_id: string) => {
             return new Promise((res, rej) => {
-                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id || transaction_id === not_complete_transaction_id || transaction_id === too_much_transaction_id || transaction_id === enough_transaction_id) {
+                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id || transaction_id === not_complete_transaction_id || transaction_id === too_much_transaction_id || transaction_id === enough_transaction_id || transaction_id === failing_transaction_id) {
                     res(true);
                 } else {
                     res(false);
@@ -60,7 +71,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
 
         treasuryModelMock.isFiatPaymentCompleted = jest.fn().mockImplementation((transaction_id: string) => {
             return new Promise((res, rej) => {
-                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id || transaction_id === too_much_transaction_id || transaction_id === enough_transaction_id) {
+                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id || transaction_id === too_much_transaction_id || transaction_id === enough_transaction_id || transaction_id === failing_transaction_id) {
                     res(true);
                 } else {
                     res(false);
@@ -84,6 +95,8 @@ describe("Treasury Business SDK Onramp Tests", () => {
                     res(too_much_transaction);
                 } else if (id === enough_transaction_id) {
                     res(enough_transaction);
+                } else if (id === failing_transaction_id) {
+                    res(failing_transaction);
                 }
             })
         });
@@ -91,6 +104,16 @@ describe("Treasury Business SDK Onramp Tests", () => {
         liquidityManagerControllerMock.getMoreTokens = jest.fn().mockImplementation((token, amount) => {
             return new Promise((res, rej) => {
                 res(null);
+            })
+        });
+
+        liquidityManagerControllerMock.sendTokensToBusiness = jest.fn().mockImplementation((environment_id, token_type, amount, liquidityModel) => {
+            return new Promise((res, rej) => {
+                if (environment_id === failingEnvironment) {
+                    rej(new Error("Could not send"));
+                } else {
+                    res(null);
+                }
             })
         })
     });
@@ -180,6 +203,15 @@ describe("Treasury Business SDK Onramp Tests", () => {
         } catch (err) {
             console.error("Unexpected error", err);
             expect(false).toBe(true);
+        }
+    });
+
+    it("should undo treasury cache deduct if something failed but had enough balance", async () => {
+        try {
+            await treasuryController.businessOnramp(failing_transaction_id, treasuryModelMock, liquidityManagerControllerMock, transactionModelMock, liquidityModelMock, emailServiceMock);
+            expect(false).toBe(true);
+        } catch(err) {
+            expect(liquidityManagerControllerMock.undoCacheDeduct).toHaveBeenCalledWith(failing_transaction.token, failing_transaction.amount, liquidityModelMock);
         }
     })
 })

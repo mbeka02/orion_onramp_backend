@@ -6,5 +6,6 @@ export const liquidityModelMock = {
     deductCachedTreasuryBalance: jest.fn(),
     transferToBusiness: jest.fn(),
     getTransactionDetailsForBusinessTransfer: jest.fn(),
-    sendTokensToAccount: jest.fn()
+    sendTokensToAccount: jest.fn(),
+    undoTreasuryCachedBalanceDeduct: jest.fn()
 } as LiquidityManagerModel

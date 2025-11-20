@@ -1,4 +1,5 @@
 import liquidityManagerController from "../../src/controllers/liquidityManager";
+import { Errors, MyError } from "../../src/errors";
 import { TOKEN_TYPE } from "../../src/types/token"
 import { emailServiceMock } from "../mocks/email_service_mock";
 import { liquidityModelMock } from "../mocks/liquidity_model_mock";
@@ -44,5 +45,40 @@ describe("Liquidity Managers Tests: Treasury Balance checker", () => {
         expect(isEnough).toBe(true);
         expect(liquidityModelMock.deductCachedTreasuryBalance).toHaveBeenCalledWith(otherToken, safeBalanceCheck);
         expect(emailServiceMock.topUpTreasury).toHaveBeenCalledWith(otherToken, undefined)
+    })
+});
+
+describe("Liquidity Manager Tests: Send Tokens To Business", () => {
+    const environment_no_wallet = "no wallet";
+    const amount = 10;
+    const tokenType = TOKEN_TYPE.KESy_TESTNET
+
+    beforeAll(async () => {
+        liquidityModelMock.getTransactionDetailsForBusinessTransfer = jest.fn().mockImplementation((environment_id, token_type, amount) => {
+            return new Promise((res, rej) => {
+                if (environment_id === environment_no_wallet) {
+                    rej(new MyError(Errors.BUSINESS_NOT_SET_WALLET));
+                }
+            })
+        })
+    });
+
+    it("should fail if business has not set crypto wallet", async () => {
+        try {
+            await liquidityManagerController.sendTokensToBusiness(environment_no_wallet, tokenType, amount, liquidityModelMock);
+            expect(false).toBe(true);
+        } catch (err) {
+            if (err instanceof MyError) {
+                if (err.message === Errors.BUSINESS_NOT_SET_WALLET) {
+                    expect(true).toBe(true)
+                } else {
+                    console.error("Unexpected error", err);
+                    expect(false).toBe(true);
+                }
+            } else {
+                console.error("Unexpected error", err);
+                expect(false).toBe(true);
+            }
+        }
     })
 })

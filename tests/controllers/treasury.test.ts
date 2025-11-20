@@ -211,7 +211,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
             await treasuryController.businessOnramp(failing_transaction_id, treasuryModelMock, liquidityManagerControllerMock, transactionModelMock, liquidityModelMock, emailServiceMock);
             expect(false).toBe(true);
         } catch(err) {
-            expect(liquidityManagerControllerMock.undoCacheDeduct).toHaveBeenCalledWith(failing_transaction.token, failing_transaction.amount, liquidityModelMock);
+            expect(liquidityManagerControllerMock.undoCacheDeduct).toHaveBeenCalledWith(failing_transaction.token, failing_transaction.amount / 100, liquidityModelMock);
         }
     })
 })

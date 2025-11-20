@@ -5,6 +5,8 @@ import { validateBody } from "../middleware/validation";
 import { initializeTransactionSchema } from "../types/transactions";
 import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
+import { PaystackWebhookPayload } from "../types/paystack";
+import { validatePrivateKey } from "../middleware/authenticationMiddleware";
 
 const router: Router = Router();
 
@@ -18,7 +20,6 @@ const transactionController = new TransactionController(transactionModel);
  * Body:
  * - amount: number (in major units, e.g., KES 1000)
  * - email: string
- * - environmentID: string (UUID)
  * - token: "KESy_MAINNET" | "KESy_TESTNET"
  * - metadata: { orderID: string, ...other fields }
  * - currency?: string (default: "KES")
@@ -27,10 +28,17 @@ const transactionController = new TransactionController(transactionModel);
  */
 router.post(
   "/initialize",
+  validatePrivateKey,
   validateBody(initializeTransactionSchema),
   async (req: Request, res: Response) => {
     try {
-      const { environmentID, token, ...transactionRequest } = req.body;
+      if (!req.environment_id) {
+        res.status(401).json({error: Errors.UNAUTHORIZED});
+        return;
+      }
+
+      const environmentID = req.environment_id;
+      const { token, ...transactionRequest } = req.body;
 
       const result = await transactionController.initializeTransaction(
         transactionRequest,
@@ -60,5 +68,37 @@ router.post(
     }
   },
 );
+/**
+ * Paystack webhook
+ * Handles incoming webhook events from Paystack
+ */
+router.post("/webhook/paystack", async (req: Request, res: Response) => {
+  try {
+    const body = (req as any).rawBody;
+    if (!body) {
+      logger.error("Raw body not available for webhook signature validation");
+      return res.status(400).send("Invalid request");
+    }
+    const paystackSignature = req.headers["x-paystack-signature"] as string;
+    if (!paystackSignature) {
+      logger.warn("Missing Paystack webhook signature");
+      return res.status(400).send("Missing signature");
+    }
+    const isValid = transactionController.isSignatureValid(
+      body,
+      paystackSignature,
+    );
+    if (!isValid) {
+      logger.warn("Invalid Paystack webhook signature");
+      return res.status(400).send("Invalid signature");
+    }
+    const { event, data } = JSON.parse(body) as PaystackWebhookPayload;
+    await transactionController.handlePaystackWebhook(event, data);
+    return res.status(200).send("Webhook received");
+  } catch (error) {
+    logger.error("Error handling Paystack webhook", { error });
+    return res.status(500).send("Internal Server Error");
+  }
+});
 
 export default router;

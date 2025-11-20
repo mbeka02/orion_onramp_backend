@@ -10,7 +10,6 @@ import { authenticationMiddleware } from "../middleware/authenticationMiddleware
 import { SuccessMessage } from "../success";
 import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
-import { auth } from "../lib/auth";
 import { getAuthContext } from "../lib/auth/utils";
 import businessModel from "../models/businesses";
 const router: Router = Express.Router();

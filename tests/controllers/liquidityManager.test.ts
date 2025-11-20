@@ -50,7 +50,12 @@ describe("Liquidity Managers Tests: Treasury Balance checker", () => {
 
 describe("Liquidity Manager Tests: Send Tokens To Business", () => {
     const environment_no_wallet = "no wallet";
+    const environment_not_associated = "not associated";
+    const notAssociatedAccount = "not associated";
+    const treasuryAccount = "treasury";
+    const token = "token";
     const amount = 10;
+    const amountWithDecimals = amount * Math.pow(10, 2)
     const tokenType = TOKEN_TYPE.KESy_TESTNET
 
     beforeAll(async () => {
@@ -58,6 +63,22 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
             return new Promise((res, rej) => {
                 if (environment_id === environment_no_wallet) {
                     rej(new MyError(Errors.BUSINESS_NOT_SET_WALLET));
+                } else if (environment_id === environment_not_associated) {
+                    res({
+                        token_type: tokenType,
+                        treasury_account: treasuryAccount,
+                        token_address: token,
+                        business_crypto_account: notAssociatedAccount,
+                        amount_with_decimals: amountWithDecimals
+                    })
+                }
+            })
+        });
+
+        liquidityModelMock.sendTokensToAccount = jest.fn().mockImplementation((details) => {
+            return new Promise((res, rej) => {
+                if (details.business_crypto_account === notAssociatedAccount) {
+                    rej (new MyError(Errors.BUSINESS_NOT_ASSOCIATED));
                 }
             })
         })
@@ -71,6 +92,25 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
             if (err instanceof MyError) {
                 if (err.message === Errors.BUSINESS_NOT_SET_WALLET) {
                     expect(true).toBe(true)
+                } else {
+                    console.error("Unexpected error", err);
+                    expect(false).toBe(true);
+                }
+            } else {
+                console.error("Unexpected error", err);
+                expect(false).toBe(true);
+            }
+        }
+    });
+
+    it("should fail if business has not associated to account", async () => {
+        try {
+            await liquidityManagerController.sendTokensToBusiness(environment_not_associated, tokenType, amount, liquidityModelMock);
+            expect(false).toBe(true);
+        } catch (err) {
+            if (err instanceof MyError) {
+                if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
+                    expect(true).toBe(true);
                 } else {
                     console.error("Unexpected error", err);
                     expect(false).toBe(true);

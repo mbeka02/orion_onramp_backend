@@ -1,10 +1,13 @@
 import { MyError } from "../errors";
 import { EmailService } from "../lib/emails/email.util";
 import logger from "../lib/logger";
+import sleep from "../lib/sleep";
 import { LiquidityManagerModel } from "../models/liquidityManager";
 import { TOKEN_TYPE } from "../types/token";
 
 const MINIMUM_TOKEN_BALANCE_TREASURY = 300000;
+
+const MAX_RETRIES = 5;
 
 export class LiquidityManagerController {
     async doesTreasuryHaveBalance(token: TOKEN_TYPE, amount: number, liquidityModel: LiquidityManagerModel, emailService: EmailService): Promise<boolean> {
@@ -48,6 +51,20 @@ export class LiquidityManagerController {
             }
 
             throw new Error("Could not send tokens to business");
+        }
+    }
+
+    async undoCacheDeduct(token: TOKEN_TYPE, amount: number, liquidityModel: LiquidityManagerModel, retry: number = 1) {
+        try {
+            await liquidityModel.undoTreasuryCachedBalanceDeduct(token, amount);
+        } catch(err) {
+            logger.error("Liquidity Manager Controller: Undo cache deduct failed", {error: err, token, amount, retry});
+            if (retry < MAX_RETRIES) {
+                await sleep((2 ** retry) * 1000)
+                await this.undoCacheDeduct(token, amount, liquidityModel, retry + 1);
+            } else {
+                throw new Error("Could not undo cache deduct");
+            }
         }
     }
 }

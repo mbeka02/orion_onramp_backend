@@ -38,7 +38,13 @@ export class TreasuryController {
                 await liquidityManagerController.getMoreTokens(transaction.token, emailService, amount);
                 throw new MyError(Errors.TREASURY_DOES_NOT_HAVE_ENOUGH);
             } else {
-                await liquidityManagerController.sendTokensToBusiness(transaction.environmentID, transaction.token, amount, liquidityModel);
+                try {
+                    await liquidityManagerController.sendTokensToBusiness(transaction.environmentID, transaction.token, amount, liquidityModel);
+                } catch(err) {
+                    logger.error("Treasury Controller: Error sending tokens", {error: err, transaction_id});
+                    await liquidityManagerController.undoCacheDeduct(transaction.token, transaction.amount, liquidityModel);
+                    throw err;
+                }
             }
         } catch(err) {
             logger.error("Treasury Controller: Error onramping funds from transaction", {error: err, transaction_id});

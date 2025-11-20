@@ -160,6 +160,30 @@ export class LiquidityManagerModel {
             throw new Error("Could not send tokens");
         }
     }
+
+    async undoTreasuryCachedBalanceDeduct(token: TOKEN_TYPE, amount: number) {
+        try {
+            const currentBalance = await db.select({
+                balance: treasuryBalanceTable.balance,
+                decimals: treasuryBalanceTable.decimals
+            }).from(treasuryBalanceTable)
+            .where(eq(treasuryBalanceTable.token, token));
+
+            if (currentBalance.length > 0) {
+                const balance = currentBalance[0];
+                const amountSubract = BigInt(amount * Math.pow(10, balance.decimals));
+                
+                if (balance.balance >= amountSubract) {
+                    await db.update(treasuryBalanceTable).set({
+                        balance: balance.balance + amountSubract
+                    }).where(eq(treasuryBalanceTable.token, token));
+                }
+            }
+        } catch(err) {
+            logger.error("Liquidity Manager Model: Error undoing treasury cache balance deduct", {error: err, token, amount});
+            throw new Error("Error undoing treasury cache balance");
+        }
+    }
 }
 
 const liquidityModel = new LiquidityManagerModel();

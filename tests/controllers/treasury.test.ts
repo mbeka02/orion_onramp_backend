@@ -18,18 +18,29 @@ describe("Treasury Business SDK Onramp Tests", () => {
     const testToken = TOKEN_TYPE.KESy_TESTNET;
     const too_much_transaction = {
         id: too_much_transaction_id,
-        environment_id: "too_much",
+        environmentID: "too_much",
         reference: "too_much",
         token: testToken,
         amount: too_much_amount * 100,
         email: "too_much",
         transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
     }
+    const enough_transaction_id = "enough_transaction";
+    const enough_amount = 10;
+    const enough_transaction = {
+        id: enough_transaction_id,
+        environmentID: "enough",
+        reference: "enough",
+        token: testToken,
+        amount: enough_amount * 100,
+        email: "enough",
+        transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
+    }
 
-    beforeAll(async() => {
+    beforeAll(async () => {
         treasuryModelMock.doesTransactionExist = jest.fn().mockImplementation((transaction_id: string) => {
             return new Promise((res, rej) => {
-                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id || transaction_id === not_complete_transaction_id || transaction_id === too_much_transaction_id) {
+                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id || transaction_id === not_complete_transaction_id || transaction_id === too_much_transaction_id || transaction_id === enough_transaction_id) {
                     res(true);
                 } else {
                     res(false);
@@ -49,7 +60,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
 
         treasuryModelMock.isFiatPaymentCompleted = jest.fn().mockImplementation((transaction_id: string) => {
             return new Promise((res, rej) => {
-                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id || transaction_id === too_much_transaction_id) {
+                if (transaction_id === existing_transaction_id || transaction_id === onramped_transaction_id || transaction_id === too_much_transaction_id || transaction_id === enough_transaction_id) {
                     res(true);
                 } else {
                     res(false);
@@ -59,7 +70,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
 
         liquidityManagerControllerMock.doesTreasuryHaveBalance = jest.fn().mockImplementation((token, amount, liquidityModel) => {
             return new Promise((res, rej) => {
-                if (token === testToken && amount >= too_much_amount ) {
+                if (token === testToken && amount >= too_much_amount) {
                     res(false)
                 } else {
                     res(true);
@@ -71,6 +82,8 @@ describe("Treasury Business SDK Onramp Tests", () => {
             return new Promise((res, rej) => {
                 if (id === too_much_transaction_id) {
                     res(too_much_transaction);
+                } else if (id === enough_transaction_id) {
+                    res(enough_transaction);
                 }
             })
         });
@@ -86,7 +99,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
         try {
             await treasuryController.businessOnramp(non_existing_transaction_id, treasuryModelMock, liquidityManagerControllerMock, transactionModelMock, liquidityModelMock, emailServiceMock);
             expect(false).toBe(true);
-        } catch(err) {
+        } catch (err) {
             if (err instanceof MyError) {
                 if (err.message === Errors.UNAUTHORIZED_PAYMENT) {
                     expect(true).toBe(true);
@@ -105,7 +118,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
         try {
             await treasuryController.businessOnramp(onramped_transaction_id, treasuryModelMock, liquidityManagerControllerMock, transactionModelMock, liquidityModelMock, emailServiceMock);
             expect(false).toBe(true);
-        } catch(err) {
+        } catch (err) {
             if (err instanceof MyError) {
                 if (err.message === Errors.PAYMENT_ALREADY_ONRAMPED) {
                     expect(true).toBe(true);
@@ -124,7 +137,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
         try {
             await treasuryController.businessOnramp(not_complete_transaction_id, treasuryModelMock, liquidityManagerControllerMock, transactionModelMock, liquidityModelMock, emailServiceMock);
             expect(false).toBe(true);
-        } catch(err) {
+        } catch (err) {
             if (err instanceof MyError) {
                 if (err.message === Errors.PAYMENT_NOT_COMPLETE) {
                     expect(true).toBe(true);
@@ -143,7 +156,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
         try {
             await treasuryController.businessOnramp(too_much_transaction_id, treasuryModelMock, liquidityManagerControllerMock, transactionModelMock, liquidityModelMock, emailServiceMock);
             expect(true).toBe(false);
-        } catch(err) {
+        } catch (err) {
             if (err instanceof MyError) {
                 if (err.message === Errors.TREASURY_DOES_NOT_HAVE_ENOUGH) {
                     expect(true).toBe(true);
@@ -159,4 +172,14 @@ describe("Treasury Business SDK Onramp Tests", () => {
             }
         }
     });
+
+    it("should send tokens to the DApp", async () => {
+        try {
+            await treasuryController.businessOnramp(enough_transaction_id, treasuryModelMock, liquidityManagerControllerMock, transactionModelMock, liquidityModelMock, emailServiceMock);
+            expect(liquidityManagerControllerMock.sendTokensToBusiness).toHaveBeenCalledWith(enough_transaction.environmentID, enough_transaction.token, enough_transaction.amount / 100, liquidityModelMock);
+        } catch (err) {
+            console.error("Unexpected error", err);
+            expect(false).toBe(true);
+        }
+    })
 })

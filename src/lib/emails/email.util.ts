@@ -72,7 +72,7 @@ export class EmailService {
   async topUpTreasury(token: TOKEN_TYPE, amount?: number) {
     try {
       if (!process.env.TREASURY_OVERLOOK_EMAIL) {
-        throw new Error("Invalid env setup, set")
+        throw new Error("Invalid env setup, set TREASURY_OVERLOOK_EMAIL")
       }
       await sendEmail({
         to: process.env.TREASURY_OVERLOOK_EMAIL,
@@ -80,7 +80,7 @@ export class EmailService {
         react: TopUpTreasury({token, amount})
       })
     } catch(err) {
-      logger.error("Email Util: Top Up Treasury Email", {error: err});
+      logger.error("Email Util: Could not send Top Up Treasury Email", {error: err});
       throw new Error("Could not send top up treasury email");
     }
   }

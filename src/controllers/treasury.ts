@@ -42,7 +42,7 @@ export class TreasuryController {
                     await liquidityManagerController.sendTokensToBusiness(transaction.environmentID, transaction.token, amount, liquidityModel);
                 } catch(err) {
                     logger.error("Treasury Controller: Error sending tokens", {error: err, transaction_id});
-                    await liquidityManagerController.undoCacheDeduct(transaction.token, transaction.amount, liquidityModel);
+                    await liquidityManagerController.undoCacheDeduct(transaction.token, amount, liquidityModel);
                     throw err;
                 }
             }

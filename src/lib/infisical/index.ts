@@ -9,8 +9,10 @@ export enum InfisicalKeys {
 
 class Infisical {
     private client: InfisicalSDK
+    private isLoggedIn: boolean
 
     constructor() {
+        this.isLoggedIn = false;
         this.client = new InfisicalSDK();
     }
 
@@ -32,7 +34,16 @@ class Infisical {
 
     async getSecret(key: InfisicalKeys, environment: "dev" | "prod" | "staging"): Promise<string> {
         try {
-            await this._login();
+            if (!process.env.INFISICAL_PROJECT_ID) {
+                throw new Error("Invalid env setup, set INFISICAL_PROJECT_ID in env");
+            }
+
+            if (this.isLoggedIn === false) {
+                await this._login();
+            } else {
+                await this.client.auth().universalAuth.renew();
+            }
+            
             const secret = await this.client.secrets().getSecret({
                 environment,
                 projectId: process.env.INFISICAL_PROJECT_ID,

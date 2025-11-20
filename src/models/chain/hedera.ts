@@ -4,7 +4,6 @@ import { AccountId, Client,PrivateKey, PublicKey, ReceiptStatusError, TransferTr
 import "dotenv/config";
 import { TOKEN_TYPE } from "../../types/token";
 import infisical, { InfisicalKeys } from "../../lib/infisical";
-import { error } from "console";
 import { Errors, MyError } from "../../errors";
 
 export class HederaChainModel {
@@ -51,8 +50,8 @@ export class HederaChainModel {
                 throw new Error("Network not yet supported")
             }
         } catch (err) {
-            logger.error("Hedera Chain Model: Could not get client for network");
-            throw error;
+            logger.error("Hedera Chain Model: Could not get client for network", {error: err, network});
+            throw new Error("Could not get client");
         }
     }
 

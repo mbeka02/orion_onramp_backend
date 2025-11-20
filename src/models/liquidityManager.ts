@@ -171,13 +171,11 @@ export class LiquidityManagerModel {
 
             if (currentBalance.length > 0) {
                 const balance = currentBalance[0];
-                const amountSubract = BigInt(amount * Math.pow(10, balance.decimals));
+                const amountAdd = BigInt(amount * Math.pow(10, balance.decimals));
                 
-                if (balance.balance >= amountSubract) {
-                    await db.update(treasuryBalanceTable).set({
-                        balance: balance.balance + amountSubract
-                    }).where(eq(treasuryBalanceTable.token, token));
-                }
+                await db.update(treasuryBalanceTable).set({
+                    balance: balance.balance + amountAdd
+                }).where(eq(treasuryBalanceTable.token, token));
             }
         } catch(err) {
             logger.error("Liquidity Manager Model: Error undoing treasury cache balance deduct", {error: err, token, amount});

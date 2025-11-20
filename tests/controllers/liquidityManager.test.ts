@@ -52,8 +52,10 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
     const environment_no_wallet = "no wallet";
     const environment_not_associated = "not associated";
     const environment_too_much = "amount is too big";
+    const good_environment = "good";
     const notAssociatedAccount = "not associated";
     const tooMuchAccount = "too much";
+    const goodAccount = "good";
     const treasuryAccount = "treasury";
     const token = "token";
     const amount = 10;
@@ -81,6 +83,14 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
                         business_crypto_account: tooMuchAccount,
                         amount_with_decimals: amountWithDecimals
                     });
+                } else if (environment_id === good_environment) {
+                    res({
+                        token_type: tokenType,
+                        treasury_account: treasuryAccount,
+                        token_address: token,
+                        business_crypto_account: goodAccount,
+                        amount_with_decimals: amountWithDecimals
+                    });
                 }
             })
         });
@@ -91,6 +101,8 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
                     rej(new MyError(Errors.BUSINESS_NOT_ASSOCIATED));
                 } else if (details.business_crypto_account === tooMuchAccount) {
                     rej(new MyError(Errors.TREASURY_DOES_NOT_HAVE_ENOUGH));
+                } else {
+                    res(null);
                 }
             })
         })
@@ -151,5 +163,10 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
                 expect(false).toBe(true);
             }
         }
+    });
+
+    it("should send tokens", async () => {
+        await liquidityManagerController.sendTokensToBusiness(good_environment, tokenType, amount, liquidityModelMock);
+        expect(true).toBe(true);
     })
 })

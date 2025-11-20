@@ -51,7 +51,9 @@ describe("Liquidity Managers Tests: Treasury Balance checker", () => {
 describe("Liquidity Manager Tests: Send Tokens To Business", () => {
     const environment_no_wallet = "no wallet";
     const environment_not_associated = "not associated";
+    const environment_too_much = "amount is too big";
     const notAssociatedAccount = "not associated";
+    const tooMuchAccount = "too much";
     const treasuryAccount = "treasury";
     const token = "token";
     const amount = 10;
@@ -70,7 +72,15 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
                         token_address: token,
                         business_crypto_account: notAssociatedAccount,
                         amount_with_decimals: amountWithDecimals
-                    })
+                    });
+                } else if (environment_id === environment_too_much) {
+                    res({
+                        token_type: tokenType,
+                        treasury_account: treasuryAccount,
+                        token_address: token,
+                        business_crypto_account: tooMuchAccount,
+                        amount_with_decimals: amountWithDecimals
+                    });
                 }
             })
         });
@@ -78,7 +88,9 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
         liquidityModelMock.sendTokensToAccount = jest.fn().mockImplementation((details) => {
             return new Promise((res, rej) => {
                 if (details.business_crypto_account === notAssociatedAccount) {
-                    rej (new MyError(Errors.BUSINESS_NOT_ASSOCIATED));
+                    rej(new MyError(Errors.BUSINESS_NOT_ASSOCIATED));
+                } else if (details.business_crypto_account === tooMuchAccount) {
+                    rej(new MyError(Errors.TREASURY_DOES_NOT_HAVE_ENOUGH));
                 }
             })
         })
@@ -110,6 +122,25 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
         } catch (err) {
             if (err instanceof MyError) {
                 if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
+                    expect(true).toBe(true);
+                } else {
+                    console.error("Unexpected error", err);
+                    expect(false).toBe(true);
+                }
+            } else {
+                console.error("Unexpected error", err);
+                expect(false).toBe(true);
+            }
+        }
+    });
+
+    it("should fail if treasury does not have enough tokens", async () => {
+        try {
+            await liquidityManagerController.sendTokensToBusiness(environment_too_much, tokenType, amount, liquidityModelMock);
+            expect(false).toBe(true);
+        } catch (err) {
+            if (err instanceof MyError) {
+                if (err.message === Errors.TREASURY_DOES_NOT_HAVE_ENOUGH) {
                     expect(true).toBe(true);
                 } else {
                     console.error("Unexpected error", err);

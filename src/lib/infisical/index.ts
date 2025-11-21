@@ -26,6 +26,7 @@ class Infisical {
                 clientId: process.env.INFISICAL_CLIENT_ID,
                 clientSecret: process.env.INFISICAL_CLIENT_SECRET
             });
+            this.isLoggedIn = true;
         } catch(err) {
             logger.error("Infisical: Error logging in to infisical", {error: err});
             throw new Error("Error logging in to infisical");

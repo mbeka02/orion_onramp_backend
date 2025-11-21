@@ -347,6 +347,25 @@ export class BusinessModel {
             throw new Error("Error getting industries and categories");
         }
     }
+
+    async isBusinessApproved(business_id: string): Promise<boolean> {
+        try {
+            const approved = await db.select({
+                status: businesses.status
+            }).from(businesses)
+            .where(eq(businesses.id, business_id))
+            .limit(1);
+
+            if (approved.length < 1) {
+                return false;
+            }
+
+            return approved[0].status === BUSINESS_STATUS.APPROVED;
+        } catch(err) {
+            logger.error("Business Model Error: Error checking if business is approved", {error: err, business_id});
+            throw new Error("Could not check if business is approved");
+        }
+    }
 }
 
 const businessModel = new BusinessModel();

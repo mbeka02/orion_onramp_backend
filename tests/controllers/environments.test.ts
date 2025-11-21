@@ -28,7 +28,7 @@ describe("Environment Controller: Create Key Tests", () => {
                     } else if (business_id === business) {
                         res(true);
                     } else {
-                        rej("Unexpected input");
+                        rej(new Error("Unexpected input"));
                     }
                 })
             })

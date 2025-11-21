@@ -8,16 +8,16 @@ import { BusinessModel } from "../models/businesses";
 export class EnvironmentsController {
     async create(args: CreateEnvironmentType, user_id: string, environmentModel: EnvironmentModel, encryption_service: EncryptionService, businessModel: BusinessModel) {
         try {
+            const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(args.businessID, user_id);
+            if (isUserOwnerOrAdmin === false) {
+                throw new MyError(Errors.UNAUTHORIZED);
+            }
+
             if (args.type === ENVIRONMENT_TYPES.LIVE) {
                 const isBusinessApproved = await businessModel.isBusinessApproved(args.businessID);
                 if (isBusinessApproved === false) {
                     throw new MyError(Errors.BUSINESS_NOT_APPROVED);
                 }
-            }
-            
-            const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(args.businessID, user_id);
-            if (isUserOwnerOrAdmin === false) {
-                throw new MyError(Errors.UNAUTHORIZED);
             }
 
             const doesBusinessAlreadyHaveEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(args.businessID, args.type);

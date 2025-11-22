@@ -73,7 +73,7 @@ describe("Environment Controller: Create Key Tests", () => {
 
             businessModelMock.isUserOwnerOrAdmin = jest.fn().mockImplementation((business_id: string, user_id: string) => {
                 return new Promise((res, rej) => {
-                    if (user_id === adminUser && business_id === business || business_id === unapprovedBusiness) {
+                    if (user_id === adminUser && (business_id === business || business_id === unapprovedBusiness)) {
                         res(true);
                     } else {
                         res(false);

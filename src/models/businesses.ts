@@ -3,6 +3,7 @@ import { db } from "../lib/db";
 import { businesses, businessUsers, invitations, industries, categories } from "../lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS, BusinessType, Invitation, CreateBusinessType, UpdateBusinessType, Industry, Category } from "../types/businesses";
+import { Errors, MyError } from "../errors";
 
 export class BusinessModel {
     async createDraft(business: CreateBusinessType, ownerId: string): Promise<string> {
@@ -345,6 +346,29 @@ export class BusinessModel {
         catch (error) {
             logger.error("Business Model Error: Error getting industries and categories", { error });
             throw new Error("Error getting industries and categories");
+        }
+    }
+
+    async isBusinessApproved(business_id: string): Promise<boolean> {
+        try {
+            const approved = await db.select({
+                status: businesses.status
+            }).from(businesses)
+            .where(eq(businesses.id, business_id))
+            .limit(1);
+
+            if (approved.length < 1) {
+                throw new MyError(Errors.BUSINESS_NOT_FOUND);
+            }
+
+            return approved[0].status === BUSINESS_STATUS.APPROVED;
+        } catch(err) {
+            logger.error("Business Model Error: Error checking if business is approved", {error: err, business_id});
+            if (err instanceof MyError) {
+                throw err;
+            }
+            
+            throw new Error("Could not check if business is approved");
         }
     }
 }

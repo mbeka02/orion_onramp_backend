@@ -13,6 +13,13 @@ export class EnvironmentsController {
                 throw new MyError(Errors.UNAUTHORIZED);
             }
 
+            if (args.type === ENVIRONMENT_TYPES.LIVE) {
+                const isBusinessApproved = await businessModel.isBusinessApproved(args.businessID);
+                if (isBusinessApproved === false) {
+                    throw new MyError(Errors.BUSINESS_NOT_APPROVED);
+                }
+            }
+
             const doesBusinessAlreadyHaveEnvironment = await environmentModel.doesBusinessAlreadyHaveEnvironment(args.businessID, args.type);
             if (doesBusinessAlreadyHaveEnvironment === true) {
                 throw new MyError(Errors.BUSINESS_ALREADY_HAS_ENVIRONMENT);

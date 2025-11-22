@@ -23,6 +23,7 @@ export enum Errors {
   RECEIVER_NOT_ASSOCIATED = "Receiver has not associated",
   BUSINESS_NOT_SET_WALLET = "Business has not set wallet",
   BUSINESS_NOT_ASSOCIATED = "Business has not associated",
+  BUSINESS_NOT_APPROVED = "Business is not approved",
   INTERNAL_SERVER_ERROR = "Internal Server Error",
 
   // transactions

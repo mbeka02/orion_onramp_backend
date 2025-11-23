@@ -279,6 +279,6 @@ export const admin = pgTable("admin", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
+  password: text("password").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })

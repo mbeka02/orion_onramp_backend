@@ -34,4 +34,7 @@ export enum Errors {
   TRANSACTION_CREATION_FAILED = "Failed to create transaction",
   PAYSTACK_API_ERROR = "Payment provider error",
   PAYSTACK_VERIFICATION_FAILED = "Failed to verify payment",
+  //Admin
+  ADMIN_ALREADY_EXISTS = "Admin with this email already exists",
+  WRONG_ADMIN_CREDENTIALS = "Wrong admin credentials",
 }

@@ -14,12 +14,10 @@ router.post(
         try {
             const adminModel = new AdminModel();
             const { admin, token } = await adminController.createadmin(req.body, adminModel);
-            // Remove password from response
-            const { password, ...adminWithoutPassword } = admin;
             res.status(201).json({
                 success: true,
                 message: "Admin created successfully",
-                data: { admin: adminWithoutPassword, token },
+                data: { admin: admin, token },
             });
         } catch (err) {
             logger.error("Admin Route: Error creating admin", { err, body: req.body });
@@ -34,12 +32,11 @@ router.post(
         try {
             const adminModel = new AdminModel();
             const { admin, token } = await adminController.login(req.body, adminModel);
-            // Remove password from response
-            const { password, ...adminWithoutPassword } = admin;
+
             res.status(200).json({
                 success: true,
                 message: "Admin logged in successfully",
-                data: { admin: adminWithoutPassword, token },
+                data: { admin: admin, token },
             });
         } catch (err) {
             logger.error("Admin Route: Error logging in admin", { err, body: req.body });

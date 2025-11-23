@@ -16,7 +16,8 @@ export class AdminModel {
                 email: args.email,
                 password: args.password,
             }).returning();
-            return newAdmin[0];
+
+            return {email: newAdmin[0].email, id: newAdmin[0].id};
         }
         catch (error) {
             throw error;
@@ -32,7 +33,7 @@ export class AdminModel {
             if (!isPasswordValid) {
                 throw new MyError(Errors.WRONG_ADMIN_CREDENTIALS);
             }
-            return admin;
+            return {email: admin.email, id: admin.id};
         }
         catch (error) {
             throw error;

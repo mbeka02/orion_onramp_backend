@@ -5,6 +5,7 @@ import { AdminModel } from "../models/admin";
 import { validateBody } from "../middleware/validation";
 import {createAdminSchema, loginAdminSchema } from "../types/admin";
 import rateLimit from 'express-rate-limit';
+import { MyError } from "../errors";
 const router: Router = Express.Router();
 const adminController = new Admincontroller();
 
@@ -24,29 +25,41 @@ router.post(
             res.status(201).json({
                 success: true,
                 message: "Admin created successfully",
-                data: { admin: admin, token },
+                data: {  admin, token },
             });
         } catch (err) {
-            logger.error("Admin Route: Error creating admin", { err, body: req.body });
+            logger.error("Admin Route: Error creating admin", { err, body: {
+                email: req.body.email,
+                id:req.body.id
+            } });
+            if (err instanceof MyError) {
+                return res.status(400).json({ error: err.message });
+            }
             res.status(500).json({ error: "Internal Server Error" });
         }
     }
 )
 router.post(
     "/login",
+    loginLimiter,
     validateBody(loginAdminSchema),
     async (req, res) => {
         try {
             const adminModel = new AdminModel();
             const { admin, token } = await adminController.login(req.body, adminModel);
-
             res.status(200).json({
                 success: true,
                 message: "Admin logged in successfully",
-                data: { admin: admin, token },
+                data: {  admin, token },
             });
         } catch (err) {
-            logger.error("Admin Route: Error logging in admin", { err, body: req.body });
+            logger.error("Admin Route: Error logging in admin", { err, body: {
+                email: req.body.email,
+                id:req.body.id
+            } });
+            if (err instanceof MyError) {
+                return res.status(400).json({ error: err.message });
+            }
             res.status(500).json({ error: "Internal Server Error" });
         }
     }

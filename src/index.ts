@@ -14,6 +14,7 @@ import {
   stopCachedTreasuryBalanceUpdates,
 } from "./services/treasuryBalance";
 import { preserveRawBody } from "./middleware/rawBody";
+import adminRouter from "./routes/admin";
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -43,6 +44,7 @@ app.get("/health", async (req, res) => {
 app.use("/api/environment", environmentRouter);
 app.use("/api/business", businessRouter);
 app.use("/api/transaction", transactionRouter);
+// app.use("/api/admin", adminRouter);
 let server: Server;
 let isShuttingDown = false;
 // Start background job

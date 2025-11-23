@@ -29,11 +29,11 @@ export class AdminModel {
             if (!admin) {
                 throw new MyError(Errors.WRONG_ADMIN_CREDENTIALS);
             }
-            const isPasswordValid = bcrypt.compare(args.password, admin.password);
+            const isPasswordValid = bcrypt.compareSync(args.password, admin.password);
             if (!isPasswordValid) {
                 throw new MyError(Errors.WRONG_ADMIN_CREDENTIALS);
             }
-            return {email: admin.email, id: admin.id};
+            return admin;
         }
         catch (error) {
             throw error;

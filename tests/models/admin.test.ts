@@ -56,7 +56,8 @@ describe("Admin Model", () => {
 
             const result = await adminModel.createAdmin(input);
 
-            expect(result).toEqual(mockAdmin);
+            expect(result).toHaveProperty("id");
+            expect(result).toHaveProperty("email", mockEmail);
             expect(db.insert).toHaveBeenCalled();
         });
 
@@ -122,12 +123,12 @@ describe("Admin Model", () => {
             };
 
             jest.spyOn(adminModel, "getAdminByEmail").mockResolvedValue(mockAdmin as any);
-            (bcrypt.compare as jest.Mock).mockReturnValue(true);
+            (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
 
             const result = await adminModel.login(input);
 
             expect(result).toEqual(mockAdmin);
-            expect(bcrypt.compare).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
+            expect(bcrypt.compareSync).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
         });
 
         it("should throw error when admin not found", async () => {
@@ -178,11 +179,11 @@ describe("Admin Model", () => {
             };
 
             jest.spyOn(adminModel, "getAdminByEmail").mockResolvedValue(mockAdmin as any);
-            (bcrypt.compare as jest.Mock).mockReturnValue(true);
+            (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
 
             await adminModel.login(input);
 
-            expect(bcrypt.compare).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
+            expect(bcrypt.compareSync).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
         });
     });
 

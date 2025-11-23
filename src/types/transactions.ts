@@ -1,4 +1,5 @@
 import z from "zod";
+import { TOKEN_TYPE } from "./token";
 
 export enum TRANSACTION_STATUS {
   PENDING = "pending",
@@ -22,7 +23,7 @@ export const PaymentChannelEnum = z.enum([
 ]);
 
 // Token type enum
-export const TokenTypeEnum = z.enum(["KESy_MAINNET", "KESy_TESTNET"]);
+export const TokenTypeEnum = z.enum([TOKEN_TYPE.KESy_MAINNET, TOKEN_TYPE.KESy_TESTNET]);
 
 // Initialize transaction schema
 export const initializeTransactionSchema = z.object({

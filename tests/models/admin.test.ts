@@ -26,7 +26,7 @@ describe("Admin Model", () => {
         jest.resetAllMocks();
         
         // Setup bcrypt mocks
-        (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
+        (bcrypt.compare as jest.Mock).mockReturnValue(true);
     });
 
     describe("createAdmin", () => {
@@ -122,12 +122,12 @@ describe("Admin Model", () => {
             };
 
             jest.spyOn(adminModel, "getAdminByEmail").mockResolvedValue(mockAdmin as any);
-            (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
+            (bcrypt.compare as jest.Mock).mockReturnValue(true);
 
             const result = await adminModel.login(input);
 
             expect(result).toEqual(mockAdmin);
-            expect(bcrypt.compareSync).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
+            expect(bcrypt.compare).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
         });
 
         it("should throw error when admin not found", async () => {
@@ -157,7 +157,7 @@ describe("Admin Model", () => {
             };
 
             jest.spyOn(adminModel, "getAdminByEmail").mockResolvedValue(mockAdmin as any);
-            (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
+            (bcrypt.compare as jest.Mock).mockReturnValue(false);
 
             await expect(adminModel.login(input)).rejects.toThrow(MyError);
             await expect(adminModel.login(input)).rejects.toThrow(Errors.WRONG_ADMIN_CREDENTIALS);
@@ -178,11 +178,11 @@ describe("Admin Model", () => {
             };
 
             jest.spyOn(adminModel, "getAdminByEmail").mockResolvedValue(mockAdmin as any);
-            (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
+            (bcrypt.compare as jest.Mock).mockReturnValue(true);
 
             await adminModel.login(input);
 
-            expect(bcrypt.compareSync).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
+            expect(bcrypt.compare).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
         });
     });
 

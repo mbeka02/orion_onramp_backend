@@ -24,7 +24,7 @@ describe("Admin Controller", () => {
         // Setup bcrypt mocks
         (bcrypt.genSaltSync as jest.Mock).mockReturnValue("salt");
         (bcrypt.hashSync as jest.Mock).mockReturnValue(mockHashedPassword);
-        (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
+        (bcrypt.compare as jest.Mock).mockReturnValue(true);
         
         // Setup jwt mock
         (jwt.sign as jest.Mock).mockReturnValue(mockToken);

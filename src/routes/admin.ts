@@ -4,11 +4,18 @@ import { Admincontroller } from "../controllers/admin";
 import { AdminModel } from "../models/admin";
 import { validateBody } from "../middleware/validation";
 import {createAdminSchema, loginAdminSchema } from "../types/admin";
+import rateLimit from 'express-rate-limit';
 const router: Router = Express.Router();
 const adminController = new Admincontroller();
 
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: 'Too many login attempts, please try again later'
+});
 router.post(
     "/create",
+    loginLimiter,
     validateBody(createAdminSchema),
     async (req, res) => {
         try {

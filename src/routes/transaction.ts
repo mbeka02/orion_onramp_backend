@@ -6,7 +6,10 @@ import { initializeTransactionSchema } from "../types/transactions";
 import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
 import { PaystackWebhookPayload } from "../types/paystack";
-import { validatePrivateKey } from "../middleware/authenticationMiddleware";
+import {
+  authenticationMiddleware,
+  validatePrivateKey,
+} from "../middleware/authenticationMiddleware";
 import treasuryController from "../controllers/treasury";
 import treasuryModel from "../models/treasury";
 import liquidityManagerController from "../controllers/liquidityManager";
@@ -17,6 +20,68 @@ const router: Router = Router();
 
 const transactionModel = new TransactionModel();
 const transactionController = new TransactionController(transactionModel);
+
+/**
+ * GET /api/transaction
+ * Get all the transactions associated with an enviroment
+ * Query Params:
+ * environment_id
+ * page
+ * limit
+ */
+router.get("/", authenticationMiddleware, async (req, res) => {
+  try {
+    const environmentID = req.query.environment_id;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    if (!environmentID || typeof environmentID !== "string") {
+      res.status(400).json({
+        error:
+          "Error Bad Request.Include the environment id in the query parameters or ensure it is a single string",
+      });
+      return;
+    }
+    const transactions =
+      await transactionController.getTransactionsByEnvironment(
+        environmentID,
+        page,
+        limit,
+      );
+    return res.status(200).json(transactions);
+  } catch (err) {
+    logger.error("Error fetching transactions in router", { error: err });
+
+    if (err instanceof MyError) {
+      return res.status(400).json({ message: err.message });
+    }
+
+    res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+  }
+});
+/**
+ * GET /api/transaction/:id
+ * Get the transaction details by id
+ *  Params:
+ * id
+ *
+ *
+ */
+router.get("/:id", authenticationMiddleware, async (req, res) => {
+  try {
+    const transactionID = req.params.id;
+    const transaction =
+      await transactionController.getTransactionsByID(transactionID);
+    res.status(200).json(transaction);
+  } catch (err) {
+    logger.error("Error fetching transaction in router", { error: err });
+
+    if (err instanceof MyError) {
+      return res.status(400).json({ message: err.message });
+    }
+
+    res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+  }
+});
 
 /**
  * POST /api/transaction/initialize
@@ -109,11 +174,14 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
         liquidityManagerController,
         transactionModel,
         liquidityModel,
-        emailService
+        emailService,
       );
     } catch (err) {
       // Will implement queuing of this in a later PR
-      logger.error("Could not onramp tokens for business", {error: err, transaction: data.reference});
+      logger.error("Could not onramp tokens for business", {
+        error: err,
+        transaction: data.reference,
+      });
     }
     return;
   } catch (error) {

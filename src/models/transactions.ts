@@ -2,9 +2,9 @@ import { transactionsTable } from "../lib/db/schema";
 import { db } from "../lib/db";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
-import { DrizzleError, eq } from "drizzle-orm";
 import { TRANSACTION_STATUS } from "../types/transactions";
 import { DatabaseError } from "pg";
+import { desc, count, eq, DrizzleError, and } from "drizzle-orm";
 interface createTransactionArgs {
   amount: number;
   email: string;
@@ -22,6 +22,60 @@ interface UpdatePaystackResponseArgs {
   paystackResponseRaw: Record<string, any>;
 }
 export class TransactionModel {
+  /**
+   * Get transactions for an environment with pagination
+   */
+  async getTransactionsByEnvironment(
+    environmentID: string,
+    page: number = 1,
+    limit: number = 20,
+  ) {
+    const offset = (page - 1) * limit;
+
+    try {
+      const [transactionData, totalCountResult] = await Promise.all([
+        db
+          .select()
+          .from(transactionsTable)
+          .where(eq(transactionsTable.environmentID, environmentID))
+          .limit(limit)
+          .offset(offset)
+          .orderBy(desc(transactionsTable.createdAt)),
+
+        db
+          .select({ count: count() })
+          .from(transactionsTable)
+          .where(eq(transactionsTable.environmentID, environmentID)),
+      ]);
+
+      const totalItems = totalCountResult[0]?.count || 0;
+      const totalPages = Math.ceil(totalItems / limit);
+
+      const formattedTransactions = transactionData.map((tx) => ({
+        ...tx,
+        amountInCents: tx.amount,
+        amountMajor: tx.amount / 100,
+        paystackResponse: tx.paystackResponseRaw,
+      }));
+      return {
+        data: formattedTransactions,
+        pagination: {
+          currentPage: page,
+          itemsPerPage: limit,
+          totalItems,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+      };
+    } catch (err) {
+      logger.error("Error fetching environment transactions", {
+        error: err,
+        environmentID,
+      });
+      throw new Error("Error fetching transactions", { cause: err });
+    }
+  }
   async createTransaction(args: createTransactionArgs) {
     try {
       const [insertedTransaction] = await db

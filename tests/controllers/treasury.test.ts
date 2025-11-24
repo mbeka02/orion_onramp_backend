@@ -16,8 +16,9 @@ describe("Treasury Business SDK Onramp Tests", () => {
     const too_much_transaction_reference = "too_much_transaction";
     const too_much_amount = 1000000;
     const testToken = TOKEN_TYPE.KESy_TESTNET;
+    const too_much_transaction_id = "too_much_id";
     const too_much_transaction = {
-        id: too_much_transaction_reference,
+        id: too_much_transaction_id,
         environmentID: "too_much",
         reference: "too_much",
         token: testToken,

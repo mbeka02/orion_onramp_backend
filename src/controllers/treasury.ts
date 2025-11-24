@@ -40,11 +40,17 @@ export class TreasuryController {
             } else {
                 try {
                     await liquidityManagerController.sendTokensToBusiness(transaction.environmentID, transaction.token, amount, liquidityModel);
-                    await liquidityManagerController.markTransactionOnramped(transaction_reference, liquidityModel);
                 } catch(err) {
                     logger.error("Treasury Controller: Error sending tokens", {error: err, transaction_reference: transaction_reference});
                     await liquidityManagerController.undoCacheDeduct(transaction.token, amount, liquidityModel);
                     throw err;
+                }
+
+                try {
+                    await liquidityManagerController.markTransactionOnramped(transaction_reference, liquidityModel);
+                } catch(err) {
+                    logger.error("Treasury Controller: Tokens sent but failed to mark as onramped", {error: err, transaction_reference});
+                    // NOT THROWING AN ERROR SINCE TOKENS HAVE ALREADY BEEN SENT
                 }
             }
         } catch(err) {

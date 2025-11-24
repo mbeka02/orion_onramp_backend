@@ -1,12 +1,13 @@
 import { eq } from "drizzle-orm";
 import { db } from "../lib/db";
-import { businesses, environmentsTable, treasuryBalanceTable } from "../lib/db/schema";
+import { businesses, environmentsTable, transactionsTable, treasuryBalanceTable } from "../lib/db/schema";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
 import hederaChainModel, { HederaChainModel } from "./chain/hedera";
 import { SUPPORTED_CHAINS } from "../types/chain";
 import { divideBigIntWithDecimals } from "../lib/bigIntDivision";
 import { Errors, MyError } from "../errors";
+import { TRANSACTION_STATUS } from "../types/transactions";
 
 interface BusinessTransactionDetails {
     token_type: TOKEN_TYPE,
@@ -180,6 +181,17 @@ export class LiquidityManagerModel {
         } catch(err) {
             logger.error("Liquidity Manager Model: Error undoing treasury cache balance deduct", {error: err, token, amount});
             throw new Error("Error undoing treasury cache balance");
+        }
+    }
+
+    async markTransactionAsOnramped(reference: string) {
+        try {
+            await db.update(transactionsTable).set({
+                transactionStatus: TRANSACTION_STATUS.ONRAMPED
+            }).where(eq(transactionsTable.reference, reference));
+        } catch(err) {
+            logger.error("Liquidity Manager Model: Error marking transaction as onramped", {error: err, reference});
+            throw new Error("Error marking transaction as onramped");
         }
     }
 }

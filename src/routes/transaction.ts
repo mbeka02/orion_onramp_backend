@@ -32,8 +32,10 @@ const transactionController = new TransactionController(transactionModel);
 router.get("/", authenticationMiddleware, async (req, res) => {
   try {
     const environmentID = req.query.environment_id;
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 20;
+    const rawPage = Number(req.query.page);
+    const rawLimit = Number(req.query.limit);
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 20;
     if (!environmentID || typeof environmentID !== "string") {
       res.status(400).json({
         error:

@@ -32,6 +32,8 @@ export enum Errors {
   TRANSACTION_MISSING_ORDER_ID = "Missing or invalid 'orderID' in metadata",
   TRANSACTION_ALREADY_INITIALIZED = "Payment already initialized",
   TRANSACTION_CREATION_FAILED = "Failed to create transaction",
+  TRANSACTIONS_FETCH_FAILED = "Error fetching transactions",
+  TRANSACTION_FETCH_FAILED = "Error fetching transaction",
   PAYSTACK_API_ERROR = "Payment provider error",
   PAYSTACK_VERIFICATION_FAILED = "Failed to verify payment",
   //Admin

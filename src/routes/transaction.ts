@@ -7,6 +7,11 @@ import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
 import { PaystackWebhookPayload } from "../types/paystack";
 import { validatePrivateKey } from "../middleware/authenticationMiddleware";
+import treasuryController from "../controllers/treasury";
+import treasuryModel from "../models/treasury";
+import liquidityManagerController from "../controllers/liquidityManager";
+import liquidityModel from "../models/liquidityManager";
+import { emailService } from "../lib/emails/email.util";
 
 const router: Router = Router();
 
@@ -94,7 +99,18 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
     }
     const { event, data } = JSON.parse(body) as PaystackWebhookPayload;
     await transactionController.handlePaystackWebhook(event, data);
-    return res.status(200).send("Webhook received");
+    res.status(200).send("Webhook received");
+
+    // Call treasury
+    await treasuryController.businessOnramp(
+      data.reference,
+      treasuryModel,
+      liquidityManagerController,
+      transactionModel,
+      liquidityModel,
+      emailService
+    );
+    return;
   } catch (error) {
     logger.error("Error handling Paystack webhook", { error });
     return res.status(500).send("Internal Server Error");

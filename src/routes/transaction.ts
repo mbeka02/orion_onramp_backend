@@ -38,7 +38,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       if (!req.environment_id) {
-        res.status(401).json({error: Errors.UNAUTHORIZED});
+        res.status(401).json({ error: Errors.UNAUTHORIZED });
         return;
       }
 
@@ -101,15 +101,20 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
     await transactionController.handlePaystackWebhook(event, data);
     res.status(200).send("Webhook received");
 
-    // Call treasury
-    await treasuryController.businessOnramp(
-      data.reference,
-      treasuryModel,
-      liquidityManagerController,
-      transactionModel,
-      liquidityModel,
-      emailService
-    );
+    try {
+      // Call treasury
+      await treasuryController.businessOnramp(
+        data.reference,
+        treasuryModel,
+        liquidityManagerController,
+        transactionModel,
+        liquidityModel,
+        emailService
+      );
+    } catch (err) {
+      // Will implement queuing of this in a later PR
+      logger.error("Could not onramp tokens for business", {error: err, transaction: data.reference});
+    }
     return;
   } catch (error) {
     logger.error("Error handling Paystack webhook", { error });

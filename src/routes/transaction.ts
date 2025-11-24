@@ -7,6 +7,11 @@ import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
 import { PaystackWebhookPayload } from "../types/paystack";
 import { validatePrivateKey } from "../middleware/authenticationMiddleware";
+import treasuryController from "../controllers/treasury";
+import treasuryModel from "../models/treasury";
+import liquidityManagerController from "../controllers/liquidityManager";
+import liquidityModel from "../models/liquidityManager";
+import { emailService } from "../lib/emails/email.util";
 
 const router: Router = Router();
 
@@ -33,7 +38,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       if (!req.environment_id) {
-        res.status(401).json({error: Errors.UNAUTHORIZED});
+        res.status(401).json({ error: Errors.UNAUTHORIZED });
         return;
       }
 
@@ -94,7 +99,23 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
     }
     const { event, data } = JSON.parse(body) as PaystackWebhookPayload;
     await transactionController.handlePaystackWebhook(event, data);
-    return res.status(200).send("Webhook received");
+    res.status(200).send("Webhook received");
+
+    try {
+      // Call treasury
+      await treasuryController.businessOnramp(
+        data.reference,
+        treasuryModel,
+        liquidityManagerController,
+        transactionModel,
+        liquidityModel,
+        emailService
+      );
+    } catch (err) {
+      // Will implement queuing of this in a later PR
+      logger.error("Could not onramp tokens for business", {error: err, transaction: data.reference});
+    }
+    return;
   } catch (error) {
     logger.error("Error handling Paystack webhook", { error });
     return res.status(500).send("Internal Server Error");

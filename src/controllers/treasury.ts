@@ -7,25 +7,25 @@ import { TreasuryModel } from "../models/treasury";
 import { LiquidityManagerController } from "./liquidityManager";
 
 export class TreasuryController {
-    async businessOnramp(transaction_id: string, treasuryModel: TreasuryModel, liquidityManagerController: LiquidityManagerController, transactionModel: TransactionModel, liquidityModel: LiquidityManagerModel, emailService: EmailService) {
+    async businessOnramp(transaction_reference: string, treasuryModel: TreasuryModel, liquidityManagerController: LiquidityManagerController, transactionModel: TransactionModel, liquidityModel: LiquidityManagerModel, emailService: EmailService) {
         try {
-            const doesTransactionExist = await treasuryModel.doesTransactionExist(transaction_id);
+            const doesTransactionExist = await treasuryModel.doesTransactionExist(transaction_reference);
             if (doesTransactionExist === false) {
                 throw new MyError(Errors.UNAUTHORIZED_PAYMENT);
             }
 
-            const transactionAlreadyOnramped = await treasuryModel.hasTransactionAlreadyBeenOnramped(transaction_id);
+            const transactionAlreadyOnramped = await treasuryModel.hasTransactionAlreadyBeenOnramped(transaction_reference);
             if (transactionAlreadyOnramped === true) {
                 throw new MyError(Errors.PAYMENT_ALREADY_ONRAMPED);
             }
 
-            const isPaymentCompleteSuccessfully = await treasuryModel.isFiatPaymentCompleted(transaction_id);
+            const isPaymentCompleteSuccessfully = await treasuryModel.isFiatPaymentCompleted(transaction_reference);
             if (isPaymentCompleteSuccessfully === false) {
                 throw new MyError(Errors.PAYMENT_NOT_COMPLETE);
             }
 
             // Get transaction details
-            const transaction = await transactionModel.getTransactionById(transaction_id);
+            const transaction = await transactionModel.getTransactionByReference(transaction_reference);
             if (!transaction) {
                 throw new Error("Could not get transaction");
             }
@@ -40,14 +40,15 @@ export class TreasuryController {
             } else {
                 try {
                     await liquidityManagerController.sendTokensToBusiness(transaction.environmentID, transaction.token, amount, liquidityModel);
+                    await liquidityManagerController.markTransactionOnramped(transaction_reference, liquidityModel);
                 } catch(err) {
-                    logger.error("Treasury Controller: Error sending tokens", {error: err, transaction_id});
+                    logger.error("Treasury Controller: Error sending tokens", {error: err, transaction_reference: transaction_reference});
                     await liquidityManagerController.undoCacheDeduct(transaction.token, amount, liquidityModel);
                     throw err;
                 }
             }
         } catch(err) {
-            logger.error("Treasury Controller: Error onramping funds from transaction", {error: err, transaction_id});
+            logger.error("Treasury Controller: Error onramping funds from transaction", {error: err, transaction_reference: transaction_reference});
 
             if (err instanceof MyError) {
                 throw err;

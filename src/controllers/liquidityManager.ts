@@ -67,6 +67,20 @@ export class LiquidityManagerController {
             }
         }
     }
+
+    async markTransactionOnramped(transaction_reference: string, liquidityModel: LiquidityManagerModel, retry: number = 1) {
+        try {
+            await liquidityModel.markTransactionAsOnramped(transaction_reference);
+        } catch(err) {
+            logger.error("Liquidity Manager Controller: Could not mark transaction as onramped", {error: err, transaction_reference});
+            if (retry < MAX_RETRIES) {
+                await sleep((2 ** retry) * 1000);
+                await this.markTransactionOnramped(transaction_reference, liquidityModel, retry + 1);
+            } else {
+                throw new Error("Could not mark transaction as onramped");
+            }
+        }
+    }
 }
 
 const liquidityManagerController = new LiquidityManagerController();

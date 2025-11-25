@@ -139,7 +139,7 @@ export class TransactionModel {
             logger.warn("Duplicate transaction reference", {
               reference: args.reference,
             });
-            throw err; // Let controller handle this
+            throw err;
           }
         }
       }

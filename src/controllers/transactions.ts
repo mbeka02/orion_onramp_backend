@@ -252,8 +252,15 @@ export class TransactionController {
     try {
       const transaction =
         await this.transactionModel.getTransactionById(transactionID);
+      if (!transaction) {
+        throw new MyError(Errors.TRANSACTION_NOT_FOUND);
+      }
       return transaction;
     } catch (err) {
+      logger.error("Failed to fetch transaction by ID", {
+        error: err,
+        transactionID,
+      });
       if (err instanceof MyError) {
         throw err;
       }

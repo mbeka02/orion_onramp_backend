@@ -54,12 +54,10 @@ router.post("/create", authenticationMiddleware, async (req, res) => {
       userId,
       businessModel,
     );
-    res
-      .status(201)
-      .json({
-        message: "Business draft created",
-        business: { id: result.business_id },
-      });
+    res.status(201).json({
+      message: "Business draft created",
+      business: { id: result.business_id },
+    });
   } catch (err) {
     logger.error("Error creating business in router", { error: err });
     if (err instanceof MyError)

@@ -257,5 +257,32 @@ export class TransactionModel {
       throw new Error("Error fetching transaction", { cause: err });
     }
   }
+  /**
+   * Helper: Get the Business ID associated with a Transaction ID
+   * This is used for permission checks.
+   */
+  async getTransactionBusinessId(
+    transactionId: string,
+  ): Promise<string | null> {
+    try {
+      const [result] = await db
+        .select({ businessId: environmentsTable.businessID })
+        .from(transactionsTable)
+        .innerJoin(
+          environmentsTable,
+          eq(transactionsTable.environmentID, environmentsTable.id),
+        )
+        .where(eq(transactionsTable.id, transactionId))
+        .limit(1);
+
+      return result?.businessId || null;
+    } catch (err) {
+      logger.error("Error fetching business ID for transaction", {
+        error: err,
+        transactionId,
+      });
+      throw new Error("Error fetching transaction context", { cause: err });
+    }
+  }
 }
 export const transactionModel = new TransactionModel();

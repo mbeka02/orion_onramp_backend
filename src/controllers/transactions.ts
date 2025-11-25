@@ -260,8 +260,25 @@ export class TransactionController {
   /**
    * Get transaction by ID
    */
-  async getTransactionByID(transactionID: string) {
+  async getTransactionByID(userID: string, transactionID: string) {
     try {
+      const businessID =
+        await this.transactionModel.getTransactionBusinessId(transactionID);
+
+      if (!businessID) {
+        //the transaction likely doesn't exist
+        throw new MyError(Errors.TRANSACTION_NOT_FOUND);
+      }
+
+      const validMember =
+        await this.businessesModel.checkUserBusinessMembership(
+          userID,
+          businessID,
+        );
+
+      if (!validMember) {
+        throw new MyError(Errors.TRANSACTION_VIEW_FORBIDDEN);
+      }
       const transaction =
         await this.transactionModel.getTransactionById(transactionID);
       if (!transaction) {

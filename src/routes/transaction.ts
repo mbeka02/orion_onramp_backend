@@ -82,6 +82,10 @@ router.get("/", authenticationMiddleware, async (req, res) => {
     logger.error("Error fetching transactions in router", { error: err });
 
     if (err instanceof MyError) {
+      if (err.message === Errors.TRANSACTION_VIEW_FORBIDDEN) {
+        res.status(403).json({ message: err.message });
+        return;
+      }
       return res.status(400).json({ message: err.message });
     }
 
@@ -98,9 +102,16 @@ router.get("/", authenticationMiddleware, async (req, res) => {
  */
 router.get("/:id", authenticationMiddleware, async (req, res) => {
   try {
+    const session = await getAuthContext(req);
+    if (!session?.user.id) {
+      res.status(401).json({ message: Errors.UNAUTHORIZED });
+      return;
+    }
     const transactionID = req.params.id;
-    const transaction =
-      await transactionController.getTransactionByID(transactionID);
+    const transaction = await transactionController.getTransactionByID(
+      session.user.id,
+      transactionID,
+    );
     res.status(200).json(transaction);
   } catch (err) {
     logger.error("Error fetching transaction in router", { error: err });
@@ -108,6 +119,10 @@ router.get("/:id", authenticationMiddleware, async (req, res) => {
     if (err instanceof MyError) {
       if (err.message === Errors.TRANSACTION_NOT_FOUND) {
         res.status(404).json({ message: err.message });
+        return;
+      }
+      if (err.message === Errors.TRANSACTION_VIEW_FORBIDDEN) {
+        res.status(403).json({ message: err.message });
         return;
       }
       return res.status(400).json({ message: err.message });

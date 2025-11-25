@@ -80,7 +80,7 @@ router.get("/:id", authenticationMiddleware, async (req, res) => {
   try {
     const transactionID = req.params.id;
     const transaction =
-      await transactionController.getTransactionsByID(transactionID);
+      await transactionController.getTransactionByID(transactionID);
     res.status(200).json(transaction);
   } catch (err) {
     logger.error("Error fetching transaction in router", { error: err });

@@ -430,14 +430,8 @@ export class TransactionController {
           logger.info("Unhandled Paystack webhook event", { event });
           return;
       }
-    } catch (err) {
-      logger.error("Error handling Paystack webhook", { err });
-      if (err instanceof MyError) {
-        throw err;
-      }
-      throw new MyError("unexpected error when handling paystack webhook", {
-        cause: err,
-      });
+    } catch (error) {
+      logger.error("Error handling Paystack webhook", { error });
     }
   }
   async processChargeSuccess(data: WebhookChargeData) {
@@ -447,7 +441,7 @@ export class TransactionController {
         logger.error("Missing reference in charge.success webhook data", {
           data,
         });
-        throw new MyError(Errors.MISSING_REFERENCE);
+        return;
       }
       const transaction =
         await this.transactionModel.getTransactionByReference(reference);
@@ -455,7 +449,7 @@ export class TransactionController {
         logger.warn("Transaction not found for charge.success webhook", {
           reference,
         });
-        throw new MyError(Errors.TRANSACTION_NOT_FOUND);
+        return;
       }
       if (transaction.transactionStatus === TRANSACTION_STATUS.SUCCESSFUL) {
         logger.info("Transaction already marked successful", { reference });
@@ -470,13 +464,6 @@ export class TransactionController {
       //TODO: Treasury logic goes here
     } catch (error) {
       logger.error("Error processing charge success webhook", { error });
-      if (error instanceof MyError) {
-        throw error;
-      }
-
-      throw new MyError("Error processing charge success webhook", {
-        cause: error,
-      });
     }
   }
   async processChargeFailed(data: WebhookChargeData) {
@@ -486,7 +473,7 @@ export class TransactionController {
         logger.error("Missing reference in charge.failed webhook data", {
           data,
         });
-        throw new MyError(Errors.MISSING_REFERENCE);
+        return;
       }
       const transaction =
         await this.transactionModel.getTransactionByReference(reference);
@@ -494,7 +481,7 @@ export class TransactionController {
         logger.warn("Transaction not found for charge.failed webhook", {
           reference,
         });
-        throw new MyError(Errors.TRANSACTION_NOT_FOUND);
+        return;
       }
       if (transaction.transactionStatus === TRANSACTION_STATUS.FAILED) {
         logger.info("Transaction already marked failed", { reference });
@@ -509,12 +496,6 @@ export class TransactionController {
       //TODO: Treasury logic goes here
     } catch (error) {
       logger.error("Error processing charge failed webhook", { error });
-      if (error instanceof MyError) {
-        throw error;
-      }
-      throw new MyError("Error processing charge failed webhook", {
-        cause: error,
-      });
     }
   }
 }

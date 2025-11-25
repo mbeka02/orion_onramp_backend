@@ -5,7 +5,9 @@ import postHogLogger, { PostHogEventTypes } from "./posthog";
 
 const parsed = loggerLevelsSchema.safeParse(process.env);
 if (parsed.error) {
-    throw new Error("Invalid setup error, set NODE_ENV and LOG_LEVEL to one of the correct values");
+  throw new Error(
+    "Invalid setup error, set NODE_ENV and LOG_LEVEL to one of the correct values",
+  );
 }
 const env = parsed.data;
 
@@ -59,36 +61,37 @@ const pinoLogger = pino({
     err: pino.stdSerializers.err,
     error: pino.stdSerializers.err,
   },
-  transport: env.NODE_ENV === "development" || env.NODE_ENV === 'test'
-    ? {
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-          translateTime: "SYS:yyyy-mm-dd HH:MM:ss",
-          ignore: "pid,hostname",
-        },
-      }
-    : undefined,
+  transport:
+    env.NODE_ENV === "development" || env.NODE_ENV === "test"
+      ? {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+            translateTime: "SYS:yyyy-mm-dd HH:MM:ss",
+            ignore: "pid,hostname",
+          },
+        }
+      : undefined,
 });
 
 // Application logger wrapper
 const logger: Logger = {
   fatal(message: string, context?: LogContext) {
     pinoLogger.fatal(context, message);
-    if (env.NODE_ENV === 'production') {
-      postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+    if (env.NODE_ENV === "production") {
+      postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, { context });
     }
   },
   error(message: string, context?: LogContext) {
     pinoLogger.error(context, message);
     if (env.NODE_ENV === "production") {
-      postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, {context});
+      postHogLogger.sendEvent(PostHogEventTypes.ERROR, message, { context });
     }
   },
   warn(message: string, context?: LogContext) {
     pinoLogger.warn(context, message);
     if (env.NODE_ENV === "production") {
-      postHogLogger.sendEvent(PostHogEventTypes.WARNING, message, {context});
+      postHogLogger.sendEvent(PostHogEventTypes.WARNING, message, { context });
     }
   },
   info(message: string, context?: LogContext) {

@@ -51,6 +51,13 @@ router.get("/", authenticationMiddleware, async (req, res) => {
       });
       return;
     }
+    const validEnvironmentTypes = Object.values(ENVIRONMENT_TYPES);
+    if (!validEnvironmentTypes.includes(environmentType as ENVIRONMENT_TYPES)) {
+      res.status(400).json({
+        error: `Invalid environment_type. Must be one of: ${validEnvironmentTypes.join(", ")}`,
+      });
+      return;
+    }
     const transactions = await transactionController.getTransactionsByBusiness(
       businessID,
       environmentType as ENVIRONMENT_TYPES,

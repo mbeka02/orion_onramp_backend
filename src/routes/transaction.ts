@@ -15,6 +15,7 @@ import treasuryModel from "../models/treasury";
 import liquidityManagerController from "../controllers/liquidityManager";
 import liquidityModel from "../models/liquidityManager";
 import { emailService } from "../lib/emails/email.util";
+import { ENVIRONMENT_TYPES } from "../types/environments";
 
 const router: Router = Router();
 
@@ -25,30 +26,37 @@ const transactionController = new TransactionController(transactionModel);
  * GET /api/transaction
  * Get all the transactions associated with an enviroment
  * Query Params:
- * environment_id
+ * business_id
+ * environment_type
  * page
  * limit
  */
 router.get("/", authenticationMiddleware, async (req, res) => {
   try {
-    const environmentID = req.query.environment_id;
+    const businessID = req.query.business_id;
+    const environmentType = req.query.environment_type;
     const rawPage = Number(req.query.page);
     const rawLimit = Number(req.query.limit);
     const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
     const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 20;
-    if (!environmentID || typeof environmentID !== "string") {
+    if (
+      !businessID ||
+      !environmentType ||
+      typeof businessID !== "string" ||
+      typeof environmentType !== "string"
+    ) {
       res.status(400).json({
         error:
-          "Error Bad Request.Include the environment id in the query parameters or ensure it is a single string",
+          "Error Bad Request.Include the business id and environment type in the query parameters and ensure they are valid strings",
       });
       return;
     }
-    const transactions =
-      await transactionController.getTransactionsByEnvironment(
-        environmentID,
-        page,
-        limit,
-      );
+    const transactions = await transactionController.getTransactionsByBusiness(
+      businessID,
+      environmentType as ENVIRONMENT_TYPES,
+      page,
+      limit,
+    );
     return res.status(200).json(transactions);
   } catch (err) {
     logger.error("Error fetching transactions in router", { error: err });
@@ -124,11 +132,7 @@ router.post(
         token,
       });
 
-      res.status(201).json({
-        success: true,
-        message: "Transaction initialized successfully",
-        data: result,
-      });
+      res.status(201).json(result);
     } catch (err) {
       logger.error("Error initializing transaction in router", { error: err });
 

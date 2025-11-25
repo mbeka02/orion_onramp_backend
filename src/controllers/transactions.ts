@@ -18,6 +18,7 @@ import {
   WebhookChargeData,
   WEBHOOK_EVENTS,
 } from "../types/paystack";
+import { ENVIRONMENT_TYPES } from "../types/environments";
 export class TransactionController {
   private apiKey: string;
   private MAX_TRANSACTION_AMOUNT = 500000;
@@ -210,17 +211,19 @@ export class TransactionController {
     }
   }
   /**
-   * Get transactions for an environment with pagination
+   * Get transactions for a business with pagination
    */
-  async getTransactionsByEnvironment(
-    environmentID: string,
+  async getTransactionsByBusiness(
+    businessID: string,
+    environmentType: ENVIRONMENT_TYPES,
     page: number,
     limit: number,
   ) {
     try {
       const transactions =
-        await this.transactionModel.getTransactionsByEnvironment(
-          environmentID,
+        await this.transactionModel.getTransactionsByBusiness(
+          businessID,
+          environmentType,
           page,
           limit,
         );

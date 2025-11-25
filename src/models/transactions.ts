@@ -1,5 +1,5 @@
 import {
-  businesses,
+  businessUsers,
   environmentsTable,
   transactionsTable,
 } from "../lib/db/schema";

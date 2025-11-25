@@ -455,7 +455,7 @@ export class TransactionController {
     try {
       const reference = data.reference;
       if (!data?.reference) {
-        logger.error("Missing reference in charge.success webhook data", {
+        logger.error("Missing reference in charge.failed webhook data", {
           data,
         });
         return;

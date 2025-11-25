@@ -16,11 +16,17 @@ import liquidityManagerController from "../controllers/liquidityManager";
 import liquidityModel from "../models/liquidityManager";
 import { emailService } from "../lib/emails/email.util";
 import { ENVIRONMENT_TYPES } from "../types/environments";
+import { BusinessModel } from "../models/businesses";
+import { getAuthContext } from "../lib/auth/utils";
 
 const router: Router = Router();
 
 const transactionModel = new TransactionModel();
-const transactionController = new TransactionController(transactionModel);
+const businessModel = new BusinessModel();
+const transactionController = new TransactionController(
+  transactionModel,
+  businessModel,
+);
 
 /**
  * GET /api/transaction
@@ -33,6 +39,12 @@ const transactionController = new TransactionController(transactionModel);
  */
 router.get("/", authenticationMiddleware, async (req, res) => {
   try {
+    const session = await getAuthContext(req);
+    if (!session?.user.id) {
+      res.status(401).json({ message: Errors.UNAUTHORIZED });
+      return;
+    }
+
     const businessID = req.query.business_id;
     const environmentType = req.query.environment_type;
     const rawPage = Number(req.query.page);
@@ -59,6 +71,7 @@ router.get("/", authenticationMiddleware, async (req, res) => {
       return;
     }
     const transactions = await transactionController.getTransactionsByBusiness(
+      session.user.id,
       businessID,
       environmentType as ENVIRONMENT_TYPES,
       page,

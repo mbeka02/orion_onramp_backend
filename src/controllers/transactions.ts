@@ -19,13 +19,15 @@ import {
   WEBHOOK_EVENTS,
 } from "../types/paystack";
 import { ENVIRONMENT_TYPES } from "../types/environments";
+import { BusinessModel } from "../models/businesses";
 export class TransactionController {
   private apiKey: string;
   private MAX_TRANSACTION_AMOUNT = 500000;
   private transactionModel: TransactionModel;
+  private businessesModel: BusinessModel;
   private paystackBaseUrl = "https://api.paystack.co";
 
-  constructor(tmodel: TransactionModel) {
+  constructor(tmodel: TransactionModel, bmodel: BusinessModel) {
     const PAYSTACK_TEST_SECRET = process.env.PAYSTACK_TEST_SECRET_KEY;
     const PAYSTACK_LIVE_SECRET = process.env.PAYSTACK_LIVE_SECRET_KEY;
 
@@ -41,6 +43,7 @@ export class TransactionController {
         : PAYSTACK_TEST_SECRET;
 
     this.transactionModel = tmodel;
+    this.businessesModel = bmodel;
   }
 
   /**
@@ -214,12 +217,21 @@ export class TransactionController {
    * Get transactions for a business with pagination
    */
   async getTransactionsByBusiness(
+    userID: string,
     businessID: string,
     environmentType: ENVIRONMENT_TYPES,
     page: number,
     limit: number,
   ) {
     try {
+      const validMember =
+        await this.businessesModel.checkUserBusinessMembership(
+          userID,
+          businessID,
+        );
+      if (!validMember) {
+        throw new MyError(Errors.TRANSACTION_VIEW_FORBIDDEN);
+      }
       const transactions =
         await this.transactionModel.getTransactionsByBusiness(
           businessID,

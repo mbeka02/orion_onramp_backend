@@ -1,10 +1,22 @@
-import { transactionsTable } from "../lib/db/schema";
+import {
+  businesses,
+  environmentsTable,
+  transactionsTable,
+} from "../lib/db/schema";
 import { db } from "../lib/db";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
 import { TRANSACTION_STATUS } from "../types/transactions";
 import { DatabaseError } from "pg";
-import { desc, count, eq, DrizzleError, and } from "drizzle-orm";
+import {
+  desc,
+  count,
+  eq,
+  DrizzleError,
+  and,
+  getTableColumns,
+} from "drizzle-orm";
+import { ENVIRONMENT_TYPES } from "../types/environments";
 interface createTransactionArgs {
   amount: number;
   email: string;
@@ -23,10 +35,11 @@ interface UpdatePaystackResponseArgs {
 }
 export class TransactionModel {
   /**
-   * Get transactions for an environment with pagination
+   * Get transactions for a business with pagination
    */
-  async getTransactionsByEnvironment(
-    environmentID: string,
+  async getTransactionsByBusiness(
+    businessID: string,
+    environmentType: ENVIRONMENT_TYPES,
     page: number = 1,
     limit: number = 20,
   ) {
@@ -35,17 +48,36 @@ export class TransactionModel {
     try {
       const [transactionData, totalCountResult] = await Promise.all([
         db
-          .select()
+          .select({
+            ...getTableColumns(transactionsTable),
+          })
           .from(transactionsTable)
-          .where(eq(transactionsTable.environmentID, environmentID))
+          .innerJoin(
+            environmentsTable,
+            eq(environmentsTable.id, transactionsTable.environmentID),
+          )
+          .where(
+            and(
+              eq(environmentsTable.type, environmentType),
+              eq(environmentsTable.businessID, businessID),
+            ),
+          )
           .limit(limit)
           .offset(offset)
           .orderBy(desc(transactionsTable.createdAt)),
-
         db
           .select({ count: count() })
           .from(transactionsTable)
-          .where(eq(transactionsTable.environmentID, environmentID)),
+          .innerJoin(
+            environmentsTable,
+            eq(environmentsTable.id, transactionsTable.environmentID),
+          )
+          .where(
+            and(
+              eq(environmentsTable.type, environmentType),
+              eq(environmentsTable.businessID, businessID),
+            ),
+          ),
       ]);
 
       const totalItems = totalCountResult[0]?.count || 0;
@@ -57,6 +89,7 @@ export class TransactionModel {
         amountMajor: tx.amount / 100,
         paystackResponse: tx.paystackResponseRaw,
       }));
+
       return {
         data: formattedTransactions,
         pagination: {
@@ -69,9 +102,10 @@ export class TransactionModel {
         },
       };
     } catch (err) {
-      logger.error("Error fetching environment transactions", {
+      logger.error("Error fetching business transactions", {
         error: err,
-        environmentID,
+        businessID,
+        environmentType,
       });
       throw new Error("Error fetching transactions", { cause: err });
     }

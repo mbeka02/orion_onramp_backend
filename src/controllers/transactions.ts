@@ -240,7 +240,7 @@ export class TransactionController {
   /**
    * Get transaction by ID
    */
-  async getTransactionsByID(transactionID: string) {
+  async getTransactionByID(transactionID: string) {
     try {
       const transaction =
         await this.transactionModel.getTransactionById(transactionID);

@@ -83,12 +83,13 @@ export class TransactionModel {
       const totalItems = totalCountResult[0]?.count || 0;
       const totalPages = Math.ceil(totalItems / limit);
 
-      const formattedTransactions = transactionData.map((tx) => ({
-        ...tx,
-        amountInCents: tx.amount,
-        amountMajor: tx.amount / 100,
-        paystackResponse: tx.paystackResponseRaw,
-      }));
+      const formattedTransactions = transactionData.map(
+        ({ paystackResponseRaw, ...tx }) => ({
+          ...tx,
+          amountInCents: tx.amount,
+          amountMajor: tx.amount / 100,
+        }),
+      );
 
       return {
         data: formattedTransactions,

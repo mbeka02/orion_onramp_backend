@@ -1,10 +1,22 @@
-import { transactionsTable } from "../lib/db/schema";
+import {
+  businessUsers,
+  environmentsTable,
+  transactionsTable,
+} from "../lib/db/schema";
 import { db } from "../lib/db";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
-import { DrizzleError, eq } from "drizzle-orm";
 import { TRANSACTION_STATUS } from "../types/transactions";
 import { DatabaseError } from "pg";
+import {
+  desc,
+  count,
+  eq,
+  DrizzleError,
+  and,
+  getTableColumns,
+} from "drizzle-orm";
+import { ENVIRONMENT_TYPES } from "../types/environments";
 interface createTransactionArgs {
   amount: number;
   email: string;
@@ -22,6 +34,83 @@ interface UpdatePaystackResponseArgs {
   paystackResponseRaw: Record<string, any>;
 }
 export class TransactionModel {
+  /**
+   * Get transactions for a business with pagination
+   */
+  async getTransactionsByBusiness(
+    businessID: string,
+    environmentType: ENVIRONMENT_TYPES,
+    page: number = 1,
+    limit: number = 20,
+  ) {
+    const offset = (page - 1) * limit;
+
+    try {
+      const [transactionData, totalCountResult] = await Promise.all([
+        db
+          .select({
+            ...getTableColumns(transactionsTable),
+          })
+          .from(transactionsTable)
+          .innerJoin(
+            environmentsTable,
+            eq(environmentsTable.id, transactionsTable.environmentID),
+          )
+          .where(
+            and(
+              eq(environmentsTable.type, environmentType),
+              eq(environmentsTable.businessID, businessID),
+            ),
+          )
+          .limit(limit)
+          .offset(offset)
+          .orderBy(desc(transactionsTable.createdAt)),
+        db
+          .select({ count: count() })
+          .from(transactionsTable)
+          .innerJoin(
+            environmentsTable,
+            eq(environmentsTable.id, transactionsTable.environmentID),
+          )
+          .where(
+            and(
+              eq(environmentsTable.type, environmentType),
+              eq(environmentsTable.businessID, businessID),
+            ),
+          ),
+      ]);
+
+      const totalItems = totalCountResult[0]?.count || 0;
+      const totalPages = Math.ceil(totalItems / limit);
+
+      const formattedTransactions = transactionData.map(
+        ({ paystackResponseRaw, ...tx }) => ({
+          ...tx,
+          amountInCents: tx.amount,
+          amountMajor: tx.amount / 100,
+        }),
+      );
+
+      return {
+        data: formattedTransactions,
+        pagination: {
+          currentPage: page,
+          itemsPerPage: limit,
+          totalItems,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+      };
+    } catch (err) {
+      logger.error("Error fetching business transactions", {
+        error: err,
+        businessID,
+        environmentType,
+      });
+      throw new Error("Error fetching transactions", { cause: err });
+    }
+  }
   async createTransaction(args: createTransactionArgs) {
     try {
       const [insertedTransaction] = await db
@@ -50,7 +139,7 @@ export class TransactionModel {
             logger.warn("Duplicate transaction reference", {
               reference: args.reference,
             });
-            throw err; // Let controller handle this
+            throw err;
           }
         }
       }
@@ -167,6 +256,33 @@ export class TransactionModel {
         id,
       });
       throw new Error("Error fetching transaction", { cause: err });
+    }
+  }
+  /**
+   * Helper: Get the Business ID associated with a Transaction ID
+   * This is used for permission checks.
+   */
+  async getTransactionBusinessId(
+    transactionId: string,
+  ): Promise<string | null> {
+    try {
+      const [result] = await db
+        .select({ businessId: environmentsTable.businessID })
+        .from(transactionsTable)
+        .innerJoin(
+          environmentsTable,
+          eq(transactionsTable.environmentID, environmentsTable.id),
+        )
+        .where(eq(transactionsTable.id, transactionId))
+        .limit(1);
+
+      return result?.businessId || null;
+    } catch (err) {
+      logger.error("Error fetching business ID for transaction", {
+        error: err,
+        transactionId,
+      });
+      throw new Error("Error fetching transaction context", { cause: err });
     }
   }
 }

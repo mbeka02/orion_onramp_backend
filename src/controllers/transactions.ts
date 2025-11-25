@@ -12,15 +12,22 @@ import logger from "../lib/logger";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import { MyError, Errors } from "../errors";
-import * as crypto from 'crypto';
-import { WebhookEvent, WebhookChargeData, WEBHOOK_EVENTS } from "../types/paystack";
+import * as crypto from "crypto";
+import {
+  WebhookEvent,
+  WebhookChargeData,
+  WEBHOOK_EVENTS,
+} from "../types/paystack";
+import { ENVIRONMENT_TYPES } from "../types/environments";
+import { BusinessModel } from "../models/businesses";
 export class TransactionController {
   private apiKey: string;
   private MAX_TRANSACTION_AMOUNT = 500000;
   private transactionModel: TransactionModel;
+  private businessesModel: BusinessModel;
   private paystackBaseUrl = "https://api.paystack.co";
 
-  constructor(tmodel: TransactionModel) {
+  constructor(tmodel: TransactionModel, bmodel: BusinessModel) {
     const PAYSTACK_TEST_SECRET = process.env.PAYSTACK_TEST_SECRET_KEY;
     const PAYSTACK_LIVE_SECRET = process.env.PAYSTACK_LIVE_SECRET_KEY;
 
@@ -36,6 +43,7 @@ export class TransactionController {
         : PAYSTACK_TEST_SECRET;
 
     this.transactionModel = tmodel;
+    this.businessesModel = bmodel;
   }
 
   /**
@@ -205,7 +213,90 @@ export class TransactionController {
       throw new MyError(Errors.PAYSTACK_VERIFICATION_FAILED, { cause: err });
     }
   }
+  /**
+   * Get transactions for a business with pagination
+   */
+  async getTransactionsByBusiness(
+    userID: string,
+    businessID: string,
+    environmentType: ENVIRONMENT_TYPES,
+    page: number,
+    limit: number,
+  ) {
+    try {
+      const validMember =
+        await this.businessesModel.checkUserBusinessMembership(
+          userID,
+          businessID,
+        );
+      if (!validMember) {
+        throw new MyError(Errors.TRANSACTION_VIEW_FORBIDDEN);
+      }
+      const transactions =
+        await this.transactionModel.getTransactionsByBusiness(
+          businessID,
+          environmentType,
+          page,
+          limit,
+        );
+      return transactions;
+    } catch (err) {
+      logger.error("Failed to fetch transactions for business", {
+        error: err,
+        businessID,
+        environmentType,
+        page,
+        limit,
+      });
 
+      if (err instanceof MyError) {
+        throw err;
+      }
+
+      // Wrap other errors
+      throw new MyError(Errors.TRANSACTIONS_FETCH_FAILED, { cause: err });
+    }
+  }
+  /**
+   * Get transaction by ID
+   */
+  async getTransactionByID(userID: string, transactionID: string) {
+    try {
+      const businessID =
+        await this.transactionModel.getTransactionBusinessId(transactionID);
+
+      if (!businessID) {
+        //the transaction likely doesn't exist
+        throw new MyError(Errors.TRANSACTION_NOT_FOUND);
+      }
+
+      const validMember =
+        await this.businessesModel.checkUserBusinessMembership(
+          userID,
+          businessID,
+        );
+
+      if (!validMember) {
+        throw new MyError(Errors.TRANSACTION_VIEW_FORBIDDEN);
+      }
+      const transaction =
+        await this.transactionModel.getTransactionById(transactionID);
+      if (!transaction) {
+        throw new MyError(Errors.TRANSACTION_NOT_FOUND);
+      }
+      return transaction;
+    } catch (err) {
+      logger.error("Failed to fetch transaction by ID", {
+        error: err,
+        transactionID,
+      });
+      if (err instanceof MyError) {
+        throw err;
+      }
+      // Wrap other errors
+      throw new MyError(Errors.TRANSACTION_FETCH_FAILED, { cause: err });
+    }
+  }
   /**
    * Generate unique reference for the DApp transaction
    */
@@ -343,16 +434,14 @@ export class TransactionController {
     try {
       const secret = this.apiKey;
       const hash = crypto
-        .createHmac('sha512', secret)
-        .update(body, 'utf8')
-        .digest('hex');
-      const hashBuffer = Buffer.from(hash, 'hex');
-      const sigBuffer = Buffer.from(paystackSignature, 'hex');
+        .createHmac("sha512", secret)
+        .update(body, "utf8")
+        .digest("hex");
+      const hashBuffer = Buffer.from(hash, "hex");
+      const sigBuffer = Buffer.from(paystackSignature, "hex");
       if (hashBuffer.length !== sigBuffer.length) return false;
       return crypto.timingSafeEqual(hashBuffer, sigBuffer);
-
-    }
-    catch (error) {
+    } catch (error) {
       logger.error("Error validating Paystack signature", { error: error });
       return false;
     }
@@ -370,8 +459,7 @@ export class TransactionController {
           logger.info("Unhandled Paystack webhook event", { event });
           return;
       }
-    }
-    catch (error) {
+    } catch (error) {
       logger.error("Error handling Paystack webhook", { error });
     }
   }
@@ -379,13 +467,17 @@ export class TransactionController {
     try {
       const reference = data.reference;
       if (!data?.reference) {
-        logger.error("Missing reference in charge.success webhook data", { data });
+        logger.error("Missing reference in charge.success webhook data", {
+          data,
+        });
         return;
       }
       const transaction =
         await this.transactionModel.getTransactionByReference(reference);
       if (!transaction) {
-        logger.warn("Transaction not found for charge.success webhook", { reference });
+        logger.warn("Transaction not found for charge.success webhook", {
+          reference,
+        });
         return;
       }
       if (transaction.transactionStatus === TRANSACTION_STATUS.SUCCESSFUL) {
@@ -399,8 +491,7 @@ export class TransactionController {
       );
       logger.info("Transaction marked successful via webhook", { reference });
       //TODO: Treasury logic goes here
-    }
-    catch (error) {
+    } catch (error) {
       logger.error("Error processing charge success webhook", { error });
     }
   }
@@ -408,13 +499,17 @@ export class TransactionController {
     try {
       const reference = data.reference;
       if (!data?.reference) {
-        logger.error("Missing reference in charge.success webhook data", { data });
+        logger.error("Missing reference in charge.failed webhook data", {
+          data,
+        });
         return;
       }
       const transaction =
         await this.transactionModel.getTransactionByReference(reference);
       if (!transaction) {
-        logger.warn("Transaction not found for charge.failed webhook", { reference });
+        logger.warn("Transaction not found for charge.failed webhook", {
+          reference,
+        });
         return;
       }
       if (transaction.transactionStatus === TRANSACTION_STATUS.FAILED) {
@@ -428,10 +523,8 @@ export class TransactionController {
       );
       logger.info("Transaction marked failed via webhook", { reference });
       //TODO: Treasury logic goes here
-    }
-    catch (error) {
+    } catch (error) {
       logger.error("Error processing charge failed webhook", { error });
     }
   }
-
 }

@@ -1,0 +1,25 @@
+name: Run Lint Tests on PR
+run-name: ${{ github.actor }} is making a PR and checking if code has linting issues
+on: 
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  lint-check:
+    name: Run lint check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Use NodeJS
+        uses: actions/setup-node@v6.0.0
+        with:
+          node-version-file: .nvmrc
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4.2.0
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run lint check
+        run: pnpm format:check
+

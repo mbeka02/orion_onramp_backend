@@ -1,0 +1,15 @@
+# Ignore dependencies
+node_modules
+
+# Ignore build output (adjust 'dist' to match your tsconfig 'outDir')
+dist
+build
+coverage
+
+# Ignore system files
+.DS_Store
+.env
+
+# Ignore workflows
+.github
+setup

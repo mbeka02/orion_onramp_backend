@@ -1,5 +1,9 @@
 // Retain 2 decimal places of precision
-export function divideBigIntWithDecimals(numerator: bigint, denominator: bigint, decimalPlaces = 2): number { 
+export function divideBigIntWithDecimals(
+  numerator: bigint,
+  denominator: bigint,
+  decimalPlaces = 2,
+): number {
   if (denominator === 0n) {
     return 0;
   }

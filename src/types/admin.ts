@@ -1,4 +1,8 @@
 import z from "zod";
+export enum ROLE {
+    ADMIN = "ADMIN",
+    SUPER_ADMIN = "SUPER_ADMIN",
+}
 export const createAdminSchema = z.object({
     name: z.string().min(1),
     email: z.email(),
@@ -8,9 +12,10 @@ export const loginAdminSchema = z.object({
     email: z.email(),
     password: z.string().min(6),
 })
-export interface JWTPayload{
+export interface JWTPayload {
     adminId: string;
     email: string;
+    role: ROLE;
     iat?: number;
     exp?: number;
 }
@@ -23,6 +28,7 @@ export const getBusinessesQuerySchema = z.object({
 export const businessIdParamSchema = z.object({
     id: z.uuid("Invalid business ID format"),
 });
+
 
 export type LoginAdminInput = z.infer<typeof loginAdminSchema>;
 export type CreateAdminInput = z.infer<typeof createAdminSchema>;

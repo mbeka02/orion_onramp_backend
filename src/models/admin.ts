@@ -7,6 +7,34 @@ import bcrypt from "bcrypt";
 import { BusinessType, BUSINESS_STATUS } from "../types/businesses";
 import logger from "../lib/logger";
 export class AdminModel {
+    async setup() {
+        try {
+            const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD as string;
+            const SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL as string;
+            if (!SUPERADMIN_EMAIL || !SUPERADMIN_PASSWORD) {
+                logger.error("Superadmin credentials are not set in environment variables.");
+                throw new MyError("Superadmin credentials are not set in environment variables.");
+            }
+            const doesSuperAdminExist = await this.doesAdminExist(SUPERADMIN_EMAIL);
+            if (doesSuperAdminExist) {
+                logger.info("Superadmin already exists. Skipping creation.");
+                return
+            }
+            const hashedPassword = bcrypt.hashSync(SUPERADMIN_PASSWORD, 10);
+            const newAdmin = await db.insert(admin).values({
+                name: "Superadmin",
+                email: SUPERADMIN_EMAIL,
+                password: hashedPassword,
+            }).returning();
+
+            logger.info("Superadmin account created", { email: newAdmin[0].email, id: newAdmin[0].id } );
+            return { email: newAdmin[0].email, id: newAdmin[0].id };
+        }
+        catch (error) {
+            logger.error("Error during superadmin setup", { error });
+            throw error;
+        }
+    }
     async createAdmin(args: CreateAdminInput) {
         try {
             const doesAdminExist = await this.doesAdminExist(args.email);
@@ -19,7 +47,7 @@ export class AdminModel {
                 password: args.password,
             }).returning();
 
-            return {email: newAdmin[0].email, id: newAdmin[0].id};
+            return { email: newAdmin[0].email, id: newAdmin[0].id };
         }
         catch (error) {
             throw error;
@@ -62,13 +90,13 @@ export class AdminModel {
 
     // Business Management Methods
     async getBusinessesByStatus(
-        status?: BUSINESS_STATUS, 
-        page: number = 1, 
+        status?: BUSINESS_STATUS,
+        page: number = 1,
         limit: number = 10
     ): Promise<{ businesses: BusinessType[], totalCount: number, totalPages: number }> {
         try {
             const offset = (page - 1) * limit;
-            
+
             // Build where conditions
             const whereConditions: SQL[] = [];
             if (status) {
@@ -127,7 +155,7 @@ export class AdminModel {
             const countQuery = db
                 .select({ count: count() })
                 .from(businesses);
-            
+
             if (whereConditions.length > 0) {
                 countQuery.where(and(...whereConditions));
             }
@@ -222,15 +250,15 @@ export class AdminModel {
 
             await db
                 .update(businesses)
-                .set({ 
+                .set({
                     status: BUSINESS_STATUS.APPROVED,
                 })
                 .where(eq(businesses.id, businessId));
 
-            logger.info("Admin approved business", { 
-                businessId, 
+            logger.info("Admin approved business", {
+                businessId,
                 adminId,
-                tradingName: business.tradingName 
+                tradingName: business.tradingName
             });
         } catch (error) {
             logger.error("Admin Model: Error approving business", { error, businessId, adminId });
@@ -253,16 +281,16 @@ export class AdminModel {
 
             await db
                 .update(businesses)
-                .set({ 
+                .set({
                     status: BUSINESS_STATUS.SUSPENDED,
                 })
                 .where(eq(businesses.id, businessId));
 
-            logger.info("Admin suspended business", { 
-                businessId, 
+            logger.info("Admin suspended business", {
+                businessId,
                 adminId,
                 tradingName: business.tradingName,
-                previousStatus: business.status 
+                previousStatus: business.status
             });
         } catch (error) {
             logger.error("Admin Model: Error suspending business", { error, businessId, adminId });

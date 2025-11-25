@@ -279,6 +279,7 @@ export const admin = pgTable("admin", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
+  role: text("role").notNull().default("ADMIN"),
   password: text("password").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })

@@ -3,7 +3,7 @@ import logger from "../lib/logger";
 import { Admincontroller } from "../controllers/admin";
 import { AdminModel } from "../models/admin";
 import { validateBody } from "../middleware/validation";
-import {createAdminSchema, loginAdminSchema } from "../types/admin";
+import {createAdminSchema, loginAdminSchema, ROLE } from "../types/admin";
 import rateLimit from 'express-rate-limit';
 import { MyError } from "../errors";
 import { adminAuthenticationMiddleware } from "../middleware/adminAuthenticationMiddleware";
@@ -20,8 +20,12 @@ router.post(
     "/create",
     loginLimiter,
     validateBody(createAdminSchema),
+    adminAuthenticationMiddleware,
     async (req, res) => {
         try {
+            if (req.role !== ROLE.SUPER_ADMIN) {
+                return res.status(403).json({ error: "Forbidden: Only SUPER_ADMIN can create new admins" });
+            }
             const adminModel = new AdminModel();
             const { admin, token } = await adminController.createadmin(req.body, adminModel);
             res.status(201).json({

@@ -1,5 +1,5 @@
 import { AdminModel } from "../models/admin";
-import { CreateAdminInput, LoginAdminInput, JWTPayload } from "../types/admin";
+import { CreateAdminInput, LoginAdminInput, JWTPayload, ROLE } from "../types/admin";
 import { MyError, Errors } from "../errors";
 import logger from "../lib/logger";
 import bcrypt from "bcrypt";
@@ -7,11 +7,24 @@ import jwt from "jsonwebtoken";
 import { BUSINESS_STATUS } from "../types/businesses";
 const SALT_ROUNDS = 10;
 export class Admincontroller {
+    async setup() {
+        const model = new AdminModel();
+        try{
+            await model.setup();
+        }
+        catch(error){
+            logger.error("Admin Controller: Error during setup", { error });
+            if (error instanceof MyError) {
+                throw error;
+            }
+            throw new Error(Errors.INTERNAL_SERVER_ERROR);
+        }
+    }
     async createadmin(args: CreateAdminInput, model: AdminModel) {
         try {
             const hashPassword = this.hashPassword(args.password);
             const admin = await model.createAdmin({ ...args, password: hashPassword });
-            const token = this.generateToken(admin.id, admin.email);
+            const token = this.generateToken(admin.id, admin.email, ROLE.ADMIN);
             return { admin, token };
         } catch (err) {
             if (err instanceof MyError)
@@ -23,7 +36,7 @@ export class Admincontroller {
     async login(args: LoginAdminInput, model: AdminModel) {
         try {
             const admin = await model.login(args);
-            const token = this.generateToken(admin.id, admin.email);
+            const token = this.generateToken(admin.id, admin.email, admin.role as ROLE);
             return { admin, token };
         } catch (err) {
             if (err instanceof MyError)
@@ -36,8 +49,8 @@ export class Admincontroller {
         const salt = bcrypt.genSaltSync(SALT_ROUNDS);
         return bcrypt.hashSync(password, salt);
     }
-    private generateToken(adminId: string, email: string): string {
-        const payload: JWTPayload = { adminId, email };
+    private generateToken(adminId: string, email: string, role: ROLE): string {
+        const payload: JWTPayload = { adminId, email, role };
         const secretKey = process.env.JWT_SECRET_KEY as string;
         return jwt.sign(payload, secretKey, { expiresIn: "7d" });
     }

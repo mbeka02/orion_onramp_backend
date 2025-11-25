@@ -1,14 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { JWTPayload } from "../types/admin";
+import { JWTPayload, ROLE } from "../types/admin";
 import logger from "../lib/logger";
 import { Errors } from "../errors";
+import { decode } from "punycode";
 
 declare global {
     namespace Express {
         interface Request {
             adminId?: string;
             adminEmail?: string;
+            role: ROLE
         }
     }
 }
@@ -38,7 +40,7 @@ export const adminAuthenticationMiddleware = (
 
         const decoded = jwt.verify(token, secretKey) as JWTPayload;
         
-        if (!decoded.adminId || !decoded.email) {
+        if (!decoded.adminId || !decoded.email || !decoded.role && (decoded.role !== ROLE.ADMIN || decoded.role !== ROLE.SUPER_ADMIN)) {
             logger.warn("Admin Authentication: Invalid token payload");
             res.status(401).json({ error: Errors.UNAUTHORIZED });
             return;
@@ -47,6 +49,7 @@ export const adminAuthenticationMiddleware = (
         // Attach admin info to request
         req.adminId = decoded.adminId;
         req.adminEmail = decoded.email;
+        req.role = decoded.role;
         
         logger.info("Admin authenticated successfully", {
             adminId: decoded.adminId,

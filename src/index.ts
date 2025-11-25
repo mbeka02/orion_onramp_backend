@@ -15,17 +15,21 @@ import {
 } from "./services/treasuryBalance";
 import { preserveRawBody } from "./middleware/rawBody";
 import adminRouter from "./routes/admin";
+import { Admincontroller } from "./controllers/admin";
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
-
-if (!PORT || !DATABASE_URL || !FRONTEND_URL) {
+const ADMIN_FRONTEND_URL = process.env.ADMIN_FRONTEND_URL;
+if (!PORT || !DATABASE_URL || !FRONTEND_URL || !ADMIN_FRONTEND_URL) {
   logger.error(
     "Invalid env setup, set PORT, FRONTEND_URL and DATABASE_URL in env variables",
   );
   process.exit(1);
 }
-app.use("/", cors({ origin: FRONTEND_URL, credentials: true }));
+app.use(
+  "/",
+  cors({ origin: [FRONTEND_URL, ADMIN_FRONTEND_URL], credentials: true }),
+);
 // BETTER AUTH ROUTES , DO NOT TAMPER WITH THE CONFIGURATION
 // api/auth/sign-up/email
 // api/auth/sign-in/email
@@ -47,6 +51,17 @@ app.use("/api/transaction", transactionRouter);
 app.use("/api/admin", adminRouter);
 let server: Server;
 let isShuttingDown = false;
+//Setup superadmin
+(async () => {
+  try {
+    const adminController = new Admincontroller();
+    await adminController.setup();
+    logger.info("Superadmin setup completed successfully");
+  } catch (err) {
+    logger.error(`Failed to setup superadmin: ${err}`);
+    process.exit(1);
+  }
+})();
 // Start background job
 async function initialize(): Promise<void> {
   try {

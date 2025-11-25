@@ -1,6 +1,6 @@
 import { AdminModel } from "../../src/models/admin";
 import { Errors, MyError } from "../../src/errors";
-import { CreateAdminInput, LoginAdminInput } from "../../src/types/admin";
+import { CreateAdminInput, LoginAdminInput, ROLE } from "../../src/types/admin";
 import { BUSINESS_STATUS } from "../../src/types/businesses";
 import bcrypt from "bcrypt";
 

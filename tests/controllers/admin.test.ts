@@ -1,7 +1,7 @@
 import { Admincontroller } from "../../src/controllers/admin";
 import { Errors, MyError } from "../../src/errors";
 import { adminModelMock } from "../mocks/admin_model_mock";
-import { CreateAdminInput, LoginAdminInput } from "../../src/types/admin";
+import { CreateAdminInput, LoginAdminInput, ROLE } from "../../src/types/admin";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -57,7 +57,7 @@ describe("Admin Controller", () => {
                 password: mockHashedPassword,
             });
             expect(jwt.sign).toHaveBeenCalledWith(
-                { adminId: mockAdminId, email: mockEmail },
+                { adminId: mockAdminId, email: mockEmail, role: ROLE.ADMIN },
                 "test-secret-key",
                 { expiresIn: "7d" }
             );
@@ -144,7 +144,7 @@ describe("Admin Controller", () => {
             await adminController.createadmin(input, adminModelMock as any);
 
             expect(jwt.sign).toHaveBeenCalledWith(
-                { adminId: mockAdminId, email: mockEmail },
+                { adminId: mockAdminId, email: mockEmail, role: ROLE.ADMIN },
                 "test-secret-key",
                 { expiresIn: "7d" }
             );

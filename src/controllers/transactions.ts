@@ -229,6 +229,14 @@ export class TransactionController {
         );
       return transactions;
     } catch (err) {
+      logger.error("Failed to fetch transactions for business", {
+        error: err,
+        businessID,
+        environmentType,
+        page,
+        limit,
+      });
+
       if (err instanceof MyError) {
         throw err;
       }

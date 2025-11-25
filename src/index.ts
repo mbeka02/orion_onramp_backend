@@ -44,7 +44,7 @@ app.get("/health", async (req, res) => {
 app.use("/api/environment", environmentRouter);
 app.use("/api/business", businessRouter);
 app.use("/api/transaction", transactionRouter);
-// app.use("/api/admin", adminRouter);
+app.use("/api/admin", adminRouter);
 let server: Server;
 let isShuttingDown = false;
 // Start background job

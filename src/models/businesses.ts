@@ -17,7 +17,6 @@ import {
   CreateBusinessType,
   UpdateBusinessType,
   Industry,
-  Category,
 } from "../types/businesses";
 import { Errors, MyError } from "../errors";
 

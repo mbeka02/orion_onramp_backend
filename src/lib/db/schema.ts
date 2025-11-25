@@ -1,17 +1,63 @@
-import { pgTable, primaryKey, pgEnum, text, timestamp, boolean, uuid, unique, serial, bigint, varchar, integer, jsonb, } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  primaryKey,
+  pgEnum,
+  text,
+  timestamp,
+  boolean,
+  uuid,
+  unique,
+  serial,
+  bigint,
+  varchar,
+  integer,
+  jsonb,
+} from "drizzle-orm/pg-core";
 import { ENVIRONMENT_TYPES } from "../../types/environments";
 import { TRANSACTION_STATUS } from "../../types/transactions";
-import { BUSINESS_TYPES, BUSINESS_REGISTRATION_TYPES, BUSINESS_STATUS, USER_ROLES, USER_INVITATION_STATUS } from "../../types/businesses";
+import {
+  BUSINESS_TYPES,
+  BUSINESS_REGISTRATION_TYPES,
+  BUSINESS_STATUS,
+  USER_ROLES,
+  USER_INVITATION_STATUS,
+} from "../../types/businesses";
 import { TOKEN_TYPE } from "../../types/token";
 
 import { relations } from "drizzle-orm";
 
-export const environment = pgEnum("environment_types", [ENVIRONMENT_TYPES.LIVE, ENVIRONMENT_TYPES.TEST])
-export const role = pgEnum("user_role", [USER_ROLES.ADMIN, USER_ROLES.DEVELOPER, USER_ROLES.FINANCE, USER_ROLES.SUPPORT])
-export const invitationStatus = pgEnum("invitation_status", [USER_INVITATION_STATUS.PENDING, USER_INVITATION_STATUS.ACCEPTED, USER_INVITATION_STATUS.REJECTED, USER_INVITATION_STATUS.EXPIRED, USER_INVITATION_STATUS.CANCELLED])
-export const businessType = pgEnum("business_type", [BUSINESS_TYPES.STARTER, BUSINESS_TYPES.REGISTERED]);
-export const businessRegistrationType = pgEnum("business_registration_type", [BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP, BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY]);
-export const businessStatus = pgEnum("business_status", [BUSINESS_STATUS.DRAFT, BUSINESS_STATUS.PENDING, BUSINESS_STATUS.APPROVED, BUSINESS_STATUS.REJECTED, BUSINESS_STATUS.SUSPENDED]);
+export const environment = pgEnum("environment_types", [
+  ENVIRONMENT_TYPES.LIVE,
+  ENVIRONMENT_TYPES.TEST,
+]);
+export const role = pgEnum("user_role", [
+  USER_ROLES.ADMIN,
+  USER_ROLES.DEVELOPER,
+  USER_ROLES.FINANCE,
+  USER_ROLES.SUPPORT,
+]);
+export const invitationStatus = pgEnum("invitation_status", [
+  USER_INVITATION_STATUS.PENDING,
+  USER_INVITATION_STATUS.ACCEPTED,
+  USER_INVITATION_STATUS.REJECTED,
+  USER_INVITATION_STATUS.EXPIRED,
+  USER_INVITATION_STATUS.CANCELLED,
+]);
+export const businessType = pgEnum("business_type", [
+  BUSINESS_TYPES.STARTER,
+  BUSINESS_TYPES.REGISTERED,
+]);
+export const businessRegistrationType = pgEnum("business_registration_type", [
+  BUSINESS_REGISTRATION_TYPES.SOLE_PROPRIETORSHIP,
+  BUSINESS_REGISTRATION_TYPES.REGISTERED_COMPANY,
+]);
+export const businessStatus = pgEnum("business_status", [
+  BUSINESS_STATUS.DRAFT,
+  BUSINESS_STATUS.PENDING,
+  BUSINESS_STATUS.APPROVED,
+  BUSINESS_STATUS.REJECTED,
+  BUSINESS_STATUS.SUSPENDED,
+]);
 import { SUPPORTED_CHAINS } from "../../types/chain";
 
 export const token_type = pgEnum("token", [
@@ -21,8 +67,8 @@ export const token_type = pgEnum("token", [
 
 export const chain_enum = pgEnum("chain_enum", [
   SUPPORTED_CHAINS.HEDERA_MAINNET,
-  SUPPORTED_CHAINS.HEDERA_TESTNET
-])
+  SUPPORTED_CHAINS.HEDERA_TESTNET,
+]);
 
 export const transaction_status = pgEnum("transaction_status", [
   TRANSACTION_STATUS.PENDING,
@@ -82,7 +128,11 @@ export const environmentKeysTable = pgTable(
   },
   (table) => [
     primaryKey({
-      columns: [table.environmentID, table.encryptedPrivateKey, table.publicKey],
+      columns: [
+        table.environmentID,
+        table.encryptedPrivateKey,
+        table.publicKey,
+      ],
     }),
   ],
 );
@@ -173,10 +223,12 @@ export const businesses = pgTable("business", {
   staffSize: text("staff_size"),
   annualSalesVolume: text("annual_sales_volume"),
   businessType: businessType(),
-  industryId: uuid("industry_id")
-    .references(() => industries.id, { onDelete: "set null" }),
-  categoryId: uuid("category_id")
-    .references(() => categories.id, { onDelete: "set null" }),
+  industryId: uuid("industry_id").references(() => industries.id, {
+    onDelete: "set null",
+  }),
+  categoryId: uuid("category_id").references(() => categories.id, {
+    onDelete: "set null",
+  }),
   legalBusinessName: text("legal_business_name"),
   registrationtype: businessRegistrationType(),
   generalEmail: text("general_email"),
@@ -198,19 +250,23 @@ export const businesses = pgTable("business", {
   businessRegistrationNumber: text("registration_number").unique(),
   status: businessStatus().default(BUSINESS_STATUS.DRAFT),
   createdAt: timestamp("created_at").defaultNow(),
-})
-export const businessUsers = pgTable("business_users", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  businessId: uuid("business_id")
-    .notNull()
-    .references(() => businesses.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  role: role(),
-  joinedAt: timestamp("joined_at").defaultNow().notNull(),
-},
-  (table) => [unique("business_user_unique").on(table.businessId, table.userId)]
+});
+export const businessUsers = pgTable(
+  "business_users",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    businessId: uuid("business_id")
+      .notNull()
+      .references(() => businesses.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: role(),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  },
+  (table) => [
+    unique("business_user_unique").on(table.businessId, table.userId),
+  ],
 );
 export const invitations = pgTable("invitations", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -273,12 +329,12 @@ export const treasuryBalanceTable = pgTable("treasury_token_balances", {
   chain: chain_enum("chain").notNull(),
   treasuryAccount: text("treasury_account").notNull(),
   decimals: integer("token_decimals").notNull(),
-  balance: bigint("balance", { mode: "bigint" }).notNull()
-})
+  balance: bigint("balance", { mode: "bigint" }).notNull(),
+});
 export const admin = pgTable("admin", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-})
+});

@@ -85,7 +85,7 @@ export class Admincontroller {
 
     async getBusinessById(businessId: string, model: AdminModel) {
         try {
-            if (!businessId) {
+            if (!businessId || !businessId.trim()) {
                 throw new MyError("Business ID is required");
             }
 
@@ -107,10 +107,10 @@ export class Admincontroller {
 
     async approveBusiness(businessId: string, adminId: string, model: AdminModel) {
         try {
-            if (!businessId) {
+            if (!businessId || !businessId.trim()) {
                 throw new MyError("Business ID is required");
             }
-            if (!adminId) {
+            if (!adminId || !adminId.trim()) {
                 throw new MyError("Admin ID is required");
             }
 
@@ -137,10 +137,10 @@ export class Admincontroller {
 
     async suspendBusiness(businessId: string, adminId: string, model: AdminModel) {
         try {
-            if (!businessId) {
+            if (!businessId || !businessId.trim()) {
                 throw new MyError("Business ID is required");
             }
-            if (!adminId) {
+            if (!adminId || !adminId.trim()) {
                 throw new MyError("Admin ID is required");
             }
 

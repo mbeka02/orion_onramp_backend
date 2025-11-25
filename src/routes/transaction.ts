@@ -196,6 +196,13 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
     return;
   } catch (error) {
     logger.error("Error handling Paystack webhook", { error });
+    if (error instanceof MyError) {
+      if (error.message === Errors.TRANSACTION_NOT_FOUND) {
+        res.status(404).send(error.message);
+        return;
+      }
+      return res.status(400).send(error.message);
+    }
     return res.status(500).send("Internal Server Error");
   }
 });

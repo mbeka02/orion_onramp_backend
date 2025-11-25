@@ -28,6 +28,8 @@ export enum Errors {
 
   // transactions
   TRANSACTION_NOT_FOUND = "Transaction not found",
+  REFERENCE_NOT_FOUND = "Reference not found",
+  MISSING_REFERENCE = "The Reference is missing",
   TRANSACTION_AMOUNT_EXCEEDS_LIMIT = "Amount exceeds maximum transaction limit",
   TRANSACTION_MISSING_ORDER_ID = "Missing or invalid 'orderID' in metadata",
   TRANSACTION_ALREADY_INITIALIZED = "Payment already initialized",

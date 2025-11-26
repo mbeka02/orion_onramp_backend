@@ -6,7 +6,12 @@ import { eq, and, desc, count, SQL } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { BusinessType, BUSINESS_STATUS } from "../types/businesses";
 import logger from "../lib/logger";
+import { BusinessModel } from "./businesses";
 export class AdminModel {
+  private businessModel: BusinessModel;
+  constructor(businessModel: BusinessModel) {
+    this.businessModel = businessModel;
+  }
   async setup() {
     try {
       const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD as string;
@@ -104,69 +109,10 @@ export class AdminModel {
     }
   }
 
-  
-
-  async getBusinessById(businessId: string): Promise<BusinessType | null> {
-    try {
-      const businessResult = await db
-        .select({
-          id: businesses.id,
-          ownerId: businesses.ownerId,
-          tradingName: businesses.tradingName,
-          description: businesses.description,
-          staffSize: businesses.staffSize,
-          annualSalesVolume: businesses.annualSalesVolume,
-          businessType: businesses.businessType,
-          industryName: industries.name,
-          categoryName: categories.name,
-          legalBusinessName: businesses.legalBusinessName,
-          registrationtype: businesses.registrationtype,
-          generalEmail: businesses.generalEmail,
-          supportEmail: businesses.supportEmail,
-          disputesEmail: businesses.disputesemail,
-          phoneNumber: businesses.phoneNumber,
-          website: businesses.website,
-          twitterHandle: businesses.twitterHandle,
-          facebookPage: businesses.facebookPage,
-          instagramHandle: businesses.instagramHandle,
-          country: businesses.country,
-          city: businesses.city,
-          streetaddress: businesses.streetaddress,
-          building: businesses.building,
-          postalcode: businesses.postalcode,
-          cryptoWalletAddress: businesses.cryptoWalletAddress,
-          revenuePin: businesses.revenuePin,
-          businessRegistrationCertificate:
-            businesses.businessRegistrationCertificate,
-          businessRegistrationNumber: businesses.businessRegistrationNumber,
-          status: businesses.status,
-          createdAt: businesses.createdAt,
-        })
-        .from(businesses)
-        .leftJoin(industries, eq(businesses.industryId, industries.id))
-        .leftJoin(categories, eq(businesses.categoryId, categories.id))
-        .where(eq(businesses.id, businessId));
-
-      const business = businessResult[0];
-      if (!business) {
-        return null;
-      }
-
-      logger.info("Admin fetched business by ID", { businessId });
-      return business as BusinessType;
-    } catch (error) {
-      logger.error("Admin Model: Error getting business by ID", {
-        error,
-        businessId,
-      });
-      throw error;
-    }
-  }
-
   async approveBusiness(businessId: string, adminId: string): Promise<void> {
     try {
       // Check if business exists and is in pending status
-      const business = await this.getBusinessById(businessId);
+      const business = await this.businessModel.getBusinessById(businessId);
       if (!business) {
         throw new MyError(Errors.BUSINESS_NOT_FOUND);
       }
@@ -200,7 +146,7 @@ export class AdminModel {
   async suspendBusiness(businessId: string, adminId: string): Promise<void> {
     try {
       // Check if business exists
-      const business = await this.getBusinessById(businessId);
+      const business = await this.businessModel.getBusinessById(businessId);
       if (!business) {
         throw new MyError(Errors.BUSINESS_NOT_FOUND);
       }

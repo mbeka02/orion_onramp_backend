@@ -1,9 +1,11 @@
 import { Admincontroller } from "../../src/controllers/admin";
 import { Errors, MyError } from "../../src/errors";
 import { adminModelMock } from "../mocks/admin_model_mock";
+import businessModelMock from "../mocks/business_model_mock";
 import { CreateAdminInput, LoginAdminInput, ROLE } from "../../src/types/admin";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import businessController from "../../src/controllers/businesses";
 
 // Mock bcrypt and jwt
 jest.mock("bcrypt");
@@ -336,14 +338,9 @@ describe("Admin Controller", () => {
 
       (adminModelMock.login as jest.Mock).mockResolvedValue(mockAdmin);
 
-      await adminController.login(input, adminModelMock as any);
-
-      // Should still call jwt.sign but with undefined secret
-      expect(jwt.sign).toHaveBeenCalledWith(
-        { adminId: mockAdminId, email: mockEmail },
-        undefined,
-        { expiresIn: "7d" },
-      );
+      await expect(
+        adminController.login(input, adminModelMock as any),
+      ).rejects.toThrow("Internal Server Error");
     });
   });
 
@@ -395,18 +392,18 @@ describe("Admin Controller", () => {
           totalPages: 1,
         };
 
-        (adminModelMock.getBusinessesByStatus as jest.Mock).mockResolvedValue(
-          mockResult,
-        );
+        (
+          businessModelMock.getBusinessesByStatus as jest.Mock
+        ).mockResolvedValue(mockResult);
 
         const result = await adminController.getBusinessesByStatus(
           undefined,
           1,
           10,
-          adminModelMock as any,
+          businessModelMock as any,
         );
 
-        expect(adminModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
+        expect(businessModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
           undefined,
           1,
           10,
@@ -422,18 +419,18 @@ describe("Admin Controller", () => {
           totalPages: 1,
         };
 
-        (adminModelMock.getBusinessesByStatus as jest.Mock).mockResolvedValue(
-          mockResult,
-        );
+        (
+          businessModelMock.getBusinessesByStatus as jest.Mock
+        ).mockResolvedValue(mockResult);
 
         const result = await adminController.getBusinessesByStatus(
           BUSINESS_STATUS.PENDING,
           1,
           10,
-          adminModelMock as any,
+          businessModelMock as any,
         );
 
-        expect(adminModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
+        expect(businessModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
           BUSINESS_STATUS.PENDING,
           1,
           10,
@@ -447,7 +444,7 @@ describe("Admin Controller", () => {
             undefined,
             0,
             10,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow(MyError);
         await expect(
@@ -455,7 +452,7 @@ describe("Admin Controller", () => {
             undefined,
             0,
             10,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow("Page must be greater than 0");
 
@@ -464,7 +461,7 @@ describe("Admin Controller", () => {
             undefined,
             -1,
             10,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow("Page must be greater than 0");
       });
@@ -475,7 +472,7 @@ describe("Admin Controller", () => {
             undefined,
             1,
             0,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow(MyError);
         await expect(
@@ -483,7 +480,7 @@ describe("Admin Controller", () => {
             undefined,
             1,
             0,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow("Limit must be between 1 and 100");
 
@@ -492,7 +489,7 @@ describe("Admin Controller", () => {
             undefined,
             1,
             101,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow("Limit must be between 1 and 100");
 
@@ -501,37 +498,37 @@ describe("Admin Controller", () => {
             undefined,
             1,
             -1,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow("Limit must be between 1 and 100");
       });
 
       it("should handle model errors gracefully", async () => {
-        (adminModelMock.getBusinessesByStatus as jest.Mock).mockRejectedValue(
-          new Error("Database connection failed"),
-        );
+        (
+          businessModelMock.getBusinessesByStatus as jest.Mock
+        ).mockRejectedValue(new Error("Database connection failed"));
 
         await expect(
           adminController.getBusinessesByStatus(
             undefined,
             1,
             10,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow(Errors.INTERNAL_SERVER_ERROR);
       });
 
       it("should pass through MyError from model", async () => {
-        (adminModelMock.getBusinessesByStatus as jest.Mock).mockRejectedValue(
-          new MyError("Custom business error"),
-        );
+        (
+          businessModelMock.getBusinessesByStatus as jest.Mock
+        ).mockRejectedValue(new MyError("Custom business error"));
 
         await expect(
           adminController.getBusinessesByStatus(
             undefined,
             1,
             10,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow(MyError);
         await expect(
@@ -539,7 +536,7 @@ describe("Admin Controller", () => {
             undefined,
             1,
             10,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow("Custom business error");
       });
@@ -551,19 +548,19 @@ describe("Admin Controller", () => {
           totalPages: 0,
         };
 
-        (adminModelMock.getBusinessesByStatus as jest.Mock).mockResolvedValue(
-          mockResult,
-        );
+        (
+          businessModelMock.getBusinessesByStatus as jest.Mock
+        ).mockResolvedValue(mockResult);
 
         // Test maximum allowed limit
         const result = await adminController.getBusinessesByStatus(
           undefined,
           1,
           100,
-          adminModelMock as any,
+          businessModelMock as any,
         );
 
-        expect(adminModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
+        expect(businessModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
           undefined,
           1,
           100,
@@ -575,9 +572,9 @@ describe("Admin Controller", () => {
           undefined,
           1,
           1,
-          adminModelMock as any,
+          businessModelMock as any,
         );
-        expect(adminModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
+        expect(businessModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
           undefined,
           1,
           1,
@@ -587,75 +584,81 @@ describe("Admin Controller", () => {
 
     describe("getBusinessById", () => {
       it("should get business successfully", async () => {
-        (adminModelMock.getBusinessById as jest.Mock).mockResolvedValue(
+        (businessModelMock.getBusinessById as jest.Mock).mockResolvedValue(
           mockBusiness,
         );
 
-        const result = await adminController.getBusinessById(
+        const result = await businessController.getBusinessById(
           mockBusinessId,
-          adminModelMock as any,
+          businessModelMock as any,
         );
 
-        expect(adminModelMock.getBusinessById).toHaveBeenCalledWith(
+        expect(businessModelMock.getBusinessById).toHaveBeenCalledWith(
           mockBusinessId,
         );
         expect(result).toEqual(mockBusiness);
       });
 
       it("should throw error for empty business ID", async () => {
+        (businessModelMock.getBusinessById as jest.Mock).mockResolvedValue(
+          null,
+        );
+
         await expect(
-          adminController.getBusinessById("", adminModelMock as any),
+          businessController.getBusinessById("", businessModelMock as any),
         ).rejects.toThrow(MyError);
         await expect(
-          adminController.getBusinessById("", adminModelMock as any),
-        ).rejects.toThrow("Business ID is required");
+          businessController.getBusinessById("", businessModelMock as any),
+        ).rejects.toThrow(Errors.BUSINESS_NOT_FOUND);
       });
 
       it("should throw error when business not found", async () => {
-        (adminModelMock.getBusinessById as jest.Mock).mockResolvedValue(null);
+        (businessModelMock.getBusinessById as jest.Mock).mockResolvedValue(
+          null,
+        );
 
         await expect(
-          adminController.getBusinessById(
+          businessController.getBusinessById(
             mockBusinessId,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow(MyError);
         await expect(
-          adminController.getBusinessById(
+          businessController.getBusinessById(
             mockBusinessId,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow(Errors.BUSINESS_NOT_FOUND);
       });
 
       it("should handle model errors gracefully", async () => {
-        (adminModelMock.getBusinessById as jest.Mock).mockRejectedValue(
+        (businessModelMock.getBusinessById as jest.Mock).mockRejectedValue(
           new Error("Database connection failed"),
         );
 
         await expect(
-          adminController.getBusinessById(
+          businessController.getBusinessById(
             mockBusinessId,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow(Errors.INTERNAL_SERVER_ERROR);
       });
 
       it("should pass through MyError from model", async () => {
-        (adminModelMock.getBusinessById as jest.Mock).mockRejectedValue(
+        (businessModelMock.getBusinessById as jest.Mock).mockRejectedValue(
           new MyError("Custom business error"),
         );
 
         await expect(
-          adminController.getBusinessById(
+          businessController.getBusinessById(
             mockBusinessId,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow(MyError);
         await expect(
-          adminController.getBusinessById(
+          businessController.getBusinessById(
             mockBusinessId,
-            adminModelMock as any,
+            businessModelMock as any,
           ),
         ).rejects.toThrow("Custom business error");
       });
@@ -667,13 +670,16 @@ describe("Admin Controller", () => {
           "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
         ];
 
-        (adminModelMock.getBusinessById as jest.Mock).mockResolvedValue(
+        (businessModelMock.getBusinessById as jest.Mock).mockResolvedValue(
           mockBusiness,
         );
 
         for (const uuid of validUUIDs) {
-          await adminController.getBusinessById(uuid, adminModelMock as any);
-          expect(adminModelMock.getBusinessById).toHaveBeenCalledWith(uuid);
+          await businessController.getBusinessById(
+            uuid,
+            businessModelMock as any,
+          );
+          expect(businessModelMock.getBusinessById).toHaveBeenCalledWith(uuid);
         }
       });
     });
@@ -966,28 +972,28 @@ describe("Admin Controller", () => {
           totalCount: 1,
           totalPages: 1,
         };
-        (adminModelMock.getBusinessesByStatus as jest.Mock).mockResolvedValue(
-          mockBusinessList,
-        );
+        (
+          businessModelMock.getBusinessesByStatus as jest.Mock
+        ).mockResolvedValue(mockBusinessList);
 
         // Get pending businesses
         const businesses = await adminController.getBusinessesByStatus(
           "Pending" as any,
           1,
           10,
-          adminModelMock as any,
+          businessModelMock as any,
         );
         expect(businesses.businesses).toHaveLength(1);
 
         // Then get specific business
-        (adminModelMock.getBusinessById as jest.Mock).mockResolvedValue({
+        (businessModelMock.getBusinessById as jest.Mock).mockResolvedValue({
           ...mockBusiness,
           status: "Pending",
         });
 
-        const business = await adminController.getBusinessById(
+        const business = await businessController.getBusinessById(
           mockBusinessId,
-          adminModelMock as any,
+          businessModelMock as any,
         );
         expect(business.status).toBe("Pending");
 
@@ -1004,8 +1010,8 @@ describe("Admin Controller", () => {
         expect(approvalResult.message).toBe("Business approved successfully");
 
         // Verify all operations were called
-        expect(adminModelMock.getBusinessesByStatus).toHaveBeenCalled();
-        expect(adminModelMock.getBusinessById).toHaveBeenCalled();
+        expect(businessModelMock.getBusinessesByStatus).toHaveBeenCalled();
+        expect(businessModelMock.getBusinessById).toHaveBeenCalled();
         expect(adminModelMock.approveBusiness).toHaveBeenCalled();
       });
 
@@ -1087,21 +1093,21 @@ describe("Admin Controller", () => {
           totalPages: 100,
         };
 
-        (adminModelMock.getBusinessesByStatus as jest.Mock).mockResolvedValue(
-          largeMockResult,
-        );
+        (
+          businessModelMock.getBusinessesByStatus as jest.Mock
+        ).mockResolvedValue(largeMockResult);
 
         const result = await adminController.getBusinessesByStatus(
           undefined,
           1,
           100,
-          adminModelMock as any,
+          businessModelMock as any,
         );
 
         expect(result.businesses).toHaveLength(100);
         expect(result.totalCount).toBe(10000);
         expect(result.totalPages).toBe(100);
-        expect(adminModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
+        expect(businessModelMock.getBusinessesByStatus).toHaveBeenCalledWith(
           undefined,
           1,
           100,

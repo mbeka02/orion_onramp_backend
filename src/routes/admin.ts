@@ -191,8 +191,11 @@ router.get(
         return res.status(400).json({ error: "Business ID is required" });
       }
 
-     const businessModel = new BusinessModel();
-      const business = await businessController.getBusinessById(id, businessModel);
+      const businessModel = new BusinessModel();
+      const business = await businessController.getBusinessById(
+        id,
+        businessModel,
+      );
 
       res.status(200).json({
         success: true,

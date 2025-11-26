@@ -37,4 +37,5 @@ export enum Errors {
   //Admin
   ADMIN_ALREADY_EXISTS = "Admin with this email already exists",
   WRONG_ADMIN_CREDENTIALS = "Wrong admin credentials",
+  ADMIN_NOT_FOUND = "Admin not found"
 }

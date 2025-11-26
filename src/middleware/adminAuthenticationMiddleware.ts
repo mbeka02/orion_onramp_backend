@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import { JWTPayload, ROLE } from "../types/admin";
 import logger from "../lib/logger";
 import { Errors } from "../errors";
-import { decode } from "punycode";
 
 declare global {
     namespace Express {
@@ -22,7 +21,7 @@ export const adminAuthenticationMiddleware = (
 ): void => {
     try {
         const authHeader = req.headers.authorization;
-        
+
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
             logger.warn("Admin Authentication: Missing or invalid authorization header");
             res.status(401).json({ error: Errors.UNAUTHORIZED });
@@ -39,8 +38,8 @@ export const adminAuthenticationMiddleware = (
         }
 
         const decoded = jwt.verify(token, secretKey) as JWTPayload;
-        
-        if (!decoded.adminId || !decoded.email || !decoded.role && (decoded.role !== ROLE.ADMIN || decoded.role !== ROLE.SUPER_ADMIN)) {
+
+        if (!decoded.adminId || !decoded.email || ![ROLE.ADMIN, ROLE.SUPER_ADMIN].includes(decoded.role)) {
             logger.warn("Admin Authentication: Invalid token payload");
             res.status(401).json({ error: Errors.UNAUTHORIZED });
             return;
@@ -50,7 +49,7 @@ export const adminAuthenticationMiddleware = (
         req.adminId = decoded.adminId;
         req.adminEmail = decoded.email;
         req.role = decoded.role;
-        
+
         logger.info("Admin authenticated successfully", {
             adminId: decoded.adminId,
             email: decoded.email,
@@ -65,7 +64,7 @@ export const adminAuthenticationMiddleware = (
             res.status(401).json({ error: Errors.UNAUTHORIZED });
             return;
         }
-        
+
         if (error instanceof jwt.TokenExpiredError) {
             logger.warn("Admin Authentication: Expired JWT token");
             res.status(401).json({ error: Errors.UNAUTHORIZED });

@@ -9,10 +9,10 @@ const SALT_ROUNDS = 10;
 export class Admincontroller {
     async setup() {
         const model = new AdminModel();
-        try{
+        try {
             await model.setup();
         }
-        catch(error){
+        catch (error) {
             logger.error("Admin Controller: Error during setup", { error });
             if (error instanceof MyError) {
                 throw error;
@@ -72,7 +72,7 @@ export class Admincontroller {
             }
 
             const result = await model.getBusinessesByStatus(status, page, limit);
-            
+
             logger.info("Admin Controller: Successfully retrieved businesses", {
                 status,
                 page,
@@ -86,11 +86,11 @@ export class Admincontroller {
             if (err instanceof MyError) {
                 throw err;
             }
-            logger.error("Admin Controller: Error getting businesses by status", { 
-                err, 
-                status, 
-                page, 
-                limit 
+            logger.error("Admin Controller: Error getting businesses by status", {
+                err,
+                status,
+                page,
+                limit
             });
             throw new Error(Errors.INTERNAL_SERVER_ERROR);
         }
@@ -126,12 +126,15 @@ export class Admincontroller {
             if (!adminId || !adminId.trim()) {
                 throw new MyError("Admin ID is required");
             }
-
+            const admin = await model.getAdminById(adminId);
+            if (!admin) {
+                throw new MyError(Errors.ADMIN_NOT_FOUND);
+            }
             await model.approveBusiness(businessId, adminId);
-            
-            logger.info("Admin Controller: Successfully approved business", { 
-                businessId, 
-                adminId 
+
+            logger.info("Admin Controller: Successfully approved business", {
+                businessId,
+                adminId
             });
 
             return { message: "Business approved successfully" };
@@ -139,10 +142,10 @@ export class Admincontroller {
             if (err instanceof MyError) {
                 throw err;
             }
-            logger.error("Admin Controller: Error approving business", { 
-                err, 
-                businessId, 
-                adminId 
+            logger.error("Admin Controller: Error approving business", {
+                err,
+                businessId,
+                adminId
             });
             throw new Error(Errors.INTERNAL_SERVER_ERROR);
         }
@@ -156,12 +159,15 @@ export class Admincontroller {
             if (!adminId || !adminId.trim()) {
                 throw new MyError("Admin ID is required");
             }
-
+            const admin = await model.getAdminById(adminId);
+            if (!admin) {
+                throw new MyError(Errors.ADMIN_NOT_FOUND);
+            }
             await model.suspendBusiness(businessId, adminId);
-            
-            logger.info("Admin Controller: Successfully suspended business", { 
-                businessId, 
-                adminId 
+
+            logger.info("Admin Controller: Successfully suspended business", {
+                businessId,
+                adminId
             });
 
             return { message: "Business suspended successfully" };
@@ -169,10 +175,10 @@ export class Admincontroller {
             if (err instanceof MyError) {
                 throw err;
             }
-            logger.error("Admin Controller: Error suspending business", { 
-                err, 
-                businessId, 
-                adminId 
+            logger.error("Admin Controller: Error suspending business", {
+                err,
+                businessId,
+                adminId
             });
             throw new Error(Errors.INTERNAL_SERVER_ERROR);
         }

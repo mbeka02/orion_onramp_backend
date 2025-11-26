@@ -22,7 +22,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 const ADMIN_FRONTEND_URL = process.env.ADMIN_FRONTEND_URL;
 if (!PORT || !DATABASE_URL || !FRONTEND_URL || !ADMIN_FRONTEND_URL) {
   logger.error(
-    "Invalid env setup, set PORT, FRONTEND_URL and DATABASE_URL in env variables",
+    "Invalid env setup, set PORT, FRONTEND_URL, ADMIN_FRONTEND_URL and DATABASE_URL in env variables",
   );
   process.exit(1);
 }
@@ -51,20 +51,14 @@ app.use("/api/transaction", transactionRouter);
 app.use("/api/admin", adminRouter);
 let server: Server;
 let isShuttingDown = false;
-//Setup superadmin
-(async () => {
-  try {
-    const adminController = new Admincontroller();
-    await adminController.setup();
-    logger.info("Superadmin setup completed successfully");
-  } catch (err) {
-    logger.error(`Failed to setup superadmin: ${err}`);
-    process.exit(1);
-  }
-})();
+
 // Start background job
 async function initialize(): Promise<void> {
   try {
+    //Setup superadmin
+    const adminController = new Admincontroller();
+    await adminController.setup();
+    logger.info("Superadmin setup completed successfully");
     // Start background cached treasury balance update every hour
     startCachedTreasuryBalanceUpdate("0 * * * *");
     logger.info("Cached treasury balance updates initialized successfully");

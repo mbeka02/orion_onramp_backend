@@ -25,6 +25,7 @@ export class AdminModel {
                 name: "Superadmin",
                 email: SUPERADMIN_EMAIL,
                 password: hashedPassword,
+                role: "SUPER_ADMIN"
             }).returning();
 
             logger.info("Superadmin account created", { email: newAdmin[0].email, id: newAdmin[0].id } );
@@ -294,6 +295,18 @@ export class AdminModel {
             });
         } catch (error) {
             logger.error("Admin Model: Error suspending business", { error, businessId, adminId });
+            throw error;
+        }
+    }
+    async getAdminById(adminId: string) {
+        try{
+            if(!adminId || !adminId.trim()){
+                throw new MyError("Admin ID is required");
+            }
+            const adminRecord = await db.select().from(admin).where(eq(admin.id, adminId));
+            return adminRecord[0];
+        }
+        catch(error){
             throw error;
         }
     }

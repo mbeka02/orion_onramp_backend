@@ -1,6 +1,6 @@
 import "dotenv/config";
 import crypto from "crypto";
-import { sha3_256 } from "js-sha3";
+import jsSha3 from "js-sha3";
 
 export class EncryptionService {
   secretKey: string;
@@ -35,7 +35,7 @@ export class EncryptionService {
   }
 
   hash(data: string): string {
-    return sha3_256(data);
+    return jsSha3.sha3_256(data);
   }
 
   decrypt(data: string): string {

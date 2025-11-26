@@ -126,10 +126,6 @@ export class Admincontroller {
             if (!adminId || !adminId.trim()) {
                 throw new MyError("Admin ID is required");
             }
-            const admin = await model.getAdminById(adminId);
-            if (!admin) {
-                throw new MyError(Errors.ADMIN_NOT_FOUND);
-            }
             await model.approveBusiness(businessId, adminId);
 
             logger.info("Admin Controller: Successfully approved business", {
@@ -158,10 +154,6 @@ export class Admincontroller {
             }
             if (!adminId || !adminId.trim()) {
                 throw new MyError("Admin ID is required");
-            }
-            const admin = await model.getAdminById(adminId);
-            if (!admin) {
-                throw new MyError(Errors.ADMIN_NOT_FOUND);
             }
             await model.suspendBusiness(businessId, adminId);
 

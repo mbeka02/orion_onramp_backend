@@ -5,7 +5,6 @@ import environmentModel from "../models/environments";
 import logger from "../lib/logger";
 import { EncryptionService } from "../lib/encryption";
 
-
 export async function authenticationMiddleware(
   req: Request,
   res: Response,
@@ -24,22 +23,25 @@ export async function authenticationMiddleware(
 export async function validatePrivateKey(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   try {
     const authorizationHeader = req.headers.authorization;
-    if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+    if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: Errors.UNAUTHORIZED });
     }
 
-    const privateKey = authorizationHeader.split(' ')[1];
+    const privateKey = authorizationHeader.split(" ")[1];
 
     if (!privateKey || privateKey.trim().length === 0) {
       return res.status(401).json({ error: Errors.UNAUTHORIZED });
     }
 
     const encryptionService = new EncryptionService();
-    const environment_id = await environmentModel.doesPrivateKeyExist(privateKey, encryptionService);
+    const environment_id = await environmentModel.doesPrivateKeyExist(
+      privateKey,
+      encryptionService,
+    );
     if (!environment_id) {
       return res.status(401).json({ error: Errors.UNAUTHORIZED });
     }
@@ -47,7 +49,10 @@ export async function validatePrivateKey(
     req.environment_id = environment_id;
     next();
   } catch (err) {
-    logger.error("Validate private key middleware: Could not validate private key", {error: err});
-    return res.status(500).json({error: Errors.INTERNAL_SERVER_ERROR});
+    logger.error(
+      "Validate private key middleware: Could not validate private key",
+      { error: err },
+    );
+    return res.status(500).json({ error: Errors.INTERNAL_SERVER_ERROR });
   }
 }

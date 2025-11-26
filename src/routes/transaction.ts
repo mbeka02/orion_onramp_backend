@@ -6,17 +6,131 @@ import { initializeTransactionSchema } from "../types/transactions";
 import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
 import { PaystackWebhookPayload } from "../types/paystack";
-import { validatePrivateKey } from "../middleware/authenticationMiddleware";
+import {
+  authenticationMiddleware,
+  validatePrivateKey,
+} from "../middleware/authenticationMiddleware";
 import treasuryController from "../controllers/treasury";
 import treasuryModel from "../models/treasury";
 import liquidityManagerController from "../controllers/liquidityManager";
 import liquidityModel from "../models/liquidityManager";
 import { emailService } from "../lib/emails/email.util";
+import { ENVIRONMENT_TYPES } from "../types/environments";
+import { BusinessModel } from "../models/businesses";
+import { getAuthContext } from "../lib/auth/utils";
 
 const router: Router = Router();
 
 const transactionModel = new TransactionModel();
-const transactionController = new TransactionController(transactionModel);
+const businessModel = new BusinessModel();
+const transactionController = new TransactionController(
+  transactionModel,
+  businessModel,
+);
+
+/**
+ * GET /api/transaction
+ * Get all the transactions associated with an enviroment
+ * Query Params:
+ * business_id
+ * environment_type
+ * page
+ * limit
+ */
+router.get("/", authenticationMiddleware, async (req, res) => {
+  try {
+    const session = await getAuthContext(req);
+    if (!session?.user.id) {
+      res.status(401).json({ message: Errors.UNAUTHORIZED });
+      return;
+    }
+
+    const businessID = req.query.business_id;
+    const environmentType = req.query.environment_type;
+    const rawPage = Number(req.query.page);
+    const rawLimit = Number(req.query.limit);
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 20;
+    if (
+      !businessID ||
+      !environmentType ||
+      typeof businessID !== "string" ||
+      typeof environmentType !== "string"
+    ) {
+      res.status(400).json({
+        error:
+          "Error Bad Request.Include the business id and environment type in the query parameters and ensure they are valid strings",
+      });
+      return;
+    }
+    const validEnvironmentTypes = Object.values(ENVIRONMENT_TYPES);
+    if (!validEnvironmentTypes.includes(environmentType as ENVIRONMENT_TYPES)) {
+      res.status(400).json({
+        error: `Invalid environment_type. Must be one of: ${validEnvironmentTypes.join(", ")}`,
+      });
+      return;
+    }
+    const transactions = await transactionController.getTransactionsByBusiness(
+      session.user.id,
+      businessID,
+      environmentType as ENVIRONMENT_TYPES,
+      page,
+      limit,
+    );
+    return res.status(200).json(transactions);
+  } catch (err) {
+    logger.error("Error fetching transactions in router", { error: err });
+
+    if (err instanceof MyError) {
+      if (err.message === Errors.TRANSACTION_VIEW_FORBIDDEN) {
+        res.status(403).json({ message: err.message });
+        return;
+      }
+      return res.status(400).json({ message: err.message });
+    }
+
+    res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+  }
+});
+/**
+ * GET /api/transaction/:id
+ * Get the transaction details by id
+ *  Params:
+ * id
+ *
+ *
+ */
+router.get("/:id", authenticationMiddleware, async (req, res) => {
+  try {
+    const session = await getAuthContext(req);
+    if (!session?.user.id) {
+      res.status(401).json({ message: Errors.UNAUTHORIZED });
+      return;
+    }
+    const transactionID = req.params.id;
+    const transaction = await transactionController.getTransactionByID(
+      session.user.id,
+      transactionID,
+    );
+    res.status(200).json(transaction);
+  } catch (err) {
+    logger.error("Error fetching transaction in router", { error: err });
+
+    if (err instanceof MyError) {
+      if (err.message === Errors.TRANSACTION_NOT_FOUND) {
+        res.status(404).json({ message: err.message });
+        return;
+      }
+      if (err.message === Errors.TRANSACTION_VIEW_FORBIDDEN) {
+        res.status(403).json({ message: err.message });
+        return;
+      }
+      return res.status(400).json({ message: err.message });
+    }
+
+    res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+  }
+});
 
 /**
  * POST /api/transaction/initialize
@@ -57,11 +171,7 @@ router.post(
         token,
       });
 
-      res.status(201).json({
-        success: true,
-        message: "Transaction initialized successfully",
-        data: result,
-      });
+      res.status(201).json(result);
     } catch (err) {
       logger.error("Error initializing transaction in router", { error: err });
 
@@ -109,11 +219,14 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
         liquidityManagerController,
         transactionModel,
         liquidityModel,
-        emailService
+        emailService,
       );
     } catch (err) {
       // Will implement queuing of this in a later PR
-      logger.error("Could not onramp tokens for business", {error: err, transaction: data.reference});
+      logger.error("Could not onramp tokens for business", {
+        error: err,
+        transaction: data.reference,
+      });
     }
     return;
   } catch (error) {

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "version": "7",
   "dialect": "postgresql",
@@ -11,3 +12,6 @@
     }
   ]
 }
+=======
+{ "version": "7", "dialect": "postgresql", "entries": [] }
+>>>>>>> main

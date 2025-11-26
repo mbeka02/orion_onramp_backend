@@ -4,10 +4,10 @@ export enum ROLE {
     SUPER_ADMIN = "SUPER_ADMIN",
 }
 export const createAdminSchema = z.object({
-    name: z.string().min(1),
-    email: z.email(),
-    password: z.string().min(6),
-})
+  name: z.string().min(1),
+  email: z.email(),
+  password: z.string().min(6),
+});
 export const loginAdminSchema = z.object({
     email: z.email(),
     password: z.string().min(6),

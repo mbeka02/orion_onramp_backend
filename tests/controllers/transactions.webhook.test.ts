@@ -87,13 +87,15 @@ describe("TransactionController - Webhook utilities", () => {
           transactionStatus: TRANSACTION_STATUS.PENDING,
         });
 
-      transactionModelMock.updateTransactionStatus = jest.fn().mockResolvedValue({});
+      transactionModelMock.updateTransactionStatus = jest
+        .fn()
+        .mockResolvedValue({});
 
       await (controller as any).processChargeSuccess(data);
 
-      expect(transactionModelMock.getTransactionByReference).toHaveBeenCalledWith(
-        reference,
-      );
+      expect(
+        transactionModelMock.getTransactionByReference,
+      ).toHaveBeenCalledWith(reference);
 
       expect(transactionModelMock.updateTransactionStatus).toHaveBeenCalledWith(
         reference,
@@ -106,12 +108,16 @@ describe("TransactionController - Webhook utilities", () => {
       const reference = "TXN_NOT_FOUND";
       const data = { reference } as any;
 
-      transactionModelMock.getTransactionByReference = jest.fn().mockResolvedValue(null);
+      transactionModelMock.getTransactionByReference = jest
+        .fn()
+        .mockResolvedValue(null);
       transactionModelMock.updateTransactionStatus = jest.fn();
 
       await (controller as any).processChargeSuccess(data);
 
-      expect(transactionModelMock.updateTransactionStatus).not.toHaveBeenCalled();
+      expect(
+        transactionModelMock.updateTransactionStatus,
+      ).not.toHaveBeenCalled();
     });
 
     it("does not call update when already successful", async () => {
@@ -120,12 +126,17 @@ describe("TransactionController - Webhook utilities", () => {
 
       transactionModelMock.getTransactionByReference = jest
         .fn()
-        .mockResolvedValue({ reference, transactionStatus: TRANSACTION_STATUS.SUCCESSFUL });
+        .mockResolvedValue({
+          reference,
+          transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
+        });
       transactionModelMock.updateTransactionStatus = jest.fn();
 
       await (controller as any).processChargeSuccess(data);
 
-      expect(transactionModelMock.updateTransactionStatus).not.toHaveBeenCalled();
+      expect(
+        transactionModelMock.updateTransactionStatus,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -136,15 +147,20 @@ describe("TransactionController - Webhook utilities", () => {
 
       transactionModelMock.getTransactionByReference = jest
         .fn()
-        .mockResolvedValue({ reference, transactionStatus: TRANSACTION_STATUS.PENDING });
+        .mockResolvedValue({
+          reference,
+          transactionStatus: TRANSACTION_STATUS.PENDING,
+        });
 
-      transactionModelMock.updateTransactionStatus = jest.fn().mockResolvedValue({});
+      transactionModelMock.updateTransactionStatus = jest
+        .fn()
+        .mockResolvedValue({});
 
       await (controller as any).processChargeFailed(data);
 
-      expect(transactionModelMock.getTransactionByReference).toHaveBeenCalledWith(
-        reference,
-      );
+      expect(
+        transactionModelMock.getTransactionByReference,
+      ).toHaveBeenCalledWith(reference);
 
       expect(transactionModelMock.updateTransactionStatus).toHaveBeenCalledWith(
         reference,
@@ -157,12 +173,16 @@ describe("TransactionController - Webhook utilities", () => {
       const reference = "TXN_FAIL_NOTFOUND";
       const data = { reference } as any;
 
-      transactionModelMock.getTransactionByReference = jest.fn().mockResolvedValue(null);
+      transactionModelMock.getTransactionByReference = jest
+        .fn()
+        .mockResolvedValue(null);
       transactionModelMock.updateTransactionStatus = jest.fn();
 
       await (controller as any).processChargeFailed(data);
 
-      expect(transactionModelMock.updateTransactionStatus).not.toHaveBeenCalled();
+      expect(
+        transactionModelMock.updateTransactionStatus,
+      ).not.toHaveBeenCalled();
     });
 
     it("does not call update when already failed", async () => {
@@ -171,13 +191,18 @@ describe("TransactionController - Webhook utilities", () => {
 
       transactionModelMock.getTransactionByReference = jest
         .fn()
-        .mockResolvedValue({ reference, transactionStatus: TRANSACTION_STATUS.FAILED });
+        .mockResolvedValue({
+          reference,
+          transactionStatus: TRANSACTION_STATUS.FAILED,
+        });
 
       transactionModelMock.updateTransactionStatus = jest.fn();
 
       await (controller as any).processChargeFailed(data);
 
-      expect(transactionModelMock.updateTransactionStatus).not.toHaveBeenCalled();
+      expect(
+        transactionModelMock.updateTransactionStatus,
+      ).not.toHaveBeenCalled();
     });
   });
 });

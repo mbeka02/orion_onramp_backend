@@ -11,8 +11,8 @@ import {
   Row,
   Section,
   Text,
-} from '@react-email/components';
-import * as React from 'react';
+} from "@react-email/components";
+import * as React from "react";
 
 interface EmailLayoutProps {
   children: React.ReactNode;
@@ -20,13 +20,16 @@ interface EmailLayoutProps {
   heading: string;
 }
 
-export const Layout = ({ children, previewText, heading }: EmailLayoutProps) => (
+export const Layout = ({
+  children,
+  previewText,
+  heading,
+}: EmailLayoutProps) => (
   <Html>
     <Head />
     <Body className="bg-white mx-auto font-sans">
       <Preview>{previewText}</Preview>
       <Container className="mx-auto px-5">
-        
         {/* Header Logo */}
         <Section className="mt-8">
           <Row>
@@ -38,7 +41,6 @@ export const Layout = ({ children, previewText, heading }: EmailLayoutProps) => 
                 alt="Orion"
               />
             </Column>
-
           </Row>
         </Section>
 
@@ -140,7 +142,6 @@ export const Layout = ({ children, previewText, heading }: EmailLayoutProps) => 
           >
             Orion Community
           </Link>
-          
           <Text className="text-xs text-[#b7b7b7] leading-tight text-left mb-[50px]">
             ©2025 Orion Technologies, LLC, a Salesforce company. <br />
             Nairobi, Kenya <br />

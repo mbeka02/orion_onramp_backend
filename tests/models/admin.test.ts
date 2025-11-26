@@ -6,11 +6,11 @@ import bcrypt from "bcrypt";
 
 // Mock the database
 jest.mock("../../src/lib/db", () => ({
-    db: {
-        insert: jest.fn(),
-        select: jest.fn(),
-        update: jest.fn(),
-    },
+  db: {
+    insert: jest.fn(),
+    select: jest.fn(),
+    update: jest.fn(),
+  },
 }));
 
 // Mock bcrypt
@@ -214,279 +214,340 @@ describe("Admin Model", () => {
 
     // Business Management Tests
     describe("Business Management", () => {
-        const mockBusinessId = "business-123";
-        const mockBusiness = {
-            id: mockBusinessId,
-            ownerId: "user-123",
-            tradingName: "Test Business",
-            description: "Test business description",
-            staffSize: "1-10",
-            annualSalesVolume: "100000",
-            businessType: "Starter business",
-            industryName: "Technology",
-            categoryName: "Software",
-            legalBusinessName: "Test Business Ltd",
-            registrationtype: "Registered Company",
-            generalEmail: "info@test.com",
-            supportEmail: "support@test.com",
-            disputesEmail: "disputes@test.com",
-            phoneNumber: "+254123456789",
-            website: "https://test.com",
-            twitterHandle: "@test",
-            facebookPage: "test",
-            instagramHandle: "test",
-            country: "Kenya",
-            city: "Nairobi",
-            streetaddress: "123 Test St",
-            building: "Test Building",
-            postalcode: "00100",
-            cryptoWalletAddress: "0x123...",
-            revenuePin: "P123456789A",
-            businessRegistrationCertificate: "cert123",
-            businessRegistrationNumber: "BN123456",
-            status: "Pending",
-            createdAt: new Date(),
-        };
+      const mockBusinessId = "business-123";
+      const mockBusiness = {
+        id: mockBusinessId,
+        ownerId: "user-123",
+        tradingName: "Test Business",
+        description: "Test business description",
+        staffSize: "1-10",
+        annualSalesVolume: "100000",
+        businessType: "Starter business",
+        industryName: "Technology",
+        categoryName: "Software",
+        legalBusinessName: "Test Business Ltd",
+        registrationtype: "Registered Company",
+        generalEmail: "info@test.com",
+        supportEmail: "support@test.com",
+        disputesEmail: "disputes@test.com",
+        phoneNumber: "+254123456789",
+        website: "https://test.com",
+        twitterHandle: "@test",
+        facebookPage: "test",
+        instagramHandle: "test",
+        country: "Kenya",
+        city: "Nairobi",
+        streetaddress: "123 Test St",
+        building: "Test Building",
+        postalcode: "00100",
+        cryptoWalletAddress: "0x123...",
+        revenuePin: "P123456789A",
+        businessRegistrationCertificate: "cert123",
+        businessRegistrationNumber: "BN123456",
+        status: "Pending",
+        createdAt: new Date(),
+      };
 
-        beforeEach(() => {
-            // Reset mocks for business tests
-            const { db } = require("../../src/lib/db");
-            jest.clearAllMocks();
+      beforeEach(() => {
+        // Reset mocks for business tests
+        const { db } = require("../../src/lib/db");
+        jest.clearAllMocks();
+      });
+
+      describe("getBusinessesByStatus", () => {
+        it("should get businesses with no status filter", async () => {
+          const { db } = require("../../src/lib/db");
+
+          // Mock business query
+          const mockLimit = jest.fn().mockReturnValue({
+            offset: jest.fn().mockResolvedValue([mockBusiness]),
+          });
+          const mockOffset = jest.fn().mockReturnValue(mockLimit);
+          const mockOrderBy = jest
+            .fn()
+            .mockReturnValue({ limit: mockLimit, offset: mockOffset });
+          const mockLeftJoin2 = jest
+            .fn()
+            .mockReturnValue({ orderBy: mockOrderBy });
+          const mockLeftJoin1 = jest
+            .fn()
+            .mockReturnValue({ leftJoin: mockLeftJoin2 });
+          const mockFrom = jest
+            .fn()
+            .mockReturnValue({ leftJoin: mockLeftJoin1 });
+
+          // Mock count query - simple approach
+          const mockCountQueryResult = Promise.resolve([{ count: 1 }]);
+          const mockCountQueryChain = {
+            from: jest.fn().mockReturnValue(mockCountQueryResult),
+          };
+
+          db.select = jest
+            .fn()
+            .mockReturnValueOnce({ from: mockFrom })
+            .mockReturnValueOnce(mockCountQueryChain);
+
+          const result = await adminModel.getBusinessesByStatus(
+            undefined,
+            1,
+            10,
+          );
+
+          expect(result).toEqual({
+            businesses: [mockBusiness],
+            totalCount: 1,
+            totalPages: 1,
+          });
+          expect(mockLeftJoin1).toHaveBeenCalled();
         });
 
-        describe("getBusinessesByStatus", () => {
-            it("should get businesses with no status filter", async () => {
-                const { db } = require("../../src/lib/db");
-                
-                // Mock business query
-                const mockLimit = jest.fn().mockReturnValue({ offset: jest.fn().mockResolvedValue([mockBusiness]) });
-                const mockOffset = jest.fn().mockReturnValue(mockLimit);
-                const mockOrderBy = jest.fn().mockReturnValue({ limit: mockLimit, offset: mockOffset });
-                const mockLeftJoin2 = jest.fn().mockReturnValue({ orderBy: mockOrderBy });
-                const mockLeftJoin1 = jest.fn().mockReturnValue({ leftJoin: mockLeftJoin2 });
-                const mockFrom = jest.fn().mockReturnValue({ leftJoin: mockLeftJoin1 });
-                
-                // Mock count query - simple approach
-                const mockCountQueryResult = Promise.resolve([{ count: 1 }]);
-                const mockCountQueryChain = { from: jest.fn().mockReturnValue(mockCountQueryResult) };
-                
-                db.select = jest.fn()
-                    .mockReturnValueOnce({ from: mockFrom })
-                    .mockReturnValueOnce(mockCountQueryChain);
+        it("should get businesses filtered by status", async () => {
+          // Use method-level mocking instead of complex Drizzle chain mocking
+          const originalMethod = adminModel.getBusinessesByStatus;
+          jest.spyOn(adminModel, "getBusinessesByStatus").mockResolvedValue({
+            businesses: [mockBusiness as any],
+            totalCount: 1,
+            totalPages: 1,
+          });
 
-                const result = await adminModel.getBusinessesByStatus(undefined, 1, 10);
+          const result = await adminModel.getBusinessesByStatus(
+            "Pending" as any,
+            1,
+            10,
+          );
 
-                expect(result).toEqual({
-                    businesses: [mockBusiness],
-                    totalCount: 1,
-                    totalPages: 1
-                });
-                expect(mockLeftJoin1).toHaveBeenCalled();
-            });
+          expect(result.businesses).toHaveLength(1);
+          expect(result.totalCount).toBe(1);
+          expect(result.totalPages).toBe(1);
 
-            it("should get businesses filtered by status", async () => {
-                // Use method-level mocking instead of complex Drizzle chain mocking
-                const originalMethod = adminModel.getBusinessesByStatus;
-                jest.spyOn(adminModel, 'getBusinessesByStatus').mockResolvedValue({
-                    businesses: [mockBusiness as any],
-                    totalCount: 1,
-                    totalPages: 1
-                });
-
-                const result = await adminModel.getBusinessesByStatus("Pending" as any, 1, 10);
-
-                expect(result.businesses).toHaveLength(1);
-                expect(result.totalCount).toBe(1);
-                expect(result.totalPages).toBe(1);
-
-                // Restore original method
-                adminModel.getBusinessesByStatus = originalMethod;
-            });
-
-            it("should handle pagination correctly", async () => {
-                const { db } = require("../../src/lib/db");
-                
-                const mockOffset = jest.fn().mockResolvedValue([mockBusiness]);
-                const mockLimit = jest.fn().mockReturnValue({ offset: mockOffset });
-                const mockOrderBy = jest.fn().mockReturnValue({ limit: mockLimit });
-                const mockLeftJoin2 = jest.fn().mockReturnValue({ orderBy: mockOrderBy });
-                const mockLeftJoin1 = jest.fn().mockReturnValue({ leftJoin: mockLeftJoin2 });
-                const mockFrom = jest.fn().mockReturnValue({ leftJoin: mockLeftJoin1 });
-                
-                // Mock count query
-                const mockCountFrom = jest.fn().mockResolvedValue([{ count: 25 }]);
-                
-                db.select = jest.fn()
-                    .mockReturnValueOnce({ from: mockFrom })
-                    .mockReturnValueOnce({ from: mockCountFrom });
-
-                const result = await adminModel.getBusinessesByStatus(undefined, 2, 10);
-
-                expect(mockLimit).toHaveBeenCalledWith(10);
-                expect(mockOffset).toHaveBeenCalledWith(10); // (page 2 - 1) * limit 10
-                expect(result.totalPages).toBe(3); // Math.ceil(25/10)
-            });
-
-            it("should handle database errors", async () => {
-                const { db } = require("../../src/lib/db");
-                
-                const mockFrom = jest.fn().mockReturnValue({
-                    leftJoin: jest.fn().mockReturnValue({
-                        leftJoin: jest.fn().mockReturnValue({
-                            orderBy: jest.fn().mockReturnValue({
-                                limit: jest.fn().mockReturnValue({
-                                    offset: jest.fn().mockRejectedValue(new Error("Database error"))
-                                })
-                            })
-                        })
-                    })
-                });
-                db.select.mockReturnValue({ from: mockFrom });
-
-                await expect(adminModel.getBusinessesByStatus()).rejects.toThrow("Database error");
-            });
+          // Restore original method
+          adminModel.getBusinessesByStatus = originalMethod;
         });
 
-        describe("getBusinessById", () => {
-            it("should return business when found", async () => {
-                const { db } = require("../../src/lib/db");
-                
-                const mockWhere = jest.fn().mockResolvedValue([mockBusiness]);
-                const mockLeftJoin2 = jest.fn().mockReturnValue({ where: mockWhere });
-                const mockLeftJoin1 = jest.fn().mockReturnValue({ leftJoin: mockLeftJoin2 });
-                const mockFrom = jest.fn().mockReturnValue({ leftJoin: mockLeftJoin1 });
-                db.select.mockReturnValue({ from: mockFrom });
+        it("should handle pagination correctly", async () => {
+          const { db } = require("../../src/lib/db");
 
-                const result = await adminModel.getBusinessById(mockBusinessId);
+          const mockOffset = jest.fn().mockResolvedValue([mockBusiness]);
+          const mockLimit = jest.fn().mockReturnValue({ offset: mockOffset });
+          const mockOrderBy = jest.fn().mockReturnValue({ limit: mockLimit });
+          const mockLeftJoin2 = jest
+            .fn()
+            .mockReturnValue({ orderBy: mockOrderBy });
+          const mockLeftJoin1 = jest
+            .fn()
+            .mockReturnValue({ leftJoin: mockLeftJoin2 });
+          const mockFrom = jest
+            .fn()
+            .mockReturnValue({ leftJoin: mockLeftJoin1 });
 
-                expect(result).toEqual(mockBusiness);
-            });
+          // Mock count query
+          const mockCountFrom = jest.fn().mockResolvedValue([{ count: 25 }]);
 
-            it("should return null when business not found", async () => {
-                const { db } = require("../../src/lib/db");
-                
-                const mockWhere = jest.fn().mockResolvedValue([]);
-                const mockLeftJoin2 = jest.fn().mockReturnValue({ where: mockWhere });
-                const mockLeftJoin1 = jest.fn().mockReturnValue({ leftJoin: mockLeftJoin2 });
-                const mockFrom = jest.fn().mockReturnValue({ leftJoin: mockLeftJoin1 });
-                db.select.mockReturnValue({ from: mockFrom });
+          db.select = jest
+            .fn()
+            .mockReturnValueOnce({ from: mockFrom })
+            .mockReturnValueOnce({ from: mockCountFrom });
 
-                const result = await adminModel.getBusinessById("nonexistent-id");
+          const result = await adminModel.getBusinessesByStatus(
+            undefined,
+            2,
+            10,
+          );
 
-                expect(result).toBeNull();
-            });
-
-            it("should handle database errors", async () => {
-                const { db } = require("../../src/lib/db");
-                
-                const mockFrom = jest.fn().mockReturnValue({
-                    leftJoin: jest.fn().mockReturnValue({
-                        leftJoin: jest.fn().mockReturnValue({
-                            where: jest.fn().mockRejectedValue(new Error("Database error"))
-                        })
-                    })
-                });
-                db.select.mockReturnValue({ from: mockFrom });
-
-                await expect(adminModel.getBusinessById(mockBusinessId)).rejects.toThrow("Database error");
-            });
+          expect(mockLimit).toHaveBeenCalledWith(10);
+          expect(mockOffset).toHaveBeenCalledWith(10); // (page 2 - 1) * limit 10
+          expect(result.totalPages).toBe(3); // Math.ceil(25/10)
         });
 
-        describe("approveBusiness", () => {
-            it("should approve pending business successfully", async () => {
-                const { db } = require("../../src/lib/db");
-                const { BUSINESS_STATUS } = require("../../src/types/businesses");
-                
-                // Mock getBusinessById
-                jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
-                    ...mockBusiness,
-                    status: BUSINESS_STATUS.PENDING
-                } as any);
+        it("should handle database errors", async () => {
+          const { db } = require("../../src/lib/db");
 
-                // Mock update operation
-                const mockWhere = jest.fn().mockResolvedValue([]);
-                const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
-                db.update = jest.fn().mockReturnValue({ set: mockSet });
+          const mockFrom = jest.fn().mockReturnValue({
+            leftJoin: jest.fn().mockReturnValue({
+              leftJoin: jest.fn().mockReturnValue({
+                orderBy: jest.fn().mockReturnValue({
+                  limit: jest.fn().mockReturnValue({
+                    offset: jest
+                      .fn()
+                      .mockRejectedValue(new Error("Database error")),
+                  }),
+                }),
+              }),
+            }),
+          });
+          db.select.mockReturnValue({ from: mockFrom });
 
-                await adminModel.approveBusiness(mockBusinessId, mockAdminId);
+          await expect(adminModel.getBusinessesByStatus()).rejects.toThrow(
+            "Database error",
+          );
+        });
+      });
 
-                expect(adminModel.getBusinessById).toHaveBeenCalledWith(mockBusinessId);
-                expect(db.update).toHaveBeenCalled();
-                expect(mockSet).toHaveBeenCalledWith({ status: BUSINESS_STATUS.APPROVED });
-            });
+      describe("getBusinessById", () => {
+        it("should return business when found", async () => {
+          const { db } = require("../../src/lib/db");
 
-            it("should throw error when business not found", async () => {
-                jest.spyOn(adminModel, "getBusinessById").mockResolvedValue(null);
+          const mockWhere = jest.fn().mockResolvedValue([mockBusiness]);
+          const mockLeftJoin2 = jest.fn().mockReturnValue({ where: mockWhere });
+          const mockLeftJoin1 = jest
+            .fn()
+            .mockReturnValue({ leftJoin: mockLeftJoin2 });
+          const mockFrom = jest
+            .fn()
+            .mockReturnValue({ leftJoin: mockLeftJoin1 });
+          db.select.mockReturnValue({ from: mockFrom });
 
-                await expect(adminModel.approveBusiness(mockBusinessId, mockAdminId))
-                    .rejects.toThrow(MyError);
-            });
+          const result = await adminModel.getBusinessById(mockBusinessId);
 
-            it("should throw error when business is not pending", async () => {
-                const { BUSINESS_STATUS } = require("../../src/types/businesses");
-                
-                jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
-                    ...mockBusiness,
-                    status: BUSINESS_STATUS.APPROVED
-                } as any);
-
-                await expect(adminModel.approveBusiness(mockBusinessId, mockAdminId))
-                    .rejects.toThrow("Business is not in pending status");
-            });
+          expect(result).toEqual(mockBusiness);
         });
 
-        describe("suspendBusiness", () => {
-            it("should suspend approved business successfully", async () => {
-                const { db } = require("../../src/lib/db");
-                const { BUSINESS_STATUS } = require("../../src/types/businesses");
-                
-                jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
-                    ...mockBusiness,
-                    status: BUSINESS_STATUS.APPROVED
-                } as any);
+        it("should return null when business not found", async () => {
+          const { db } = require("../../src/lib/db");
 
-                const mockWhere = jest.fn().mockResolvedValue([]);
-                const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
-                db.update = jest.fn().mockReturnValue({ set: mockSet });
+          const mockWhere = jest.fn().mockResolvedValue([]);
+          const mockLeftJoin2 = jest.fn().mockReturnValue({ where: mockWhere });
+          const mockLeftJoin1 = jest
+            .fn()
+            .mockReturnValue({ leftJoin: mockLeftJoin2 });
+          const mockFrom = jest
+            .fn()
+            .mockReturnValue({ leftJoin: mockLeftJoin1 });
+          db.select.mockReturnValue({ from: mockFrom });
 
-                await adminModel.suspendBusiness(mockBusinessId, mockAdminId);
+          const result = await adminModel.getBusinessById("nonexistent-id");
 
-                expect(adminModel.getBusinessById).toHaveBeenCalledWith(mockBusinessId);
-                expect(db.update).toHaveBeenCalled();
-                expect(mockSet).toHaveBeenCalledWith({ status: BUSINESS_STATUS.SUSPENDED });
-            });
-
-            it("should suspend pending business successfully", async () => {
-                const { db } = require("../../src/lib/db");
-                const { BUSINESS_STATUS } = require("../../src/types/businesses");
-                
-                jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
-                    ...mockBusiness,
-                    status: BUSINESS_STATUS.PENDING
-                } as any);
-
-                const mockWhere = jest.fn().mockResolvedValue([]);
-                const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
-                db.update = jest.fn().mockReturnValue({ set: mockSet });
-
-                await adminModel.suspendBusiness(mockBusinessId, mockAdminId);
-
-                expect(mockSet).toHaveBeenCalledWith({ status: BUSINESS_STATUS.SUSPENDED });
-            });
-
-            it("should throw error when business cannot be suspended", async () => {
-                const { BUSINESS_STATUS } = require("../../src/types/businesses");
-                
-                // Test with DRAFT status (should not be suspendable)
-                jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
-                    ...mockBusiness,
-                    status: BUSINESS_STATUS.DRAFT
-                } as any);
-
-                await expect(adminModel.suspendBusiness(mockBusinessId, mockAdminId))
-                    .rejects.toThrow("Business can only be suspended if it's approved or pending");
-            });
+          expect(result).toBeNull();
         });
+
+        it("should handle database errors", async () => {
+          const { db } = require("../../src/lib/db");
+
+          const mockFrom = jest.fn().mockReturnValue({
+            leftJoin: jest.fn().mockReturnValue({
+              leftJoin: jest.fn().mockReturnValue({
+                where: jest.fn().mockRejectedValue(new Error("Database error")),
+              }),
+            }),
+          });
+          db.select.mockReturnValue({ from: mockFrom });
+
+          await expect(
+            adminModel.getBusinessById(mockBusinessId),
+          ).rejects.toThrow("Database error");
+        });
+      });
+
+      describe("approveBusiness", () => {
+        it("should approve pending business successfully", async () => {
+          const { db } = require("../../src/lib/db");
+          const { BUSINESS_STATUS } = require("../../src/types/businesses");
+
+          // Mock getBusinessById
+          jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
+            ...mockBusiness,
+            status: BUSINESS_STATUS.PENDING,
+          } as any);
+
+          // Mock update operation
+          const mockWhere = jest.fn().mockResolvedValue([]);
+          const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
+          db.update = jest.fn().mockReturnValue({ set: mockSet });
+
+          await adminModel.approveBusiness(mockBusinessId, mockAdminId);
+
+          expect(adminModel.getBusinessById).toHaveBeenCalledWith(
+            mockBusinessId,
+          );
+          expect(db.update).toHaveBeenCalled();
+          expect(mockSet).toHaveBeenCalledWith({
+            status: BUSINESS_STATUS.APPROVED,
+          });
+        });
+
+        it("should throw error when business not found", async () => {
+          jest.spyOn(adminModel, "getBusinessById").mockResolvedValue(null);
+
+          await expect(
+            adminModel.approveBusiness(mockBusinessId, mockAdminId),
+          ).rejects.toThrow(MyError);
+        });
+
+        it("should throw error when business is not pending", async () => {
+          const { BUSINESS_STATUS } = require("../../src/types/businesses");
+
+          jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
+            ...mockBusiness,
+            status: BUSINESS_STATUS.APPROVED,
+          } as any);
+
+          await expect(
+            adminModel.approveBusiness(mockBusinessId, mockAdminId),
+          ).rejects.toThrow("Business is not in pending status");
+        });
+      });
+
+      describe("suspendBusiness", () => {
+        it("should suspend approved business successfully", async () => {
+          const { db } = require("../../src/lib/db");
+          const { BUSINESS_STATUS } = require("../../src/types/businesses");
+
+          jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
+            ...mockBusiness,
+            status: BUSINESS_STATUS.APPROVED,
+          } as any);
+
+          const mockWhere = jest.fn().mockResolvedValue([]);
+          const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
+          db.update = jest.fn().mockReturnValue({ set: mockSet });
+
+          await adminModel.suspendBusiness(mockBusinessId, mockAdminId);
+
+          expect(adminModel.getBusinessById).toHaveBeenCalledWith(
+            mockBusinessId,
+          );
+          expect(db.update).toHaveBeenCalled();
+          expect(mockSet).toHaveBeenCalledWith({
+            status: BUSINESS_STATUS.SUSPENDED,
+          });
+        });
+
+        it("should suspend pending business successfully", async () => {
+          const { db } = require("../../src/lib/db");
+          const { BUSINESS_STATUS } = require("../../src/types/businesses");
+
+          jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
+            ...mockBusiness,
+            status: BUSINESS_STATUS.PENDING,
+          } as any);
+
+          const mockWhere = jest.fn().mockResolvedValue([]);
+          const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
+          db.update = jest.fn().mockReturnValue({ set: mockSet });
+
+          await adminModel.suspendBusiness(mockBusinessId, mockAdminId);
+
+          expect(mockSet).toHaveBeenCalledWith({
+            status: BUSINESS_STATUS.SUSPENDED,
+          });
+        });
+
+        it("should throw error when business cannot be suspended", async () => {
+          const { BUSINESS_STATUS } = require("../../src/types/businesses");
+
+          // Test with DRAFT status (should not be suspendable)
+          jest.spyOn(adminModel, "getBusinessById").mockResolvedValue({
+            ...mockBusiness,
+            status: BUSINESS_STATUS.DRAFT,
+          } as any);
+
+          await expect(
+            adminModel.suspendBusiness(mockBusinessId, mockAdminId),
+          ).rejects.toThrow(
+            "Business can only be suspended if it's approved or pending",
+          );
+        });
+      });
     });
-})
-})
+  });
+});

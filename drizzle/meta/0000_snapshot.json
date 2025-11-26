@@ -94,12 +94,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -161,9 +157,7 @@
         "admin_email_unique": {
           "name": "admin_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -214,12 +208,8 @@
           "name": "business_users_business_id_business_id_fk",
           "tableFrom": "business_users",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -227,12 +217,8 @@
           "name": "business_users_user_id_user_id_fk",
           "tableFrom": "business_users",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -242,10 +228,7 @@
         "business_user_unique": {
           "name": "business_user_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "business_id",
-            "user_id"
-          ]
+          "columns": ["business_id", "user_id"]
         }
       },
       "policies": {},
@@ -449,12 +432,8 @@
           "name": "business_owner_id_user_id_fk",
           "tableFrom": "business",
           "tableTo": "user",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -462,12 +441,8 @@
           "name": "business_industry_id_industries_id_fk",
           "tableFrom": "business",
           "tableTo": "industries",
-          "columnsFrom": [
-            "industry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["industry_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -475,12 +450,8 @@
           "name": "business_category_id_categories_id_fk",
           "tableFrom": "business",
           "tableTo": "categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -490,30 +461,22 @@
         "business_crypto_wallet_address_unique": {
           "name": "business_crypto_wallet_address_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "crypto_wallet_address"
-          ]
+          "columns": ["crypto_wallet_address"]
         },
         "business_revenue_pin_unique": {
           "name": "business_revenue_pin_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "revenue_pin"
-          ]
+          "columns": ["revenue_pin"]
         },
         "business_registration_certificate_unique": {
           "name": "business_registration_certificate_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "registration_certificate"
-          ]
+          "columns": ["registration_certificate"]
         },
         "business_registration_number_unique": {
           "name": "business_registration_number_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "registration_number"
-          ]
+          "columns": ["registration_number"]
         }
       },
       "policies": {},
@@ -557,12 +520,8 @@
           "name": "categories_industry_id_industries_id_fk",
           "tableFrom": "categories",
           "tableTo": "industries",
-          "columnsFrom": [
-            "industry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["industry_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -621,12 +580,8 @@
           "name": "environment_keys_environment_id_environments_id_fk",
           "tableFrom": "environment_keys",
           "tableTo": "environments",
-          "columnsFrom": [
-            "environment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["environment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -634,27 +589,19 @@
       "compositePrimaryKeys": {
         "environment_keys_environment_id_encrypted_private_key_public_key_pk": {
           "name": "environment_keys_environment_id_encrypted_private_key_public_key_pk",
-          "columns": [
-            "environment_id",
-            "encrypted_private_key",
-            "public_key"
-          ]
+          "columns": ["environment_id", "encrypted_private_key", "public_key"]
         }
       },
       "uniqueConstraints": {
         "environment_keys_public_key_unique": {
           "name": "environment_keys_public_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "public_key"
-          ]
+          "columns": ["public_key"]
         },
         "environment_keys_encrypted_private_key_unique": {
           "name": "environment_keys_encrypted_private_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "encrypted_private_key"
-          ]
+          "columns": ["encrypted_private_key"]
         }
       },
       "policies": {},
@@ -704,12 +651,8 @@
           "name": "environments_business_id_business_id_fk",
           "tableFrom": "environments",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -719,10 +662,7 @@
         "environments_business_id_type_unique": {
           "name": "environments_business_id_type_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "business_id",
-            "type"
-          ]
+          "columns": ["business_id", "type"]
         }
       },
       "policies": {},
@@ -767,9 +707,7 @@
         "industries_name_unique": {
           "name": "industries_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -834,12 +772,8 @@
           "name": "invitations_business_id_business_id_fk",
           "tableFrom": "invitations",
           "tableTo": "business",
-          "columnsFrom": [
-            "business_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["business_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -847,12 +781,8 @@
           "name": "invitations_invited_by_user_id_fk",
           "tableFrom": "invitations",
           "tableTo": "user",
-          "columnsFrom": [
-            "invited_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invited_by"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -923,12 +853,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -938,9 +864,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -1042,12 +966,8 @@
           "name": "transactions_environment_id_environments_id_fk",
           "tableFrom": "transactions",
           "tableTo": "environments",
-          "columnsFrom": [
-            "environment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["environment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1057,9 +977,7 @@
         "transactions_reference_unique": {
           "name": "transactions_reference_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "reference"
-          ]
+          "columns": ["reference"]
         }
       },
       "policies": {},
@@ -1193,9 +1111,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1258,85 +1174,47 @@
     "public.business_registration_type": {
       "name": "business_registration_type",
       "schema": "public",
-      "values": [
-        "Sole Proprietorship",
-        "Registered Company"
-      ]
+      "values": ["Sole Proprietorship", "Registered Company"]
     },
     "public.business_status": {
       "name": "business_status",
       "schema": "public",
-      "values": [
-        "Draft",
-        "Pending",
-        "Approved",
-        "Rejected",
-        "Suspended"
-      ]
+      "values": ["Draft", "Pending", "Approved", "Rejected", "Suspended"]
     },
     "public.business_type": {
       "name": "business_type",
       "schema": "public",
-      "values": [
-        "Starter business",
-        "Registered Business"
-      ]
+      "values": ["Starter business", "Registered Business"]
     },
     "public.chain_enum": {
       "name": "chain_enum",
       "schema": "public",
-      "values": [
-        "hedera_mainnet",
-        "hedera_testnet"
-      ]
+      "values": ["hedera_mainnet", "hedera_testnet"]
     },
     "public.environment_types": {
       "name": "environment_types",
       "schema": "public",
-      "values": [
-        "live",
-        "test"
-      ]
+      "values": ["live", "test"]
     },
     "public.invitation_status": {
       "name": "invitation_status",
       "schema": "public",
-      "values": [
-        "Pending",
-        "Accepted",
-        "Rejected",
-        "Expired",
-        "Cancelled"
-      ]
+      "values": ["Pending", "Accepted", "Rejected", "Expired", "Cancelled"]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": [
-        "Admin",
-        "Developer",
-        "Finance",
-        "Support"
-      ]
+      "values": ["Admin", "Developer", "Finance", "Support"]
     },
     "public.token": {
       "name": "token",
       "schema": "public",
-      "values": [
-        "KESy_TESTNET",
-        "KESy_MAINNET"
-      ]
+      "values": ["KESy_TESTNET", "KESy_MAINNET"]
     },
     "public.transaction_status": {
       "name": "transaction_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "successful",
-        "failed",
-        "offramped",
-        "onramped"
-      ]
+      "values": ["pending", "successful", "failed", "offramped", "onramped"]
     }
   },
   "schemas": {},

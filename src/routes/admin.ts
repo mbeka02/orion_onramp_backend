@@ -16,9 +16,19 @@ const loginLimiter = rateLimit({
   max: 5,
   message: "Too many login attempts, please try again later",
 });
+const createAdminLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: "Too many accounts created from this IP, please try again later",
+});
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  message: "Too many requests from this IP, please try again later",
+});
 router.post(
   "/create",
-  loginLimiter,
+  createAdminLimiter,
   validateBody(createAdminSchema),
   adminAuthenticationMiddleware,
   async (req, res) => {
@@ -95,7 +105,7 @@ router.post(
  * - page?: number (default: 1)
  * - limit?: number (default: 10, max: 100)
  */
-router.get("/businesses", adminAuthenticationMiddleware, async (req, res) => {
+router.get("/businesses", adminAuthenticationMiddleware,adminLimiter, async (req, res) => {
   try {
     const { status, page = "1", limit = "10" } = req.query;
 
@@ -162,6 +172,7 @@ router.get("/businesses", adminAuthenticationMiddleware, async (req, res) => {
  */
 router.get(
   "/businesses/:id",
+  adminLimiter,
   adminAuthenticationMiddleware,
   async (req, res) => {
     try {
@@ -199,6 +210,7 @@ router.get(
  */
 router.put(
   "/businesses/:id/approve",
+  adminLimiter,
   adminAuthenticationMiddleware,
   async (req, res) => {
     try {
@@ -241,6 +253,7 @@ router.put(
  */
 router.put(
   "/businesses/:id/suspend",
+  adminLimiter,
   adminAuthenticationMiddleware,
   async (req, res) => {
     try {

@@ -38,7 +38,7 @@ export const getBusinessesQuerySchema = z.object({
 });
 
 export const businessIdParamSchema = z.object({
-  id: z.uuid("Invalid business ID format"),
+  id: z.uuid(),
 });
 
 export type LoginAdminInput = z.infer<typeof loginAdminSchema>;

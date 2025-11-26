@@ -59,8 +59,11 @@ export class Admincontroller {
     return bcrypt.hashSync(password, salt);
   }
   private generateToken(adminId: string, email: string, role: ROLE): string {
-    const payload: JWTPayload = { adminId, email, role };
     const secretKey = process.env.JWT_SECRET_KEY as string;
+    if (!secretKey) {
+      throw new Error("JWT secret key is not defined in environment variables");
+    }
+    const payload: JWTPayload = { adminId, email, role };
     return jwt.sign(payload, secretKey, { expiresIn: "7d" });
   }
 

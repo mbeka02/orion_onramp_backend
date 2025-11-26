@@ -105,66 +105,73 @@ router.post(
  * - page?: number (default: 1)
  * - limit?: number (default: 10, max: 100)
  */
-router.get("/businesses", adminAuthenticationMiddleware,adminLimiter, async (req, res) => {
-  try {
-    const { status, page = "1", limit = "10" } = req.query;
+router.get(
+  "/businesses",
+  adminAuthenticationMiddleware,
+  adminLimiter,
+  async (req, res) => {
+    try {
+      const { status, page = "1", limit = "10" } = req.query;
 
-    // Parse and validate query parameters
-    const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+      // Parse and validate query parameters
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = parseInt(limit as string, 10);
 
-    if (isNaN(pageNum) || pageNum < 1) {
-      return res.status(400).json({ error: "Invalid page parameter" });
-    }
-
-    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
-      return res.status(400).json({ error: "Invalid limit parameter (1-100)" });
-    }
-
-    // Validate status parameter if provided
-    let businessStatus: BUSINESS_STATUS | undefined;
-    if (status) {
-      const validStatuses = Object.values(BUSINESS_STATUS);
-      if (!validStatuses.includes(status as BUSINESS_STATUS)) {
-        return res.status(400).json({
-          error: "Invalid status parameter",
-          validStatuses,
-        });
+      if (isNaN(pageNum) || pageNum < 1) {
+        return res.status(400).json({ error: "Invalid page parameter" });
       }
-      businessStatus = status as BUSINESS_STATUS;
-    }
 
-    const adminModel = new AdminModel();
-    const result = await adminController.getBusinessesByStatus(
-      businessStatus,
-      pageNum,
-      limitNum,
-      adminModel,
-    );
+      if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+        return res
+          .status(400)
+          .json({ error: "Invalid limit parameter (1-100)" });
+      }
 
-    res.status(200).json({
-      success: true,
-      message: "Businesses retrieved successfully",
-      data: result,
-      pagination: {
-        page: pageNum,
-        limit: limitNum,
-        totalCount: result.totalCount,
-        totalPages: result.totalPages,
-      },
-    });
-  } catch (err) {
-    logger.error("Admin Route: Error getting businesses", {
-      err,
-      adminId: req.adminId,
-      query: req.query,
-    });
-    if (err instanceof MyError) {
-      return res.status(400).json({ error: err.message });
+      // Validate status parameter if provided
+      let businessStatus: BUSINESS_STATUS | undefined;
+      if (status) {
+        const validStatuses = Object.values(BUSINESS_STATUS);
+        if (!validStatuses.includes(status as BUSINESS_STATUS)) {
+          return res.status(400).json({
+            error: "Invalid status parameter",
+            validStatuses,
+          });
+        }
+        businessStatus = status as BUSINESS_STATUS;
+      }
+
+      const adminModel = new AdminModel();
+      const result = await adminController.getBusinessesByStatus(
+        businessStatus,
+        pageNum,
+        limitNum,
+        adminModel,
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Businesses retrieved successfully",
+        data: result,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          totalCount: result.totalCount,
+          totalPages: result.totalPages,
+        },
+      });
+    } catch (err) {
+      logger.error("Admin Route: Error getting businesses", {
+        err,
+        adminId: req.adminId,
+        query: req.query,
+      });
+      if (err instanceof MyError) {
+        return res.status(400).json({ error: err.message });
+      }
+      res.status(500).json({ error: "Internal Server Error" });
     }
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
+  },
+);
 
 /**
  * GET /api/admin/businesses/:id

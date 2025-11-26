@@ -23,7 +23,7 @@ import {
   USER_INVITATION_STATUS,
 } from "../../types/businesses";
 import { TOKEN_TYPE } from "../../types/token";
-
+import { ROLE } from "../../types/admin";
 import { relations } from "drizzle-orm";
 
 export const environment = pgEnum("environment_types", [
@@ -77,6 +77,7 @@ export const transaction_status = pgEnum("transaction_status", [
   TRANSACTION_STATUS.OFFRAMPED,
   TRANSACTION_STATUS.ONRAMPED,
 ]);
+export const adminRoles = pgEnum("admin_roles", [ROLE.ADMIN, ROLE.SUPER_ADMIN]);
 // Put database schemas here
 export const environmentsTable = pgTable(
   "environments",
@@ -248,7 +249,7 @@ export const businesses = pgTable("business", {
   revenuePin: text("revenue_pin").unique(),
   businessRegistrationCertificate: text("registration_certificate").unique(),
   businessRegistrationNumber: text("registration_number").unique(),
-  status: businessStatus().default(BUSINESS_STATUS.DRAFT),
+  status: businessStatus().default(BUSINESS_STATUS.DRAFT).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 export const businessUsers = pgTable(
@@ -335,7 +336,7 @@ export const admin = pgTable("admin", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  role: text("role").notNull().default("ADMIN"),
+  role: adminRoles().notNull().default(ROLE.ADMIN),
   password: text("password").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

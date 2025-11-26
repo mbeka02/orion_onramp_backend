@@ -1,6 +1,8 @@
 import Express, { Router } from "express";
 import logger from "../lib/logger";
 import { Admincontroller } from "../controllers/admin";
+import { BusinessController } from "../controllers/businesses";
+import { BusinessModel } from "../models/businesses";
 import { AdminModel } from "../models/admin";
 import { validateBody } from "../middleware/validation";
 import { createAdminSchema, loginAdminSchema, ROLE } from "../types/admin";
@@ -10,7 +12,7 @@ import { adminAuthenticationMiddleware } from "../middleware/adminAuthentication
 import { BUSINESS_STATUS } from "../types/businesses";
 const router: Router = Express.Router();
 const adminController = new Admincontroller();
-
+const businessController = new BusinessController();
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -140,12 +142,12 @@ router.get(
         businessStatus = status as BUSINESS_STATUS;
       }
 
-      const adminModel = new AdminModel();
+      const businessModel = new BusinessModel();
       const result = await adminController.getBusinessesByStatus(
         businessStatus,
         pageNum,
         limitNum,
-        adminModel,
+        businessModel,
       );
 
       res.status(200).json({
@@ -189,8 +191,8 @@ router.get(
         return res.status(400).json({ error: "Business ID is required" });
       }
 
-      const adminModel = new AdminModel();
-      const business = await adminController.getBusinessById(id, adminModel);
+     const businessModel = new BusinessModel();
+      const business = await businessController.getBusinessById(id, businessModel);
 
       res.status(200).json({
         success: true,

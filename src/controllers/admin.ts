@@ -10,7 +10,9 @@ import logger from "../lib/logger";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { BUSINESS_STATUS } from "../types/businesses";
+import { BusinessModel } from "../models/businesses";
 const SALT_ROUNDS = 10;
+
 export class Admincontroller {
   async setup() {
     const model = new AdminModel();
@@ -72,7 +74,7 @@ export class Admincontroller {
     status: BUSINESS_STATUS | undefined,
     page: number,
     limit: number,
-    model: AdminModel,
+    model: BusinessModel,
   ) {
     try {
       // Validate pagination parameters
@@ -103,33 +105,6 @@ export class Admincontroller {
         status,
         page,
         limit,
-      });
-      throw new Error(Errors.INTERNAL_SERVER_ERROR);
-    }
-  }
-
-  async getBusinessById(businessId: string, model: AdminModel) {
-    try {
-      if (!businessId || !businessId.trim()) {
-        throw new MyError("Business ID is required");
-      }
-
-      const business = await model.getBusinessById(businessId);
-      if (!business) {
-        throw new MyError(Errors.BUSINESS_NOT_FOUND);
-      }
-
-      logger.info("Admin Controller: Successfully retrieved business", {
-        businessId,
-      });
-      return business;
-    } catch (err) {
-      if (err instanceof MyError) {
-        throw err;
-      }
-      logger.error("Admin Controller: Error getting business by ID", {
-        err,
-        businessId,
       });
       throw new Error(Errors.INTERNAL_SERVER_ERROR);
     }

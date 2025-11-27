@@ -44,6 +44,7 @@
     "pino": "^10.1.0",
     "posthog-node": "^5.10.4",
     "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "react-email": "^4.3.2",
     "redis": "^5.10.0",
     "tailwindcss": "^4.1.16",

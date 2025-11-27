@@ -30,6 +30,7 @@ declare global {
       SUPERADMIN_EMAIL: string;
       SUPERADMIN_PASSWORD: string;
       ADMIN_FRONTEND_URL: string;
+      REDIS_URL: string;
     }
   }
 }

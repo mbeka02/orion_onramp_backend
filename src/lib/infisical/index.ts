@@ -50,7 +50,6 @@ class Infisical {
         throw new Error("Invalid env setup, set INFISICAL_PROJECT_ID in env");
       }
 
-      logger.info("Trying to connect another redis session");
       const redisConn = await redisClient.connect();
       try {
         const isRenewed = await redisConn.get(REDIS_INFISICAL_LOGIN_KEY);
@@ -61,10 +60,10 @@ class Infisical {
           });
         }
       } catch (err) {
-        logger.info("Error renewing", { error: err });
+        logger.error("Error logging in to infisical", { error: err });
+        throw new Error("Could not login to infisical");
       } finally {
         await redisConn.quit();
-        logger.info("Quit redis connection");
       }
 
       const secret = await this.client.secrets().getSecret({
@@ -81,7 +80,7 @@ class Infisical {
 
       if (retry < MAX_RETRIES) {
         await sleep(2 ** retry * 1000);
-        await this.getSecret(key, environment, retry + 1);
+        return await this.getSecret(key, environment, retry + 1);
       }
 
       throw new Error("Error getting secret from infisical");

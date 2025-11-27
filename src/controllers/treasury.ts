@@ -1,10 +1,14 @@
 import { Errors, MyError } from "../errors";
 import { EmailService } from "../lib/emails/email.util";
+import lock from "../lib/lock";
 import logger from "../lib/logger";
 import { LiquidityManagerModel } from "../models/liquidityManager";
 import { TransactionModel } from "../models/transactions";
 import { TreasuryModel } from "../models/treasury";
 import { LiquidityManagerController } from "./liquidityManager";
+
+const BALANCE_CHECK_LOCK = "balance_check_lock";
+const BUSINESS_TRANSFER_LOCK = "business_transfer_lock";
 
 export class TreasuryController {
   async businessOnramp(
@@ -47,12 +51,18 @@ export class TreasuryController {
 
       // Check if treasury has enough
       const amount = transaction.amount / 100;
-      const isEnough = await liquidityManagerController.doesTreasuryHaveBalance(
+
+      // Only allow one check at a time for treasury balance
+      const isEnough = await lock.acquire(BALANCE_CHECK_LOCK, async () => {
+        return await liquidityManagerController.doesTreasuryHaveBalance(
         transaction.token,
         amount,
         liquidityModel,
         emailService,
-      );
+      ).catch((err) => {
+        throw new Error("Could not check if treasury had balance", {cause: err});
+      });
+      });
       if (isEnough === false) {
         // Send request for more tokens
         await liquidityManagerController.getMoreTokens(
@@ -63,12 +73,18 @@ export class TreasuryController {
         throw new MyError(Errors.TREASURY_DOES_NOT_HAVE_ENOUGH);
       } else {
         try {
-          await liquidityManagerController.sendTokensToBusiness(
+          // Only allow one transfer at a time
+          await lock.acquire(BUSINESS_TRANSFER_LOCK, async () => {
+            return await liquidityManagerController.sendTokensToBusiness(
             transaction.environmentID,
             transaction.token,
             amount,
             liquidityModel,
           );
+          }).catch((err) => {
+            throw new Error("Could not send tokens to business", {cause: err})
+          })
+          
         } catch (err) {
           logger.error("Treasury Controller: Error sending tokens", {
             error: err,

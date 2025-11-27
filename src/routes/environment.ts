@@ -18,14 +18,14 @@ export const createEnvironmentLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // Limit each IP to 10 requests per windowMs
   message:
-    "Too many environments created from this IP ,please try again after one hour",
+    "Too many environments created from this IP, please try again after one hour",
 });
 
 export const rotateKeysLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10, // Limit each IP to 10 requests per windowMs
   message:
-    "Too many key rotation attempts from this IP , please try again after one hour",
+    "Too many key rotation attempts from this IP, please try again after one hour",
 });
 
 // GET all environments for a business

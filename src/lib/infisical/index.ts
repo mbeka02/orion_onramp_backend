@@ -10,7 +10,7 @@ export enum InfisicalKeys {
 }
 
 const MAX_RETRIES = 5;
-const REDIS_INFISICAL_LOGIN_KEY = 'redis_login_key';
+const REDIS_INFISICAL_LOGIN_KEY = "redis_login_key";
 
 class Infisical {
   private client: InfisicalSDK;
@@ -43,7 +43,7 @@ class Infisical {
   async getSecret(
     key: InfisicalKeys,
     environment: "dev" | "prod" | "staging",
-    retry: number = 0
+    retry: number = 0,
   ): Promise<string> {
     try {
       if (!process.env.INFISICAL_PROJECT_ID) {
@@ -56,8 +56,8 @@ class Infisical {
         const isRenewed = await redisConn.get(REDIS_INFISICAL_LOGIN_KEY);
         if (!isRenewed) {
           await this._login();
-          await redisConn.set(REDIS_INFISICAL_LOGIN_KEY, 'true', {
-            EX: 3600
+          await redisConn.set(REDIS_INFISICAL_LOGIN_KEY, "true", {
+            EX: 3600,
           });
         }
       } catch (err) {
@@ -80,7 +80,7 @@ class Infisical {
       });
 
       if (retry < MAX_RETRIES) {
-        await sleep((2 ** retry) * 1000);
+        await sleep(2 ** retry * 1000);
         await this.getSecret(key, environment, retry + 1);
       }
 

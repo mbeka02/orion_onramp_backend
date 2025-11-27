@@ -54,14 +54,18 @@ export class TreasuryController {
 
       // Only allow one check at a time for treasury balance
       const isEnough = await lock.acquire(BALANCE_CHECK_LOCK, async () => {
-        return await liquidityManagerController.doesTreasuryHaveBalance(
-        transaction.token,
-        amount,
-        liquidityModel,
-        emailService,
-      ).catch((err) => {
-        throw new Error("Could not check if treasury had balance", {cause: err});
-      });
+        return await liquidityManagerController
+          .doesTreasuryHaveBalance(
+            transaction.token,
+            amount,
+            liquidityModel,
+            emailService,
+          )
+          .catch((err) => {
+            throw new Error("Could not check if treasury had balance", {
+              cause: err,
+            });
+          });
       });
       if (isEnough === false) {
         // Send request for more tokens
@@ -74,17 +78,20 @@ export class TreasuryController {
       } else {
         try {
           // Only allow one transfer at a time
-          await lock.acquire(BUSINESS_TRANSFER_LOCK, async () => {
-            return await liquidityManagerController.sendTokensToBusiness(
-            transaction.environmentID,
-            transaction.token,
-            amount,
-            liquidityModel,
-          );
-          }).catch((err) => {
-            throw new Error("Could not send tokens to business", {cause: err})
-          })
-          
+          await lock
+            .acquire(BUSINESS_TRANSFER_LOCK, async () => {
+              return await liquidityManagerController.sendTokensToBusiness(
+                transaction.environmentID,
+                transaction.token,
+                amount,
+                liquidityModel,
+              );
+            })
+            .catch((err) => {
+              throw new Error("Could not send tokens to business", {
+                cause: err,
+              });
+            });
         } catch (err) {
           logger.error("Treasury Controller: Error sending tokens", {
             error: err,
@@ -110,7 +117,9 @@ export class TreasuryController {
           );
           // NOT THROWING AN ERROR SINCE TOKENS HAVE ALREADY BEEN SENT
         }
-        logger.info("Treasury Controller: Payment onramped succesfully", {transaction: transaction_reference})
+        logger.info("Treasury Controller: Payment onramped succesfully", {
+          transaction: transaction_reference,
+        });
       }
     } catch (err) {
       logger.error(

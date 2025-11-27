@@ -345,55 +345,7 @@ export class BusinessModel {
       });
       throw new Error("Error accepting invitation");
     }
-
-    async getBusinessesForUser(userId: string): Promise<BusinessType[]> {
-        try {
-            // Owned businesses with industry/category names
-            const ownedRows = await db.select({ biz: businesses, industryName: industries.name, categoryName: categories.name })
-                .from(businesses)
-                .leftJoin(industries, eq(industries.id, businesses.industryId))
-                .leftJoin(categories, eq(categories.id, businesses.categoryId))
-                .where(eq(businesses.ownerId, userId));
-
-            // Businesses where the user is a member
-            const memberRows = await db.select({ biz: businesses, industryName: industries.name, categoryName: categories.name })
-                .from(businesses)
-                .innerJoin(businessUsers, eq(businessUsers.businessId, businesses.id))
-                .leftJoin(industries, eq(industries.id, businesses.industryId))
-                .leftJoin(categories, eq(categories.id, businesses.categoryId))
-                .where(eq(businessUsers.userId, userId));
-
-            const owned = ownedRows.map((r: any) => {
-                const out = { ...r.biz } as any;
-                // remove raw id fields from API output
-                delete out.industryId;
-                delete out.categoryId;
-                out.industryName = r.industryName;
-                out.categoryName = r.categoryName;
-                return out as BusinessType;
-            });
-
-            const memberBizRows = memberRows.map((r: any) => {
-                const out = { ...r.biz } as any;
-                delete out.industryId;
-                delete out.categoryId;
-                out.industryName = r.industryName;
-                out.categoryName = r.categoryName;
-                return out as BusinessType;
-            });
-
-            // combine and deduplicate based on business ID
-            const allBusinesses = [...owned, ...memberBizRows];
-            const uniqueBusinesses = Array.from(
-                new Map(allBusinesses.map(biz => [biz.id, biz])).values()
-            );
-            
-            return uniqueBusinesses;
-        } catch (err) {
-            logger.error("Business Model Error: Error getting businesses for user", { error: err, userId });
-            throw new Error("Error getting businesses for user");
-        }
-  }
+}
 
   async isRegistrationNumberTaken(
     businessId: string | null,
@@ -465,7 +417,14 @@ export class BusinessModel {
         out.categoryName = r.categoryName;
         return out as BusinessType;
       });
-      return [...owned, ...memberBizRows];
+
+      // combine and deduplicate based on business ID
+      const allBusinesses = [...owned, ...memberBizRows];
+      const uniqueBusinesses = Array.from(
+          new Map(allBusinesses.map(biz => [biz.id, biz])).values()
+      );
+      
+      return uniqueBusinesses;
     } catch (err) {
       logger.error("Business Model Error: Error getting businesses for user", {
         error: err,

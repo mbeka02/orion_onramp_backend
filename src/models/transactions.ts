@@ -17,6 +17,7 @@ import {
   getTableColumns,
 } from "drizzle-orm";
 import { ENVIRONMENT_TYPES } from "../types/environments";
+import { DrizzleQueryError } from "drizzle-orm";
 interface createTransactionArgs {
   amount: number;
   email: string;
@@ -133,7 +134,7 @@ export class TransactionModel {
       return insertedTransaction;
     } catch (err) {
       // Re-throw with code for idempotency handling
-      if (err instanceof DrizzleError) {
+      if (err instanceof DrizzleQueryError) {
         if (err.cause instanceof DatabaseError) {
           if (err.cause.code === "23505") {
             logger.warn("Duplicate transaction reference", {

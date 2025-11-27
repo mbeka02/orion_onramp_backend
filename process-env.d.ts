@@ -27,6 +27,9 @@ declare global {
       HEDERA_BACKEND_PRIVATE_KEY: string;
       HEDERA_TESTNET_MIRROR_NODE_API: string;
       JWT_SECRET_KEY: string;
+      SUPERADMIN_EMAIL: string;
+      SUPERADMIN_PASSWORD: string;
+      ADMIN_FRONTEND_URL: string;
     }
   }
 }

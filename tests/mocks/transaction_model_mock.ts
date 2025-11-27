@@ -5,5 +5,6 @@ export const transactionModelMock = {
   updateTransactionWithPaystackResponse: jest.fn(),
   updateTransactionStatus: jest.fn(),
   getTransactionByReference: jest.fn(),
+  getTransactionsByBusiness: jest.fn(),
   getTransactionById: jest.fn(),
 } as TransactionModel;

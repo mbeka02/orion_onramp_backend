@@ -28,18 +28,25 @@ describe("seedIndustries", () => {
     ];
 
     // Helper builders
-    const makeSelectReturn = (rows: any[]) => ({ from: () => ({ where: () => Promise.resolve(rows) }) });
-    const makeInsertReturn = (id: string) => ({ values: () => ({ returning: () => Promise.resolve([{ id }]) }) });
+    const makeSelectReturn = (rows: any[]) => ({
+      from: () => ({ where: () => Promise.resolve(rows) }),
+    });
+    const makeInsertReturn = (id: string) => ({
+      values: () => ({ returning: () => Promise.resolve([{ id }]) }),
+    });
 
     // For each select call we want to return empty result (nothing exists yet)
-    const totalSelects = data.reduce((acc, d) => acc + 1 + (d.categories?.length ?? 0), 0);
-    const selectMock = dbModule.db.select = jest.fn();
+    const totalSelects = data.reduce(
+      (acc, d) => acc + 1 + (d.categories?.length ?? 0),
+      0,
+    );
+    const selectMock = (dbModule.db.select = jest.fn());
     for (let i = 0; i < totalSelects; i++) {
       selectMock.mockImplementationOnce(() => makeSelectReturn([]));
     }
 
     // For inserts: first two industries -> two ids, then categories (3) -> three ids
-    const insertMock = dbModule.db.insert = jest.fn();
+    const insertMock = (dbModule.db.insert = jest.fn());
     insertMock.mockImplementationOnce(() => makeInsertReturn("ind-1"));
     insertMock.mockImplementationOnce(() => makeInsertReturn("ind-2"));
     insertMock.mockImplementationOnce(() => makeInsertReturn("cat-1"));
@@ -55,15 +62,23 @@ describe("seedIndustries", () => {
   });
 
   it("skips creating when industry and category already exist", async () => {
-    const data: SeedIndustry[] = [{ name: "ExistingIndustry", categories: ["Investments"] }];
+    const data: SeedIndustry[] = [
+      { name: "ExistingIndustry", categories: ["Investments"] },
+    ];
 
-    const makeSelectReturn = (rows: any[]) => ({ from: () => ({ where: () => Promise.resolve(rows) }) });
-    const selectMock = dbModule.db.select = jest.fn();
+    const makeSelectReturn = (rows: any[]) => ({
+      from: () => ({ where: () => Promise.resolve(rows) }),
+    });
+    const selectMock = (dbModule.db.select = jest.fn());
 
     // First select for industry returns an existing row
-    selectMock.mockImplementationOnce(() => makeSelectReturn([{ id: "existing-ind" }]));
+    selectMock.mockImplementationOnce(() =>
+      makeSelectReturn([{ id: "existing-ind" }]),
+    );
     // Then select for category returns existing
-    selectMock.mockImplementationOnce(() => makeSelectReturn([{ id: "existing-cat" }]));
+    selectMock.mockImplementationOnce(() =>
+      makeSelectReturn([{ id: "existing-cat" }]),
+    );
 
     // insert should not be called at all because both found
     dbModule.db.insert = jest.fn();

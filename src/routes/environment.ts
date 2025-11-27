@@ -73,8 +73,8 @@ router.get("/:business", authenticationMiddleware, async (req, res) => {
 // Create new environment
 router.post(
   "/",
-  createEnvironmentLimiter,
   authenticationMiddleware,
+  createEnvironmentLimiter,
   async (req, res) => {
     try {
       const parsed = createEnvironmentSchema.safeParse(req.body);

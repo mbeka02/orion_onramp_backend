@@ -94,6 +94,7 @@ export class TreasuryController {
           );
           // NOT THROWING AN ERROR SINCE TOKENS HAVE ALREADY BEEN SENT
         }
+        logger.info("Treasury Controller: Payment onramped succesfully", {transaction: transaction_reference})
       }
     } catch (err) {
       logger.error(

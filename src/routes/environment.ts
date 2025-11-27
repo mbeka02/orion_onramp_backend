@@ -16,14 +16,14 @@ import businessModel from "../models/businesses";
 const router: Router = Express.Router();
 export const createEnvironmentLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // Limit each IP to 10 requests per windowMs
+  max: 30, // Limit each IP to 30 requests per windowMs
   message:
     "Too many environments created from this IP, please try again after one hour",
 });
 
 export const rotateKeysLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // Limit each IP to 10 requests per windowMs
+  max: 30, // Limit each IP to 30 requests per windowMs
   message:
     "Too many key rotation attempts from this IP, please try again after one hour",
 });

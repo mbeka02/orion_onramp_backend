@@ -124,7 +124,44 @@ export class TransactionController {
             if (!existingTransaction) {
               throw new MyError(Errors.TRANSACTION_CREATION_FAILED);
             }
+            if (!existingTransaction.authorizationUrl) {
+              logger.warn("Repairing zombie transaction (missing URL)", {
+                reference,
+              });
 
+              try {
+                const retryResponse = await this.callPaystackInitialize({
+                  ...transactionRequest,
+                  amount: amountMinor,
+                  reference: reference,
+                });
+
+                await this.transactionModel.updateTransactionWithPaystackResponse(
+                  reference,
+                  {
+                    authorizationUrl: retryResponse.data.authorization_url,
+                    accessCode: retryResponse.data.access_code,
+                    paystackResponseRaw: retryResponse.data,
+                  },
+                );
+
+                return {
+                  reference: reference,
+                  authorization_url: retryResponse.data.authorization_url,
+                  access_code: retryResponse.data.access_code,
+                };
+              } catch (retryErr) {
+                // If Paystack fails *again*, just throw.
+                // The client will have to retry a third time.
+                logger.error("Failed to repair zombie transaction", {
+                  error: retryErr,
+                  reference,
+                });
+                throw new MyError(Errors.PAYSTACK_API_ERROR, {
+                  cause: retryErr,
+                });
+              }
+            }
             // Return existing payment details
             return {
               reference: existingTransaction.reference,

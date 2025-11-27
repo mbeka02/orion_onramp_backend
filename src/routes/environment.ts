@@ -33,7 +33,7 @@ router.get("/:business", authenticationMiddleware, async (req, res) => {
   try {
     const session = await getAuthContext(req);
     if (!session?.user.id) {
-      res.status(403).json({ message: Errors.UNAUTHORIZED });
+      res.status(401).json({ message: Errors.UNAUTHORIZED });
       return;
     }
 
@@ -59,7 +59,7 @@ router.get("/:business", authenticationMiddleware, async (req, res) => {
     logger.error("Error getting environments in router", { error: err });
     if (err instanceof MyError) {
       if (err.message === Errors.UNAUTHORIZED) {
-        res.status(403).json({ message: err.message });
+        res.status(401).json({ message: err.message });
         return;
       }
 
@@ -83,7 +83,7 @@ router.post(
         const session = await getAuthContext(req);
 
         if (!session?.user.id) {
-          res.status(403).json({ message: Errors.UNAUTHORIZED });
+          res.status(401).json({ message: Errors.UNAUTHORIZED });
           return;
         }
 
@@ -118,7 +118,7 @@ router.post(
       logger.error("Error creating environment in router", { error: err });
       if (err instanceof MyError) {
         if (err.message === Errors.UNAUTHORIZED) {
-          res.status(403).json({ message: err.message });
+          res.status(401).json({ message: err.message });
           return;
         }
 
@@ -142,7 +142,7 @@ router.post(
         const data = parsed.data;
         const session = await getAuthContext(req);
         if (!session?.user.id) {
-          res.status(403).json({ message: Errors.UNAUTHORIZED });
+          res.status(401).json({ message: Errors.UNAUTHORIZED });
           return;
         }
 
@@ -175,7 +175,7 @@ router.post(
       logger.error("Error rotating key in router", { error: err });
       if (err instanceof MyError) {
         if (err.message === Errors.UNAUTHORIZED) {
-          res.status(403).json({ message: err.message });
+          res.status(401).json({ message: err.message });
           return;
         }
 

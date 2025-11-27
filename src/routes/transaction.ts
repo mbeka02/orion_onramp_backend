@@ -153,8 +153,8 @@ router.get("/:id", authenticationMiddleware, async (req, res) => {
  */
 router.post(
   "/initialize",
-  initializeTransactionLimiter,
   validatePrivateKey,
+  initializeTransactionLimiter,
   validateBody(initializeTransactionSchema),
   async (req: Request, res: Response) => {
     try {

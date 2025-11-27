@@ -133,8 +133,8 @@ router.post(
 
 router.post(
   "/new",
-  rotateKeysLimiter,
   authenticationMiddleware,
+  rotateKeysLimiter,
   async (req, res) => {
     try {
       const parsed = rotateKeysSchema.safeParse(req.body);

@@ -1,8 +1,4 @@
-import {
-  businessUsers,
-  environmentsTable,
-  transactionsTable,
-} from "../lib/db/schema";
+import { environmentsTable, transactionsTable } from "../lib/db/schema";
 import { db } from "../lib/db";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
@@ -12,7 +8,7 @@ import {
   desc,
   count,
   eq,
-  DrizzleError,
+  DrizzleQueryError,
   and,
   getTableColumns,
 } from "drizzle-orm";
@@ -133,7 +129,7 @@ export class TransactionModel {
       return insertedTransaction;
     } catch (err) {
       // Re-throw with code for idempotency handling
-      if (err instanceof DrizzleError) {
+      if (err instanceof DrizzleQueryError) {
         if (err.cause instanceof DatabaseError) {
           if (err.cause.code === "23505") {
             logger.warn("Duplicate transaction reference", {

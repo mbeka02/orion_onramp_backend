@@ -1,8 +1,4 @@
-import {
-  businessUsers,
-  environmentsTable,
-  transactionsTable,
-} from "../lib/db/schema";
+import { environmentsTable, transactionsTable } from "../lib/db/schema";
 import { db } from "../lib/db";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
@@ -12,12 +8,11 @@ import {
   desc,
   count,
   eq,
-  DrizzleError,
+  DrizzleQueryError,
   and,
   getTableColumns,
 } from "drizzle-orm";
 import { ENVIRONMENT_TYPES } from "../types/environments";
-import { DrizzleQueryError } from "drizzle-orm";
 interface createTransactionArgs {
   amount: number;
   email: string;

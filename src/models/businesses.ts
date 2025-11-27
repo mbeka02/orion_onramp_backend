@@ -417,7 +417,14 @@ export class BusinessModel {
         out.categoryName = r.categoryName;
         return out as BusinessType;
       });
-      return [...owned, ...memberBizRows];
+
+      // combine and deduplicate based on business ID
+      const allBusinesses = [...owned, ...memberBizRows];
+      const uniqueBusinesses = Array.from(
+        new Map(allBusinesses.map((biz) => [biz.id, biz])).values(),
+      );
+
+      return uniqueBusinesses;
     } catch (err) {
       logger.error("Business Model Error: Error getting businesses for user", {
         error: err,

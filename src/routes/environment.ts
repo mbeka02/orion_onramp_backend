@@ -11,15 +11,29 @@ import { SuccessMessage } from "../success";
 import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
 import { getAuthContext } from "../lib/auth/utils";
+import rateLimit from "express-rate-limit";
 import businessModel from "../models/businesses";
 const router: Router = Express.Router();
+export const createEnvironmentLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30, // Limit each IP to 30 requests per windowMs
+  message:
+    "Too many environments created from this IP, please try again after one hour",
+});
+
+export const rotateKeysLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30, // Limit each IP to 30 requests per windowMs
+  message:
+    "Too many key rotation attempts from this IP, please try again after one hour",
+});
 
 // GET all environments for a business
 router.get("/:business", authenticationMiddleware, async (req, res) => {
   try {
     const session = await getAuthContext(req);
     if (!session?.user.id) {
-      res.status(403).json({ message: Errors.UNAUTHORIZED });
+      res.status(401).json({ message: Errors.UNAUTHORIZED });
       return;
     }
 
@@ -45,7 +59,7 @@ router.get("/:business", authenticationMiddleware, async (req, res) => {
     logger.error("Error getting environments in router", { error: err });
     if (err instanceof MyError) {
       if (err.message === Errors.UNAUTHORIZED) {
-        res.status(403).json({ message: err.message });
+        res.status(401).json({ message: err.message });
         return;
       }
 
@@ -57,110 +71,120 @@ router.get("/:business", authenticationMiddleware, async (req, res) => {
 });
 
 // Create new environment
-router.post("/", authenticationMiddleware, async (req, res) => {
-  try {
-    const parsed = createEnvironmentSchema.safeParse(req.body);
-    if (parsed.success) {
-      const data = parsed.data;
-      const session = await getAuthContext(req);
+router.post(
+  "/",
+  authenticationMiddleware,
+  createEnvironmentLimiter,
+  async (req, res) => {
+    try {
+      const parsed = createEnvironmentSchema.safeParse(req.body);
+      if (parsed.success) {
+        const data = parsed.data;
+        const session = await getAuthContext(req);
 
-      if (!session?.user.id) {
-        res.status(403).json({ message: Errors.UNAUTHORIZED });
+        if (!session?.user.id) {
+          res.status(401).json({ message: Errors.UNAUTHORIZED });
+          return;
+        }
+
+        const encryptionService = new EncryptionService();
+        const result = await environmentController.create(
+          data,
+          session?.user.id,
+          environmentModel,
+          encryptionService,
+          businessModel,
+        );
+
+        res.status(201).json({
+          message: SuccessMessage.CREATE_ENVIRONMENT,
+          environment: {
+            id: result.environment_id,
+            type: result.type,
+            publicKey: result.public_key,
+            privateKey: result.private_key,
+          },
+        });
+      } else {
+        const error = parsed.error.issues[0].message;
+        logger.error("Environment Route: Invalid create data", {
+          data: req.body,
+          error,
+        });
+        res.status(400).json({ message: error });
+        return;
+      }
+    } catch (err) {
+      logger.error("Error creating environment in router", { error: err });
+      if (err instanceof MyError) {
+        if (err.message === Errors.UNAUTHORIZED) {
+          res.status(401).json({ message: err.message });
+          return;
+        }
+
+        res.status(400).json({ message: err.message });
         return;
       }
 
-      const encryptionService = new EncryptionService();
-      const result = await environmentController.create(
-        data,
-        session?.user.id,
-        environmentModel,
-        encryptionService,
-        businessModel,
-      );
+      res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+    }
+  },
+);
 
-      res.status(201).json({
-        message: SuccessMessage.CREATE_ENVIRONMENT,
-        environment: {
-          id: result.environment_id,
-          type: result.type,
+router.post(
+  "/new",
+  authenticationMiddleware,
+  rotateKeysLimiter,
+  async (req, res) => {
+    try {
+      const parsed = rotateKeysSchema.safeParse(req.body);
+      if (parsed.success) {
+        const data = parsed.data;
+        const session = await getAuthContext(req);
+        if (!session?.user.id) {
+          res.status(401).json({ message: Errors.UNAUTHORIZED });
+          return;
+        }
+
+        const userID = session.user.id;
+        const encryptionService = new EncryptionService();
+        const result = await environmentController.rotateKeys(
+          data.businessID,
+          userID,
+          data.type,
+          environmentModel,
+          encryptionService,
+          businessModel,
+        );
+
+        res.status(201).json({
+          message: SuccessMessage.ROTATE_KEY,
           publicKey: result.public_key,
           privateKey: result.private_key,
-        },
-      });
-    } else {
-      const error = parsed.error.issues[0].message;
-      logger.error("Environment Route: Invalid create data", {
-        data: req.body,
-        error,
-      });
-      res.status(400).json({ message: error });
-      return;
-    }
-  } catch (err) {
-    logger.error("Error creating environment in router", { error: err });
-    if (err instanceof MyError) {
-      if (err.message === Errors.UNAUTHORIZED) {
-        res.status(403).json({ message: err.message });
+        });
+      } else {
+        const error = parsed.error.issues[0].message;
+        logger.error("Environment Route: Invalid rotate data", {
+          data: req.body,
+          error,
+        });
+        res.status(400).json({ message: error });
         return;
       }
+    } catch (err) {
+      logger.error("Error rotating key in router", { error: err });
+      if (err instanceof MyError) {
+        if (err.message === Errors.UNAUTHORIZED) {
+          res.status(401).json({ message: err.message });
+          return;
+        }
 
-      res.status(400).json({ message: err.message });
-      return;
-    }
-
-    res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
-  }
-});
-
-router.post("/new", authenticationMiddleware, async (req, res) => {
-  try {
-    const parsed = rotateKeysSchema.safeParse(req.body);
-    if (parsed.success) {
-      const data = parsed.data;
-      const session = await getAuthContext(req);
-      if (!session?.user.id) {
-        res.status(403).json({ message: Errors.UNAUTHORIZED });
+        res.status(400).json({ message: err.message });
         return;
       }
-
-      const userID = session.user.id;
-      const encryptionService = new EncryptionService();
-      const result = await environmentController.rotateKeys(
-        data.businessID,
-        userID,
-        data.type,
-        environmentModel,
-        encryptionService,
-        businessModel,
-      );
-
-      res.status(201).json({
-        message: SuccessMessage.ROTATE_KEY,
-        publicKey: result.public_key,
-        privateKey: result.private_key,
-      });
-    } else {
-      const error = parsed.error.issues[0].message;
-      logger.error("Environment Route: Invalid rotate data", {
-        data: req.body,
-        error,
-      });
-      res.status(400).json({ message: error });
-      return;
+      res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
     }
-  } catch (err) {
-    logger.error("Error rotating key in router", { error: err });
-    if (err instanceof MyError) {
-      if (err.message === Errors.UNAUTHORIZED) {
-        res.status(403).json({ message: err.message });
-        return;
-      }
-
-      res.status(400).json({ message: err.message });
-      return;
-    }
-    res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
-  }
-});
+  },
+);
 
 export default router;

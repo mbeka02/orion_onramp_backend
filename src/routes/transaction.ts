@@ -18,7 +18,7 @@ import { emailService } from "../lib/emails/email.util";
 import { ENVIRONMENT_TYPES } from "../types/environments";
 import { BusinessModel } from "../models/businesses";
 import { getAuthContext } from "../lib/auth/utils";
-
+import rateLimit from "express-rate-limit";
 const router: Router = Router();
 
 const transactionModel = new TransactionModel();
@@ -27,6 +27,12 @@ const transactionController = new TransactionController(
   transactionModel,
   businessModel,
 );
+// Rate limiter for transaction initialization
+export const initializeTransactionLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // Limit each IP to 60 requests per windowMs
+  message: "Too many requests from this IP, try again later",
+});
 
 /**
  * GET /api/transaction
@@ -148,6 +154,7 @@ router.get("/:id", authenticationMiddleware, async (req, res) => {
 router.post(
   "/initialize",
   validatePrivateKey,
+  initializeTransactionLimiter,
   validateBody(initializeTransactionSchema),
   async (req: Request, res: Response) => {
     try {

@@ -563,9 +563,7 @@ export class BusinessModel {
     }
   }
 
-  async getBusinessTeamMembers(
-    businessId: string,
-  ): Promise<
+  async getBusinessTeamMembers(businessId: string): Promise<
     Array<{
       id: string;
       name: string;

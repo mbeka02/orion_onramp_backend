@@ -16,6 +16,7 @@ import {
 import { preserveRawBody } from "./middleware/rawBody";
 import adminRouter from "./routes/admin";
 import { Admincontroller } from "./controllers/admin";
+import { initializeE2ETestAccount } from "./lib/db/seed";
 const PORT = process.env.PORT;
 const DATABASE_URL = process.env.DATABASE_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -59,6 +60,8 @@ async function initialize(): Promise<void> {
     const adminController = new Admincontroller();
     await adminController.setup();
     logger.info("Superadmin setup completed successfully");
+    //setup e2e test account
+    await initializeE2ETestAccount();
     // Start background cached treasury balance update every hour
     startCachedTreasuryBalanceUpdate("0 * * * *");
     logger.info("Cached treasury balance updates initialized successfully");

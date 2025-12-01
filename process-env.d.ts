@@ -31,8 +31,11 @@ declare global {
       SUPERADMIN_PASSWORD: string;
       ADMIN_FRONTEND_URL: string;
       REDIS_URL: string;
+      E2E_TEST_USER_EMAIL: string;
+      E2E_TEST_USER_PASSWORD: string;
+      E2E_TEST_USER_PHONE: string;
     }
   }
 }
 
-export {};
+export { };

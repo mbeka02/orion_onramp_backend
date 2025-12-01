@@ -197,7 +197,11 @@ export class BusinessController {
     }
   }
 
-  async listInvitations(businessId: string, actorId: string, model: BusinessModel) {
+  async listInvitations(
+    businessId: string,
+    actorId: string,
+    model: BusinessModel,
+  ) {
     try {
       // Only owner or admin can list invitations
       const allowed = await model.isUserOwnerOrAdmin(businessId, actorId);
@@ -252,7 +256,10 @@ export class BusinessController {
   ) {
     try {
       // Verify user has access to this business
-      const isMember = await model.checkUserBusinessMembership(actorId, businessId);
+      const isMember = await model.checkUserBusinessMembership(
+        actorId,
+        businessId,
+      );
       if (!isMember) throw new MyError(Errors.UNAUTHORIZED);
 
       const members = await model.getBusinessTeamMembers(businessId);

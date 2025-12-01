@@ -6,7 +6,7 @@ import {
   invitations,
   industries,
   categories,
-  user
+  user,
 } from "../lib/db/schema";
 import { eq, and, desc, count, SQL } from "drizzle-orm";
 import {
@@ -565,7 +565,15 @@ export class BusinessModel {
 
   async getBusinessTeamMembers(
     businessId: string,
-  ): Promise<Array<{ id: string; name: string; email: string; role: string; joinedAt: Date }>> {
+  ): Promise<
+    Array<{
+      id: string;
+      name: string;
+      email: string;
+      role: string;
+      joinedAt: Date;
+    }>
+  > {
     try {
       const members = await db
         .select({
@@ -579,7 +587,13 @@ export class BusinessModel {
         .innerJoin(user, eq(businessUsers.userId, user.id))
         .where(eq(businessUsers.businessId, businessId));
 
-      return members as Array<{ id: string; name: string; email: string; role: string; joinedAt: Date }>;
+      return members as Array<{
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+        joinedAt: Date;
+      }>;
     } catch (err) {
       logger.error("Business Model Error: Error getting team members", {
         error: err,

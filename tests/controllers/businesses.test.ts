@@ -344,10 +344,9 @@ describe("Business Controller", () => {
         businessModelMock as any,
       );
 
-      expect(businessModelMock.checkUserBusinessMembership).toHaveBeenCalledWith(
-        ownerId,
-        businessId,
-      );
+      expect(
+        businessModelMock.checkUserBusinessMembership,
+      ).toHaveBeenCalledWith(ownerId, businessId);
       expect(businessModelMock.getBusinessTeamMembers).toHaveBeenCalledWith(
         businessId,
       );
@@ -367,10 +366,9 @@ describe("Business Controller", () => {
         ),
       ).rejects.toThrow(MyError);
 
-      expect(businessModelMock.checkUserBusinessMembership).toHaveBeenCalledWith(
-        otherUser,
-        businessId,
-      );
+      expect(
+        businessModelMock.checkUserBusinessMembership,
+      ).toHaveBeenCalledWith(otherUser, businessId);
       expect(businessModelMock.getBusinessTeamMembers).not.toHaveBeenCalled();
     });
   });

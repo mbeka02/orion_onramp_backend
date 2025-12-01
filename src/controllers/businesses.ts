@@ -196,6 +196,101 @@ export class BusinessController {
       throw new Error(Errors.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async listInvitations(businessId: string, actorId: string, model: BusinessModel) {
+    try {
+      // Only owner or admin can list invitations
+      const allowed = await model.isUserOwnerOrAdmin(businessId, actorId);
+      if (!allowed) throw new MyError(Errors.UNAUTHORIZED);
+
+      const invitations = await model.listInvitationsForBusiness(businessId);
+      return invitations;
+    } catch (err) {
+      logger.error("Business Controller: Error listing invitations", {
+        err,
+        businessId,
+        actorId,
+      });
+      if (err instanceof MyError) throw err;
+      throw new Error(Errors.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async cancelInvitation(
+    invitationId: string,
+    actorId: string,
+    model: BusinessModel,
+  ) {
+    try {
+      // Get invitation to verify business ownership
+      const invitation = await model.getInvitationById(invitationId);
+      if (!invitation) throw new MyError(Errors.INVITATION_NOT_FOUND);
+
+      // Only owner or admin can cancel invitations
+      const allowed = await model.isUserOwnerOrAdmin(
+        invitation.businessId,
+        actorId,
+      );
+      if (!allowed) throw new MyError(Errors.UNAUTHORIZED);
+
+      await model.cancelInvitation(invitationId, actorId);
+    } catch (err) {
+      logger.error("Business Controller: Error cancelling invitation", {
+        err,
+        invitationId,
+        actorId,
+      });
+      if (err instanceof MyError) throw err;
+      throw new Error(Errors.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getTeamMembers(
+    businessId: string,
+    actorId: string,
+    model: BusinessModel,
+  ) {
+    try {
+      // Verify user has access to this business
+      const isMember = await model.checkUserBusinessMembership(actorId, businessId);
+      if (!isMember) throw new MyError(Errors.UNAUTHORIZED);
+
+      const members = await model.getBusinessTeamMembers(businessId);
+      return members;
+    } catch (err) {
+      logger.error("Business Controller: Error getting team members", {
+        err,
+        businessId,
+        actorId,
+      });
+      if (err instanceof MyError) throw err;
+      throw new Error(Errors.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async removeTeamMember(
+    businessId: string,
+    memberId: string,
+    actorId: string,
+    model: BusinessModel,
+  ) {
+    try {
+      // Only owner or admin can remove team members
+      const allowed = await model.isUserOwnerOrAdmin(businessId, actorId);
+      if (!allowed) throw new MyError(Errors.UNAUTHORIZED);
+
+      await model.removeTeamMember(businessId, memberId, actorId);
+    } catch (err) {
+      logger.error("Business Controller: Error removing team member", {
+        err,
+        businessId,
+        memberId,
+        actorId,
+      });
+      if (err instanceof MyError) throw err;
+      throw new Error(Errors.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
 
 const businessController = new BusinessController();

@@ -269,4 +269,104 @@ router.get("/industries", authenticationMiddleware, async (req, res) => {
   }
 });
 
+// List all invitations for a business
+router.get("/:id/invitations", authenticationMiddleware, async (req, res) => {
+  try {
+    const session = await getAuthContext(req as any);
+    const userId = session?.user?.id;
+    if (!userId) return res.status(401).json({ message: Errors.UNAUTHORIZED });
+
+    const businessId = req.params.id;
+    const invitations = await businessController.listInvitations(
+      businessId,
+      userId,
+      businessModel,
+    );
+    res.status(200).json({ invitations });
+  } catch (err) {
+    logger.error("Error listing invitations in router", { error: err });
+    if (err instanceof MyError)
+      return res.status(403).json({ message: err.message });
+    res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+  }
+});
+
+// Cancel an invitation
+router.delete(
+  "/invitations/:inviteId",
+  authenticationMiddleware,
+  async (req, res) => {
+    try {
+      const session = await getAuthContext(req as any);
+      const userId = session?.user?.id;
+      if (!userId)
+        return res.status(401).json({ message: Errors.UNAUTHORIZED });
+
+      const inviteId = req.params.inviteId;
+      await businessController.cancelInvitation(
+        inviteId,
+        userId,
+        businessModel,
+      );
+      res.status(200).json({ message: "Invitation cancelled successfully" });
+    } catch (err) {
+      logger.error("Error cancelling invitation in router", { error: err });
+      if (err instanceof MyError)
+        return res.status(400).json({ message: err.message });
+      res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+    }
+  },
+);
+
+// Get all team members for a business
+router.get("/:id/team", authenticationMiddleware, async (req, res) => {
+  try {
+    const session = await getAuthContext(req as any);
+    const userId = session?.user?.id;
+    if (!userId) return res.status(401).json({ message: Errors.UNAUTHORIZED });
+
+    const businessId = req.params.id;
+    const members = await businessController.getTeamMembers(
+      businessId,
+      userId,
+      businessModel,
+    );
+    res.status(200).json({ members });
+  } catch (err) {
+    logger.error("Error getting team members in router", { error: err });
+    if (err instanceof MyError)
+      return res.status(403).json({ message: err.message });
+    res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+  }
+});
+
+// Remove a team member from a business
+router.delete(
+  "/:id/team/:memberId",
+  authenticationMiddleware,
+  async (req, res) => {
+    try {
+      const session = await getAuthContext(req as any);
+      const userId = session?.user?.id;
+      if (!userId)
+        return res.status(401).json({ message: Errors.UNAUTHORIZED });
+
+      const businessId = req.params.id;
+      const memberId = req.params.memberId;
+      await businessController.removeTeamMember(
+        businessId,
+        memberId,
+        userId,
+        businessModel,
+      );
+      res.status(200).json({ message: "Team member removed successfully" });
+    } catch (err) {
+      logger.error("Error removing team member in router", { error: err });
+      if (err instanceof MyError)
+        return res.status(400).json({ message: err.message });
+      res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+    }
+  },
+);
+
 export default router;

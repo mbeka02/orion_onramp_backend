@@ -152,4 +152,301 @@ describe("Business Controller", () => {
     );
     expect(res).toEqual(mockIndustries);
   });
+
+  describe("List Invitations", () => {
+    it("allows owner/admin to list invitations", async () => {
+      const mockInvitations = [
+        {
+          id: "invite-1",
+          businessId: businessId,
+          invitedBy: ownerId,
+          email: "user1@example.com",
+          role: "Developer",
+          status: "Pending",
+          createdAt: new Date(),
+        },
+        {
+          id: "invite-2",
+          businessId: businessId,
+          invitedBy: ownerId,
+          email: "user2@example.com",
+          role: "Finance",
+          status: "Pending",
+          createdAt: new Date(),
+        },
+      ];
+
+      (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(
+        true,
+      );
+      (
+        businessModelMock.listInvitationsForBusiness as jest.Mock
+      ).mockResolvedValue(mockInvitations);
+
+      const result = await businessController.listInvitations(
+        businessId,
+        ownerId,
+        businessModelMock as any,
+      );
+
+      expect(businessModelMock.isUserOwnerOrAdmin).toHaveBeenCalledWith(
+        businessId,
+        ownerId,
+      );
+      expect(businessModelMock.listInvitationsForBusiness).toHaveBeenCalledWith(
+        businessId,
+      );
+      expect(result).toEqual(mockInvitations);
+    });
+
+    it("blocks non-admin from listing invitations", async () => {
+      (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(
+        false,
+      );
+
+      await expect(
+        businessController.listInvitations(
+          businessId,
+          otherUser,
+          businessModelMock as any,
+        ),
+      ).rejects.toThrow(MyError);
+
+      expect(businessModelMock.isUserOwnerOrAdmin).toHaveBeenCalledWith(
+        businessId,
+        otherUser,
+      );
+      expect(
+        businessModelMock.listInvitationsForBusiness,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Cancel Invitation", () => {
+    const inviteId = "invite-id-123";
+
+    it("allows owner/admin to cancel invitation", async () => {
+      const mockInvitation = {
+        id: inviteId,
+        businessId: businessId,
+        invitedBy: ownerId,
+        email: "user@example.com",
+        role: "Developer",
+        status: "Pending",
+        createdAt: new Date(),
+      };
+
+      (businessModelMock.getInvitationById as jest.Mock).mockResolvedValue(
+        mockInvitation,
+      );
+      (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(
+        true,
+      );
+      (businessModelMock.cancelInvitation as jest.Mock).mockResolvedValue(
+        undefined,
+      );
+
+      await businessController.cancelInvitation(
+        inviteId,
+        ownerId,
+        businessModelMock as any,
+      );
+
+      expect(businessModelMock.getInvitationById).toHaveBeenCalledWith(
+        inviteId,
+      );
+      expect(businessModelMock.isUserOwnerOrAdmin).toHaveBeenCalledWith(
+        businessId,
+        ownerId,
+      );
+      expect(businessModelMock.cancelInvitation).toHaveBeenCalledWith(
+        inviteId,
+        ownerId,
+      );
+    });
+
+    it("blocks non-admin from cancelling invitation", async () => {
+      const mockInvitation = {
+        id: inviteId,
+        businessId: businessId,
+        invitedBy: ownerId,
+        email: "user@example.com",
+        role: "Developer",
+        status: "Pending",
+        createdAt: new Date(),
+      };
+
+      (businessModelMock.getInvitationById as jest.Mock).mockResolvedValue(
+        mockInvitation,
+      );
+      (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(
+        false,
+      );
+
+      await expect(
+        businessController.cancelInvitation(
+          inviteId,
+          otherUser,
+          businessModelMock as any,
+        ),
+      ).rejects.toThrow(MyError);
+
+      expect(businessModelMock.cancelInvitation).not.toHaveBeenCalled();
+    });
+
+    it("throws error when invitation not found", async () => {
+      (businessModelMock.getInvitationById as jest.Mock).mockResolvedValue(
+        null,
+      );
+
+      await expect(
+        businessController.cancelInvitation(
+          inviteId,
+          ownerId,
+          businessModelMock as any,
+        ),
+      ).rejects.toThrow(MyError);
+
+      expect(businessModelMock.isUserOwnerOrAdmin).not.toHaveBeenCalled();
+      expect(businessModelMock.cancelInvitation).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Get Team Members", () => {
+    it("allows business member to view team", async () => {
+      const mockMembers = [
+        {
+          id: "member-1",
+          name: "John Doe",
+          email: "john@example.com",
+          role: "Admin",
+          joinedAt: new Date(),
+        },
+        {
+          id: "member-2",
+          name: "Jane Smith",
+          email: "jane@example.com",
+          role: "Developer",
+          joinedAt: new Date(),
+        },
+      ];
+
+      (
+        businessModelMock.checkUserBusinessMembership as jest.Mock
+      ).mockResolvedValue(true);
+      (businessModelMock.getBusinessTeamMembers as jest.Mock).mockResolvedValue(
+        mockMembers,
+      );
+
+      const result = await businessController.getTeamMembers(
+        businessId,
+        ownerId,
+        businessModelMock as any,
+      );
+
+      expect(
+        businessModelMock.checkUserBusinessMembership,
+      ).toHaveBeenCalledWith(ownerId, businessId);
+      expect(businessModelMock.getBusinessTeamMembers).toHaveBeenCalledWith(
+        businessId,
+      );
+      expect(result).toEqual(mockMembers);
+    });
+
+    it("blocks non-member from viewing team", async () => {
+      (
+        businessModelMock.checkUserBusinessMembership as jest.Mock
+      ).mockResolvedValue(false);
+
+      await expect(
+        businessController.getTeamMembers(
+          businessId,
+          otherUser,
+          businessModelMock as any,
+        ),
+      ).rejects.toThrow(MyError);
+
+      expect(
+        businessModelMock.checkUserBusinessMembership,
+      ).toHaveBeenCalledWith(otherUser, businessId);
+      expect(businessModelMock.getBusinessTeamMembers).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Remove Team Member", () => {
+    const memberId = "member-id-123";
+
+    it("allows owner/admin to remove team member", async () => {
+      (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(
+        true,
+      );
+      (businessModelMock.removeTeamMember as jest.Mock).mockResolvedValue(
+        undefined,
+      );
+
+      await businessController.removeTeamMember(
+        businessId,
+        memberId,
+        ownerId,
+        businessModelMock as any,
+      );
+
+      expect(businessModelMock.isUserOwnerOrAdmin).toHaveBeenCalledWith(
+        businessId,
+        ownerId,
+      );
+      expect(businessModelMock.removeTeamMember).toHaveBeenCalledWith(
+        businessId,
+        memberId,
+        ownerId,
+      );
+    });
+
+    it("blocks non-admin from removing team member", async () => {
+      (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(
+        false,
+      );
+
+      await expect(
+        businessController.removeTeamMember(
+          businessId,
+          memberId,
+          otherUser,
+          businessModelMock as any,
+        ),
+      ).rejects.toThrow(MyError);
+
+      expect(businessModelMock.isUserOwnerOrAdmin).toHaveBeenCalledWith(
+        businessId,
+        otherUser,
+      );
+      expect(businessModelMock.removeTeamMember).not.toHaveBeenCalled();
+    });
+
+    it("propagates model errors correctly", async () => {
+      const errorMessage = "Cannot remove business owner from team";
+
+      (businessModelMock.isUserOwnerOrAdmin as jest.Mock).mockResolvedValue(
+        true,
+      );
+      (businessModelMock.removeTeamMember as jest.Mock).mockRejectedValue(
+        new Error(errorMessage),
+      );
+
+      await expect(
+        businessController.removeTeamMember(
+          businessId,
+          memberId,
+          ownerId,
+          businessModelMock as any,
+        ),
+      ).rejects.toThrow();
+
+      expect(businessModelMock.removeTeamMember).toHaveBeenCalledWith(
+        businessId,
+        memberId,
+        ownerId,
+      );
+    });
+  });
 });

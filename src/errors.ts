@@ -16,6 +16,7 @@ export enum Errors {
   INVALID_BUSINESS_DATA = "Invalid business data",
   BUSINESS_CREATION_FAILED = "Could not create business",
   INVITATION_FAILED = "Could not create invitation",
+  INVITATION_NOT_FOUND = "Invitation not found",
   REGISTRATION_NUMBER_TAKEN = "Business registration number already in use",
   UNAUTHORIZED_PAYMENT = "Unauthorized payment",
   PAYMENT_ALREADY_ONRAMPED = "Payment already onramped",

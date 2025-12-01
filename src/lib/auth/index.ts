@@ -3,6 +3,7 @@ import { db } from "../db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { account, session, user, verification } from "../db/schema";
 import { emailService } from "../emails/email.util";
+import logger from "../logger";
 const frontendUrl = process.env.FRONTEND_URL;
 if (!frontendUrl) {
   throw new Error("FRONTEND_URL environment variable is required");
@@ -60,6 +61,11 @@ export const auth: Auth = betterAuth({
   emailVerification: {
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }, request) => {
+      if (process.env.SKIP_EMAILS === "true") {
+        logger.info("Skipping verification email (SKIP_EMAILS=true)");
+        return;
+      }
+
       try {
         const verificationUrl = new URL(url);
         verificationUrl.searchParams.set(

@@ -6,6 +6,7 @@ import {
   invitations,
   industries,
   categories,
+  user
 } from "../lib/db/schema";
 import { eq, and, desc, count, SQL } from "drizzle-orm";
 import {
@@ -523,6 +524,131 @@ export class BusinessModel {
       throw new Error("Error listing invitations");
     }
   }
+
+  async cancelInvitation(invitationId: string, actorId: string) {
+    try {
+      // Fetch the invitation to verify it exists and get the business ID
+      const [invitation] = await db
+        .select()
+        .from(invitations)
+        .where(eq(invitations.id, invitationId));
+
+      if (!invitation) {
+        throw new Error("Invitation not found");
+      }
+
+      // Only pending invitations can be cancelled
+      if (invitation.status !== USER_INVITATION_STATUS.PENDING) {
+        throw new Error("Only pending invitations can be cancelled");
+      }
+
+      // Update invitation status to CANCELLED
+      const [updated] = await db
+        .update(invitations)
+        .set({ status: USER_INVITATION_STATUS.CANCELLED })
+        .where(eq(invitations.id, invitationId))
+        .returning();
+
+      logger.info("Invitation cancelled", { invitationId, actorId });
+      return updated;
+    } catch (err) {
+      logger.error("Business Model Error: Error cancelling invitation", {
+        error: err,
+        invitationId,
+        actorId,
+      });
+      throw new Error(
+        err instanceof Error ? err.message : "Error cancelling invitation",
+      );
+    }
+  }
+
+  async getBusinessTeamMembers(
+    businessId: string,
+  ): Promise<Array<{ id: string; name: string; email: string; role: string; joinedAt: Date }>> {
+    try {
+      const members = await db
+        .select({
+          id: businessUsers.id,
+          name: user.name,
+          email: user.email,
+          role: businessUsers.role,
+          joinedAt: businessUsers.joinedAt,
+        })
+        .from(businessUsers)
+        .innerJoin(user, eq(businessUsers.userId, user.id))
+        .where(eq(businessUsers.businessId, businessId));
+
+      return members as Array<{ id: string; name: string; email: string; role: string; joinedAt: Date }>;
+    } catch (err) {
+      logger.error("Business Model Error: Error getting team members", {
+        error: err,
+        businessId,
+      });
+      throw new Error("Error getting team members");
+    }
+  }
+
+  async removeTeamMember(
+    businessId: string,
+    memberId: string,
+    actorId: string,
+  ) {
+    try {
+      // Get business owner
+      const [business] = await db
+        .select({ ownerId: businesses.ownerId })
+        .from(businesses)
+        .where(eq(businesses.id, businessId));
+
+      if (!business) {
+        throw new Error("Business not found");
+      }
+
+      // Get the member being removed
+      const [member] = await db
+        .select()
+        .from(businessUsers)
+        .where(
+          and(
+            eq(businessUsers.id, memberId),
+            eq(businessUsers.businessId, businessId),
+          ),
+        );
+
+      if (!member) {
+        throw new Error("Team member not found");
+      }
+
+      // Cannot remove the business owner
+      if (member.userId === business.ownerId) {
+        throw new Error("Cannot remove business owner from team");
+      }
+
+      // Delete the team member
+      await db
+        .delete(businessUsers)
+        .where(
+          and(
+            eq(businessUsers.id, memberId),
+            eq(businessUsers.businessId, businessId),
+          ),
+        );
+
+      logger.info("Team member removed", { businessId, memberId, actorId });
+    } catch (err) {
+      logger.error("Business Model Error: Error removing team member", {
+        error: err,
+        businessId,
+        memberId,
+        actorId,
+      });
+      throw new Error(
+        err instanceof Error ? err.message : "Error removing team member",
+      );
+    }
+  }
+
   async getIndustriesAndCategories(): Promise<Industry[]> {
     try {
       const industriesWithCategories = await db

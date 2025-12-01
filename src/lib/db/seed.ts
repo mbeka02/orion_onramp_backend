@@ -5,17 +5,13 @@ import { eq } from "drizzle-orm";
 import logger from "../logger";
 
 async function seedE2ETestUser() {
-  // Don't want this running in prod
-  if (process.env.NODE_ENV === "production") {
-    logger.warn("Skipping seed - production environment detected");
-    return;
-  }
-  const testEmail = process.env.E2E_TEST_USER_EMAIL || "orion_test@example.com";
-  const testPassword = process.env.E2E_TEST_USER_PASSWORD || "TestPassword123!";
-  const testPhone = process.env.E2E_TEST_USER_PHONE || "+254712345678";
-  await db.transaction(async (tx) => {
-    await tx.delete(user).where(eq(user.email, "orion_test@example.com"));
+  // Only want this running in development
+  if (process.env.NODE_ENV === "development") {
+    const testEmail = process.env.E2E_TEST_USER_EMAIL || "orion_test@example.com";
+    const testPassword = process.env.E2E_TEST_USER_PASSWORD || "TestPassword123!";
+    const testPhone = process.env.E2E_TEST_USER_PHONE || "+254712345678";
 
+    await db.delete(user).where(eq(user.email, testEmail));
     const testUser = await testAuth.api.signUpEmail({
       body: {
         email: testEmail,
@@ -25,10 +21,9 @@ async function seedE2ETestUser() {
         phoneNumber: testPhone,
       } as any,
     });
-
     // Manually mark as verified
     if (testUser?.user?.id) {
-      await tx
+      await db
         .update(user)
         .set({
           emailVerified: true,
@@ -39,7 +34,10 @@ async function seedE2ETestUser() {
         `Test user created and auto-verified: ${testUser.user.email}`,
       );
     }
-  });
+  } else {
+    logger.warn("Skipping seed - production environment detected");
+    return;
+  }
 }
 
 export async function initializeE2ETestAccount() {

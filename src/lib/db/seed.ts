@@ -11,7 +11,31 @@ async function seedE2ETestUser() {
     return;
   }
 
-  await db.delete(user).where(eq(user.email, "orion_test@example.com"));
+  await db.transaction(async (tx) => {
+    await tx.delete(user).where(eq(user.email, "orion_test@example.com"));
+
+    const testUser = await testAuth.api.signUpEmail({
+      body: {
+        email: "orion_test@example.com",
+        password: "TestPassword123!",
+        name: "Test User",
+        businessName: "Test Business",
+        phoneNumber: "+254712345678",
+      } as any,
+    });
+
+    // Manually mark as verified
+    if (testUser?.user?.id) {
+      await tx
+        .update(user)
+        .set({
+          emailVerified: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(user.id, testUser.user.id));
+      logger.info(`Test user created and auto-verified: ${testUser.user.email}`);
+    }
+  });
 
   const testUser = await testAuth.api.signUpEmail({
     body: {

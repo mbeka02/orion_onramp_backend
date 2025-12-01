@@ -10,17 +10,19 @@ async function seedE2ETestUser() {
     logger.warn("Skipping seed - production environment detected");
     return;
   }
-
+  const testEmail = process.env.E2E_TEST_USER_EMAIL || "orion_test@example.com";
+  const testPassword = process.env.E2E_TEST_USER_PASSWORD || "TestPassword123!";
+  const testPhone = process.env.E2E_TEST_USER_PHONE || "+254712345678";
   await db.transaction(async (tx) => {
     await tx.delete(user).where(eq(user.email, "orion_test@example.com"));
 
     const testUser = await testAuth.api.signUpEmail({
       body: {
-        email: "orion_test@example.com",
-        password: "TestPassword123!",
+        email: testEmail,
+        password: testPassword,
         name: "Test User",
         businessName: "Test Business",
-        phoneNumber: "+254712345678",
+        phoneNumber: testPhone,
       } as any,
     });
 
@@ -33,31 +35,11 @@ async function seedE2ETestUser() {
           updatedAt: new Date(),
         })
         .where(eq(user.id, testUser.user.id));
-      logger.info(`Test user created and auto-verified: ${testUser.user.email}`);
+      logger.info(
+        `Test user created and auto-verified: ${testUser.user.email}`,
+      );
     }
   });
-
-  const testUser = await testAuth.api.signUpEmail({
-    body: {
-      email: "orion_test@example.com",
-      password: "TestPassword123!",
-      name: "Test User",
-      businessName: "Test Business",
-      phoneNumber: "+254712345678",
-    } as any,
-  });
-
-  // Manually mark as verified
-  if (testUser?.user?.id) {
-    await db
-      .update(user)
-      .set({
-        emailVerified: true,
-        updatedAt: new Date(),
-      })
-      .where(eq(user.id, testUser.user.id));
-    logger.info(`Test user created and auto-verified: ${testUser.user.email}`);
-  }
 }
 
 export async function initializeE2ETestAccount() {

@@ -7,8 +7,10 @@ import logger from "../logger";
 async function seedE2ETestUser() {
   // Only want this running in development
   if (process.env.NODE_ENV === "development") {
-    const testEmail = process.env.E2E_TEST_USER_EMAIL || "orion_test@example.com";
-    const testPassword = process.env.E2E_TEST_USER_PASSWORD || "TestPassword123!";
+    const testEmail =
+      process.env.E2E_TEST_USER_EMAIL || "orion_test@example.com";
+    const testPassword =
+      process.env.E2E_TEST_USER_PASSWORD || "TestPassword123!";
     const testPhone = process.env.E2E_TEST_USER_PHONE || "+254712345678";
 
     await db.delete(user).where(eq(user.email, testEmail));

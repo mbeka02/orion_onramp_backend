@@ -1,11 +1,16 @@
 import { Errors, MyError } from "../errors";
 import { EmailService } from "../lib/emails/email.util";
+import { EncryptionService } from "../lib/encryption";
 import lock from "../lib/lock";
 import logger from "../lib/logger";
+import { EnvironmentModel } from "../models/environments";
 import { LiquidityManagerModel } from "../models/liquidityManager";
 import { TransactionModel } from "../models/transactions";
 import { TreasuryModel } from "../models/treasury";
+import { WebhookModel } from "../models/webhook";
+import { WEBHOOK_CONTROLLER_EVENTS } from "../types/webhook";
 import { LiquidityManagerController } from "./liquidityManager";
+import { WebhookController } from "./webhook";
 
 const BALANCE_CHECK_LOCK = "balance_check_lock";
 const BUSINESS_TRANSFER_LOCK = "business_transfer_lock";
@@ -18,6 +23,10 @@ export class TreasuryController {
     transactionModel: TransactionModel,
     liquidityModel: LiquidityManagerModel,
     emailService: EmailService,
+    webHookController: WebhookController,
+    webHookModel: WebhookModel,
+    environmentModel: EnvironmentModel,
+    encryptionService: EncryptionService
   ) {
     try {
       const doesTransactionExist = await treasuryModel.doesTransactionExist(
@@ -42,7 +51,7 @@ export class TreasuryController {
         throw new MyError(Errors.PAYMENT_NOT_COMPLETE);
       }
 
-      logger.info("Token transfer pending", { transaction_reference })
+      await webHookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_PENDING, transaction_reference, transactionModel, webHookModel, environmentModel, encryptionService);
 
       // Get transaction details
       const transaction = await transactionModel.getTransactionByReference(
@@ -93,7 +102,6 @@ export class TreasuryController {
             .catch((err) => {
               if (err instanceof MyError) {
                 if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
-                  logger.info("account not associated", { transaction_reference });
                   throw err;
                 }
               }
@@ -129,6 +137,8 @@ export class TreasuryController {
         logger.info("Treasury Controller: Payment onramped successfully", {
           transaction: transaction_reference,
         });
+
+        await webHookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_SUCCESS, transaction_reference, transactionModel, webHookModel, environmentModel, encryptionService);
       }
     } catch (err) {
       logger.error(
@@ -140,11 +150,11 @@ export class TreasuryController {
 
       if (err instanceof MyError) {
         if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
-          logger.info("token transfer failed", { transaction_reference });
           await liquidityManagerController.markTransactionFailed(
             transaction_reference,
             liquidityModel
           );
+          await webHookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.ACCOUNT_NOT_ASSOCIATED, transaction_reference, transactionModel, webHookModel, environmentModel, encryptionService);
           throw err;
         }
         throw err;
@@ -155,8 +165,7 @@ export class TreasuryController {
         liquidityModel
       );
 
-      logger.info("token transfer failed", { transaction_reference });
-
+      await webHookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_FAILED, transaction_reference, transactionModel, webHookModel, environmentModel, encryptionService);
       throw new Error("Could not onramp fiat on behalf of business");
     }
   }

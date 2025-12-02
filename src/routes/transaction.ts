@@ -19,6 +19,10 @@ import { ENVIRONMENT_TYPES } from "../types/environments";
 import { BusinessModel } from "../models/businesses";
 import { getAuthContext } from "../lib/auth/utils";
 import rateLimit from "express-rate-limit";
+import webhookController from "../controllers/webhook";
+import webhookModel from "../models/webhook";
+import environmentModel from "../models/environments";
+import { EncryptionService } from "../lib/encryption";
 const router: Router = Router();
 
 const transactionModel = new TransactionModel();
@@ -215,11 +219,12 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
       return res.status(400).send("Invalid signature");
     }
     const { event, data } = JSON.parse(body) as PaystackWebhookPayload;
-    await transactionController.handlePaystackWebhook(event, data);
+    await transactionController.handlePaystackWebhook(event, data, webhookController);
     res.status(200).send("Webhook received");
 
     try {
       // Call treasury
+      const encryptionService = new EncryptionService();
       await treasuryController.businessOnramp(
         data.reference,
         treasuryModel,
@@ -227,6 +232,10 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
         transactionModel,
         liquidityModel,
         emailService,
+        webhookController,
+        webhookModel,
+        environmentModel,
+        encryptionService
       );
     } catch (err) {
       // Will implement queuing of this in a later PR

@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { TransactionController } from "../../src/controllers/transactions";
 import { transactionModelMock } from "../mocks/transaction_model_mock";
 import { TRANSACTION_STATUS } from "../../src/types/transactions";
+import businessModelMock from "../mocks/business_model_mock";
 
 beforeAll(() => {
   jest.clearAllMocks();
@@ -15,7 +16,7 @@ describe("TransactionController - Webhook utilities", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    controller = new TransactionController(transactionModelMock as any);
+    controller = new TransactionController(transactionModelMock as any, businessModelMock);
   });
 
   describe("isSignatureValid", () => {

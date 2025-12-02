@@ -17,6 +17,7 @@ class Infisical {
 
   constructor() {
     this.client = new InfisicalSDK();
+    this._login();
   }
 
   private async _login() {

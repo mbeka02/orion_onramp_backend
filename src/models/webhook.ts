@@ -60,3 +60,6 @@ export class WebhookModel {
     }
   }
 }
+
+const webhookModel = new WebhookModel();
+export default webhookModel;

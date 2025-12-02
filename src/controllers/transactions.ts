@@ -20,6 +20,11 @@ import {
 } from "../types/paystack";
 import { ENVIRONMENT_TYPES } from "../types/environments";
 import { BusinessModel } from "../models/businesses";
+import { WebhookController } from "./webhook";
+import { WEBHOOK_CONTROLLER_EVENTS } from "../types/webhook";
+import webhookModel from "../models/webhook";
+import environmentModel from "../models/environments";
+import { EncryptionService } from "../lib/encryption";
 export class TransactionController {
   private apiKey: string;
   private MAX_TRANSACTION_AMOUNT = 500000;
@@ -483,16 +488,17 @@ export class TransactionController {
       return false;
     }
   }
-  async handlePaystackWebhook(event: WebhookEvent, data: WebhookChargeData) {
+  async handlePaystackWebhook(event: WebhookEvent, data: WebhookChargeData, webhookController: WebhookController) {
     try {
+      const encryptionService = new EncryptionService();
       switch (event) {
         case WEBHOOK_EVENTS.CHARGE_SUCCESS:
-          logger.info("Charge success", {data});
           await this.processChargeSuccess(data);
+          await webhookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.CHARGE_SUCCESS, data.reference, this.transactionModel, webhookModel, environmentModel, encryptionService);
           break;
         case WEBHOOK_EVENTS.CHARGE_FAILED:
-          logger.info("Charge failed", {data})
           await this.processChargeFailed(data);
+          await webhookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.CHARGE_FAILED, data.reference, this.transactionModel, webhookModel, environmentModel, encryptionService);
           break;
         default:
           logger.info("Unhandled Paystack webhook event", { event });

@@ -3,7 +3,7 @@ import { ENVIRONMENT_TYPES } from "../types/environments";
 import { db } from "../lib/db";
 import { environmentKeysTable, environmentsTable } from "../lib/db/schema";
 import { eq, and, desc, isNull, gt, or } from "drizzle-orm";
-import { generateKeyPairSync } from "crypto";
+import { generateKeyPairSync, randomUUID } from "crypto";
 import { EncryptionService } from "../lib/encryption";
 
 export class EnvironmentModel {
@@ -102,7 +102,7 @@ export class EnvironmentModel {
       const extractedPublicKey = extractBase64FromPEM(publicKey);
       const extractedPrivateKey = extractBase64FromPEM(privateKey);
 
-      const webhookSecret = "whs_" + crypto.randomUUID();
+      const webhookSecret = "whs_" + randomUUID();
 
       return {
         public_key: extractedPublicKey,

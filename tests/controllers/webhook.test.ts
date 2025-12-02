@@ -3,6 +3,7 @@ import { Errors, MyError } from "../../src/errors";
 import { TOKEN_TYPE } from "../../src/types/token";
 import { TRANSACTION_STATUS } from "../../src/types/transactions";
 import { WEBHOOK_CONTROLLER_EVENTS } from "../../src/types/webhook";
+import { encryption_service_mock } from "../mocks/encryption_mock";
 import { environmentModelMock } from "../mocks/environment_model_mock";
 import { transactionModelMock } from "../mocks/transaction_model_mock";
 import { webhookModelMock } from "../mocks/webhook_model_mock";
@@ -64,7 +65,7 @@ describe("Webhook Controller: Send Event tests", () => {
             res({
               transaction_reference,
               environmentID,
-              businessWebhook: business_webhook,
+              business_webhook: business_webhook,
               transaction_status: TRANSACTION_STATUS.FAILED,
               order_id,
               token,
@@ -77,7 +78,7 @@ describe("Webhook Controller: Send Event tests", () => {
             res({
               transaction_reference,
               environmentID,
-              businessWebhook: business_webhook,
+              business_webhook: business_webhook,
               transaction_status: TRANSACTION_STATUS.FAILED,
               order_id,
               token,
@@ -88,7 +89,7 @@ describe("Webhook Controller: Send Event tests", () => {
             res({
               transaction_reference,
               environmentID,
-              businessWebhook: business_webhook,
+              business_webhook: business_webhook,
               transaction_status: TRANSACTION_STATUS.FAILED,
               order_id,
               token,
@@ -99,7 +100,7 @@ describe("Webhook Controller: Send Event tests", () => {
             res({
               transaction_reference,
               environmentID,
-              businessWebhook: business_webhook,
+              business_webhook: business_webhook,
               transaction_status: TRANSACTION_STATUS.SUCCESSFUL,
               order_id,
               token,
@@ -110,7 +111,7 @@ describe("Webhook Controller: Send Event tests", () => {
             res({
               transaction_reference,
               environmentID,
-              businessWebhook: business_webhook,
+              business_webhook: business_webhook,
               transaction_status: TRANSACTION_STATUS.FAILED,
               order_id,
               token,
@@ -121,7 +122,7 @@ describe("Webhook Controller: Send Event tests", () => {
             res({
               transaction_reference,
               environmentID,
-              businessWebhook: business_webhook,
+              business_webhook: business_webhook,
               transaction_status: TRANSACTION_STATUS.FAILED,
               order_id,
               token,
@@ -132,7 +133,7 @@ describe("Webhook Controller: Send Event tests", () => {
             res({
               transaction_reference,
               environmentID,
-              businessWebhook: business_webhook,
+              business_webhook: business_webhook,
               transaction_status: TRANSACTION_STATUS.SUCCESSFUL,
               order_id,
               token,
@@ -143,7 +144,7 @@ describe("Webhook Controller: Send Event tests", () => {
             res({
               transaction_reference,
               environmentID,
-              businessWebhook: business_webhook,
+              business_webhook: business_webhook,
               transaction_status: TRANSACTION_STATUS.SUCCESSFUL,
               order_id,
               token,
@@ -175,7 +176,6 @@ describe("Webhook Controller: Send Event tests", () => {
           if (environment_id === environmentID) {
             res({ webhook_secret: businessWebhookSecret });
           } else {
-            console.log("there");
             rej("Unexpected input");
           }
         });
@@ -190,6 +190,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -215,6 +216,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -240,6 +242,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -265,6 +268,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -290,6 +294,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -315,6 +320,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -340,6 +346,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -365,6 +372,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -382,7 +390,7 @@ describe("Webhook Controller: Send Event tests", () => {
     }
   });
 
-  it("should fail if event is token transfer success but status is not onramped", async () => {
+  it("should fail if event is account not associated but status is not failed", async () => {
     try {
       await webhookController.sendEvent(
         WEBHOOK_CONTROLLER_EVENTS.ACCOUNT_NOT_ASSOCIATED,
@@ -390,6 +398,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -415,6 +424,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -440,6 +450,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
+        encryption_service_mock
       );
       expect(webhookModelMock.generateSignature).toHaveBeenCalledWith(
         {

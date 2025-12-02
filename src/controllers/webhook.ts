@@ -14,6 +14,7 @@ export class WebhookController {
     transactionModel: TransactionModel,
     webhookModel: WebhookModel,
     environmentModel: EnvironmentModel,
+    encryptionService: EncryptionService
   ) {
     try {
       const transactionDetails =
@@ -78,7 +79,6 @@ export class WebhookController {
       }
 
       // Get webhook secret
-      const encryptionService = new EncryptionService();
       const webhookDetails =
         await environmentModel.getEnvironmentWebhookDetails(
           transactionDetails.environmentID,

@@ -320,7 +320,7 @@ export class TransactionModel {
         .from(transactionsTable)
         .leftJoin(
           environmentsTable,
-          eq(environmentsTable.id, transactionsTable.id),
+          eq(environmentsTable.id, transactionsTable.environmentID),
         )
         .where(eq(transactionsTable.reference, transaction_reference))
         .limit(1);

@@ -527,7 +527,7 @@ export class TransactionController {
               encryptionService,
             );
           } catch (err) {
-            logger.error("Failed to send charge.success webhook", {
+            logger.error("Failed to send charge.failed webhook", {
               error: err,
             });
           }

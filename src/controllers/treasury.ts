@@ -150,14 +150,20 @@ export class TreasuryController {
           transaction: transaction_reference,
         });
 
-        await webHookController.sendEvent(
-          WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_SUCCESS,
-          transaction_reference,
-          transactionModel,
-          webHookModel,
-          environmentModel,
-          encryptionService,
-        );
+        try {
+          await webHookController.sendEvent(
+            WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_SUCCESS,
+            transaction_reference,
+            transactionModel,
+            webHookModel,
+            environmentModel,
+            encryptionService,
+          );
+        } catch (err) {
+          logger.error("Error sending token transfer sucess event", {
+            error: err,
+          });
+        }
       }
     } catch (err) {
       logger.error(
@@ -171,14 +177,20 @@ export class TreasuryController {
             transaction_reference,
             liquidityModel,
           );
-          await webHookController.sendEvent(
-            WEBHOOK_CONTROLLER_EVENTS.ACCOUNT_NOT_ASSOCIATED,
-            transaction_reference,
-            transactionModel,
-            webHookModel,
-            environmentModel,
-            encryptionService,
-          );
+          try {
+            await webHookController.sendEvent(
+              WEBHOOK_CONTROLLER_EVENTS.ACCOUNT_NOT_ASSOCIATED,
+              transaction_reference,
+              transactionModel,
+              webHookModel,
+              environmentModel,
+              encryptionService,
+            );
+          } catch (err) {
+            logger.error("Error sending account not associated webhook event", {
+              error: err,
+            });
+          }
           throw err;
         }
         throw err;
@@ -189,14 +201,20 @@ export class TreasuryController {
         liquidityModel,
       );
 
-      await webHookController.sendEvent(
-        WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_FAILED,
-        transaction_reference,
-        transactionModel,
-        webHookModel,
-        environmentModel,
-        encryptionService,
-      );
+      try {
+        await webHookController.sendEvent(
+          WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_FAILED,
+          transaction_reference,
+          transactionModel,
+          webHookModel,
+          environmentModel,
+          encryptionService,
+        );
+      } catch (err) {
+        logger.error("Error sending token transfer failed webhook event", {
+          error: err,
+        });
+      }
       throw new Error("Could not onramp fiat on behalf of business");
     }
   }

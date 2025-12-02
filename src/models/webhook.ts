@@ -42,7 +42,7 @@ export class WebhookModel {
       });
 
       clearTimeout(timeOutID);
-      if (response.status !== 201) {
+      if (response.status !== 200) {
         throw new Error(
           `Webhook delivery failed with status code ${response.status}`,
         );
@@ -60,3 +60,6 @@ export class WebhookModel {
     }
   }
 }
+
+const webhookModel = new WebhookModel();
+export default webhookModel;

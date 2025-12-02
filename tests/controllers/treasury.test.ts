@@ -3,10 +3,14 @@ import { Errors, MyError } from "../../src/errors";
 import { TOKEN_TYPE } from "../../src/types/token";
 import { TRANSACTION_STATUS } from "../../src/types/transactions";
 import { emailServiceMock } from "../mocks/email_service_mock";
+import { encryption_service_mock } from "../mocks/encryption_mock";
+import { environmentModelMock } from "../mocks/environment_model_mock";
 import { liquidityManagerControllerMock } from "../mocks/liquidity_controller_mock";
 import { liquidityModelMock } from "../mocks/liquidity_model_mock";
 import { transactionModelMock } from "../mocks/transaction_model_mock";
 import { treasuryModelMock } from "../mocks/treasury_model_mock";
+import { webhookControllerMock } from "../mocks/webhook_controller_mock";
+import { webhookModelMock } from "../mocks/webhook_model_mock";
 
 describe("Treasury Business SDK Onramp Tests", () => {
   const existing_transaction_reference = "existing";
@@ -50,6 +54,10 @@ describe("Treasury Business SDK Onramp Tests", () => {
     email: "enough",
     transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
   };
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+  });
 
   beforeAll(async () => {
     treasuryModelMock.doesTransactionExist = jest
@@ -173,11 +181,18 @@ describe("Treasury Business SDK Onramp Tests", () => {
         transactionModelMock,
         liquidityModelMock,
         emailServiceMock,
+        webhookControllerMock,
+        webhookModelMock,
+        environmentModelMock,
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
       if (err instanceof MyError) {
         if (err.message === Errors.UNAUTHORIZED_PAYMENT) {
+          expect(
+            liquidityManagerControllerMock.markTransactionFailed,
+          ).toHaveBeenCalledTimes(0);
           expect(true).toBe(true);
         } else {
           console.error("Unexpected error", err);
@@ -199,12 +214,18 @@ describe("Treasury Business SDK Onramp Tests", () => {
         transactionModelMock,
         liquidityModelMock,
         emailServiceMock,
+        webhookControllerMock,
+        webhookModelMock,
+        environmentModelMock,
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
       if (err instanceof MyError) {
         if (err.message === Errors.PAYMENT_ALREADY_ONRAMPED) {
-          expect(true).toBe(true);
+          expect(
+            liquidityManagerControllerMock.markTransactionFailed,
+          ).toHaveBeenCalledTimes(0);
         } else {
           console.error("Unexpected error", err);
           expect(false).toBe(true);
@@ -225,12 +246,18 @@ describe("Treasury Business SDK Onramp Tests", () => {
         transactionModelMock,
         liquidityModelMock,
         emailServiceMock,
+        webhookControllerMock,
+        webhookModelMock,
+        environmentModelMock,
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
       if (err instanceof MyError) {
         if (err.message === Errors.PAYMENT_NOT_COMPLETE) {
-          expect(true).toBe(true);
+          expect(
+            liquidityManagerControllerMock.markTransactionFailed,
+          ).toHaveBeenCalledTimes(0);
         } else {
           console.error("Unexpected error", err);
           expect(false).toBe(true);
@@ -251,12 +278,18 @@ describe("Treasury Business SDK Onramp Tests", () => {
         transactionModelMock,
         liquidityModelMock,
         emailServiceMock,
+        webhookControllerMock,
+        webhookModelMock,
+        environmentModelMock,
+        encryption_service_mock,
       );
       expect(true).toBe(false);
     } catch (err) {
       if (err instanceof MyError) {
         if (err.message === Errors.TREASURY_DOES_NOT_HAVE_ENOUGH) {
-          expect(true).toBe(true);
+          expect(
+            liquidityManagerControllerMock.markTransactionFailed,
+          ).toHaveBeenCalledTimes(0);
           expect(
             liquidityManagerControllerMock.doesTreasuryHaveBalance,
           ).toHaveBeenCalledWith(
@@ -288,6 +321,10 @@ describe("Treasury Business SDK Onramp Tests", () => {
         transactionModelMock,
         liquidityModelMock,
         emailServiceMock,
+        webhookControllerMock,
+        webhookModelMock,
+        environmentModelMock,
+        encryption_service_mock,
       );
       expect(
         liquidityManagerControllerMock.sendTokensToBusiness,
@@ -300,6 +337,9 @@ describe("Treasury Business SDK Onramp Tests", () => {
       expect(
         liquidityManagerControllerMock.markTransactionOnramped,
       ).toHaveBeenCalledWith(enough_transaction_reference, liquidityModelMock);
+      expect(
+        liquidityManagerControllerMock.markTransactionFailed,
+      ).toHaveBeenCalledTimes(0);
     } catch (err) {
       console.error("Unexpected error", err);
       expect(false).toBe(true);
@@ -315,9 +355,19 @@ describe("Treasury Business SDK Onramp Tests", () => {
         transactionModelMock,
         liquidityModelMock,
         emailServiceMock,
+        webhookControllerMock,
+        webhookModelMock,
+        environmentModelMock,
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
+      expect(
+        liquidityManagerControllerMock.markTransactionFailed,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        liquidityManagerControllerMock.markTransactionFailed,
+      ).toHaveBeenCalledWith(failing_transaction_reference, liquidityModelMock);
       expect(
         liquidityManagerControllerMock.undoCacheDeduct,
       ).toHaveBeenCalledWith(

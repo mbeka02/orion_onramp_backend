@@ -6,4 +6,5 @@ export const liquidityManagerControllerMock = {
   sendTokensToBusiness: jest.fn(),
   undoCacheDeduct: jest.fn(),
   markTransactionOnramped: jest.fn(),
+  markTransactionFailed: jest.fn(),
 } as LiquidityManagerController;

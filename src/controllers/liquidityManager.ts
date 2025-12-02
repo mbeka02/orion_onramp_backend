@@ -1,4 +1,4 @@
-import { MyError } from "../errors";
+import { Errors, MyError } from "../errors";
 import { EmailService } from "../lib/emails/email.util";
 import logger from "../lib/logger";
 import sleep from "../lib/sleep";
@@ -129,6 +129,31 @@ export class LiquidityManagerController {
         );
       } else {
         throw new Error("Could not mark transaction as onramped");
+      }
+    }
+  }
+
+  async markTransactionFailed(
+    transaction_reference: string,
+    liquidityModel: LiquidityManagerModel,
+    retry: number = 1,
+  ) {
+    try {
+      await liquidityModel.markTransactionAsFailed(transaction_reference);
+    } catch (err) {
+      logger.error(
+        "Liquidity Manager Controller: Could not mark transaction as failed",
+        { error: err, transaction_reference },
+      );
+      if (retry < MAX_RETRIES) {
+        await sleep(2 ** retry * 1000);
+        await this.markTransactionFailed(
+          transaction_reference,
+          liquidityModel,
+          retry + 1,
+        );
+      } else {
+        throw new Error("Could not mark transaction as failed");
       }
     }
   }

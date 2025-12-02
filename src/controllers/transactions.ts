@@ -20,6 +20,11 @@ import {
 } from "../types/paystack";
 import { ENVIRONMENT_TYPES } from "../types/environments";
 import { BusinessModel } from "../models/businesses";
+import { WebhookController } from "./webhook";
+import { WEBHOOK_CONTROLLER_EVENTS } from "../types/webhook";
+import webhookModel from "../models/webhook";
+import environmentModel from "../models/environments";
+import { EncryptionService } from "../lib/encryption";
 export class TransactionController {
   private apiKey: string;
   private MAX_TRANSACTION_AMOUNT = 500000;
@@ -483,14 +488,49 @@ export class TransactionController {
       return false;
     }
   }
-  async handlePaystackWebhook(event: WebhookEvent, data: WebhookChargeData) {
+  async handlePaystackWebhook(
+    event: WebhookEvent,
+    data: WebhookChargeData,
+    webhookController: WebhookController,
+  ) {
     try {
       switch (event) {
         case WEBHOOK_EVENTS.CHARGE_SUCCESS:
           await this.processChargeSuccess(data);
+          try {
+            const encryptionService = new EncryptionService();
+            await webhookController.sendEvent(
+              WEBHOOK_CONTROLLER_EVENTS.CHARGE_SUCCESS,
+              data.reference,
+              this.transactionModel,
+              webhookModel,
+              environmentModel,
+              encryptionService,
+            );
+          } catch (err) {
+            logger.error("Failed to send charge.success webhook", {
+              error: err,
+            });
+          }
+
           break;
         case WEBHOOK_EVENTS.CHARGE_FAILED:
           await this.processChargeFailed(data);
+          try {
+            const encryptionService = new EncryptionService();
+            await webhookController.sendEvent(
+              WEBHOOK_CONTROLLER_EVENTS.CHARGE_FAILED,
+              data.reference,
+              this.transactionModel,
+              webhookModel,
+              environmentModel,
+              encryptionService,
+            );
+          } catch (err) {
+            logger.error("Failed to send charge.failed webhook", {
+              error: err,
+            });
+          }
           break;
         default:
           logger.info("Unhandled Paystack webhook event", { event });

@@ -234,58 +234,6 @@ describe("Webhook Controller: Send Event tests", () => {
     }
   });
 
-  it("should fail if event is payment request pending but status is not pending", async () => {
-    try {
-      await webhookController.sendEvent(
-        WEBHOOK_CONTROLLER_EVENTS.PAYMENT_REQUEST_PENDING,
-        paymentRequestPendingTransactionRef,
-        transactionModelMock,
-        webhookModelMock,
-        environmentModelMock,
-        encryption_service_mock,
-      );
-      expect(false).toBe(true);
-    } catch (err) {
-      if (err instanceof MyError) {
-        if (err.message === Errors.TRANSACTION_STATUS_MISMATCH) {
-          expect(true).toBe(true);
-        } else {
-          console.error("Unexpected error", err);
-          expect(false).toBe(true);
-        }
-      } else {
-        console.error("Unexpected error", err);
-        expect(false).toBe(true);
-      }
-    }
-  });
-
-  it("should fail if event is payment request success but status is not pending", async () => {
-    try {
-      await webhookController.sendEvent(
-        WEBHOOK_CONTROLLER_EVENTS.PAYMENT_REQUEST_SUCCESS,
-        paymentRequestSuccessTransactionRef,
-        transactionModelMock,
-        webhookModelMock,
-        environmentModelMock,
-        encryption_service_mock,
-      );
-      expect(false).toBe(true);
-    } catch (err) {
-      if (err instanceof MyError) {
-        if (err.message === Errors.TRANSACTION_STATUS_MISMATCH) {
-          expect(true).toBe(true);
-        } else {
-          console.error("Unexpected error", err);
-          expect(false).toBe(true);
-        }
-      } else {
-        console.error("Unexpected error", err);
-        expect(false).toBe(true);
-      }
-    }
-  });
-
   it("should fail if event is charge success but status is not success", async () => {
     try {
       await webhookController.sendEvent(

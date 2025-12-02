@@ -2,6 +2,8 @@ import crypto from "crypto";
 import { TransactionController } from "../../src/controllers/transactions";
 import { transactionModelMock } from "../mocks/transaction_model_mock";
 import { TRANSACTION_STATUS } from "../../src/types/transactions";
+import businessModelMock from "../mocks/business_model_mock";
+import { webhookControllerMock } from "../mocks/webhook_controller_mock";
 
 beforeAll(() => {
   jest.clearAllMocks();
@@ -15,7 +17,10 @@ describe("TransactionController - Webhook utilities", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    controller = new TransactionController(transactionModelMock as any);
+    controller = new TransactionController(
+      transactionModelMock as any,
+      businessModelMock,
+    );
   });
 
   describe("isSignatureValid", () => {
@@ -52,7 +57,11 @@ describe("TransactionController - Webhook utilities", () => {
         .spyOn(controller as any, "processChargeFailed")
         .mockResolvedValue(undefined);
 
-      await (controller as any).handlePaystackWebhook("charge.success", data);
+      await (controller as any).handlePaystackWebhook(
+        "charge.success",
+        data,
+        webhookControllerMock,
+      );
 
       expect(spySuccess).toHaveBeenCalledWith(data);
       expect(spyFailed).not.toHaveBeenCalled();
@@ -68,7 +77,11 @@ describe("TransactionController - Webhook utilities", () => {
         .spyOn(controller as any, "processChargeFailed")
         .mockResolvedValue(undefined);
 
-      await (controller as any).handlePaystackWebhook("charge.failed", data);
+      await (controller as any).handlePaystackWebhook(
+        "charge.failed",
+        data,
+        webhookControllerMock,
+      );
 
       expect(spyFailed).toHaveBeenCalledWith(data);
       expect(spySuccess).not.toHaveBeenCalled();

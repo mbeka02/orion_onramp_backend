@@ -29,16 +29,7 @@ export class WebhookController {
         throw new MyError(Errors.BUSINESS_NOT_HAVE_WEBHOOK);
       }
 
-      if (
-        event === WEBHOOK_CONTROLLER_EVENTS.PAYMENT_REQUEST_PENDING ||
-        event === WEBHOOK_CONTROLLER_EVENTS.PAYMENT_REQUEST_SUCCESS
-      ) {
-        if (
-          transactionDetails.transaction_status !== TRANSACTION_STATUS.PENDING
-        ) {
-          throw new MyError(Errors.TRANSACTION_STATUS_MISMATCH);
-        }
-      } else if (event === WEBHOOK_CONTROLLER_EVENTS.CHARGE_SUCCESS) {
+      if (event === WEBHOOK_CONTROLLER_EVENTS.CHARGE_SUCCESS) {
         if (
           transactionDetails.transaction_status !==
           TRANSACTION_STATUS.SUCCESSFUL

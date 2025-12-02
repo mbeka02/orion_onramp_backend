@@ -139,7 +139,7 @@ export class LiquidityManagerController {
     retry: number = 1,
   ) {
     try {
-      await liquidityModel.markTransactionAsOnramped(transaction_reference);
+      await liquidityModel.markTransactionAsFailed(transaction_reference);
     } catch (err) {
       logger.error(
         "Liquidity Manager Controller: Could not mark transaction as onramped",

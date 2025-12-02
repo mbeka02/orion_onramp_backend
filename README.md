@@ -9,7 +9,7 @@ The wrapper for the email service is in email.util.ts .
 
 ` async testEmail() {
     await sendEmail({
-      to: "pashrick237@gmail.com",
+      to: "dev@example.com",
       subject: "Test Email setup",
       react: ExampleEmail(),
     });
@@ -57,7 +57,9 @@ Authentication & Admin Management
 1. Create Admin
    `POST /api/admin/create`
 
-Create a new admin (SUPER_ADMIN only, rate-limited) 2. Admin Login
+Create a new admin (SUPER_ADMIN only, rate-limited) 
+
+2. Admin Login
 `POST /api/admin/login`
 
 Login as an admin (rate-limited)

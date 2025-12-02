@@ -1,3 +1,5 @@
+import {z} from "zod";
+
 export enum WEBHOOK_CONTROLLER_EVENTS {
     PAYMENT_REQUEST_PENDING = "payment_request_pending",
     PAYMENT_REQUEST_SUCCESS = "payment_request_success",
@@ -8,3 +10,11 @@ export enum WEBHOOK_CONTROLLER_EVENTS {
     ACCOUNT_NOT_ASSOCIATED = "account_not_associated",
     TOKEN_TRANSFER_FAILED = "token_transfer_failed"
 }
+
+export const webhookControllerMetaDataParser = z.object({
+    orderID: z.string()
+});
+
+export const webhookControllerPaystackResponseParser = z.object({
+    currency: z.string()
+});

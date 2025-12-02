@@ -1,4 +1,4 @@
-import { environmentsTable, transactionsTable } from "../lib/db/schema";
+import { businesses, environmentsTable, transactionsTable } from "../lib/db/schema";
 import { db } from "../lib/db";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
@@ -13,6 +13,7 @@ import {
   getTableColumns,
 } from "drizzle-orm";
 import { ENVIRONMENT_TYPES } from "../types/environments";
+import { webhookControllerMetaDataParser, webhookControllerPaystackResponseParser } from "../types/webhook";
 interface createTransactionArgs {
   amount: number;
   email: string;
@@ -29,6 +30,17 @@ interface UpdatePaystackResponseArgs {
   accessCode: string;
   paystackResponseRaw: Record<string, any>;
 }
+
+interface WebhookControllerTransactionDetails {
+  transaction_reference: string,
+  business_webhook: string | null,
+  transaction_status: string,
+  order_id: string,
+  token: TOKEN_TYPE,
+  amountInCents: number,
+  currency: string | null
+}
+
 export class TransactionModel {
   /**
    * Get transactions for a business with pagination
@@ -279,6 +291,53 @@ export class TransactionModel {
         transactionId,
       });
       throw new Error("Error fetching transaction context", { cause: err });
+    }
+  }
+
+  async getWebhookControllerTransactionDetails(transaction_reference: string): Promise<WebhookControllerTransactionDetails | null> {
+    try {
+      const results = await db.select({
+        transaction_reference: transactionsTable.reference,
+        business_webhook: environmentsTable.webhookUrl,
+        transaction_status: transactionsTable.transactionStatus,
+        metadata: transactionsTable.metadata,
+        token: transactionsTable.token,
+        amountInCents: transactionsTable.amount,
+        paystackResponse: transactionsTable.paystackResponseRaw
+      }).from(transactionsTable)
+      .leftJoin(environmentsTable, eq(environmentsTable.id, transactionsTable.id))
+      .where(eq(transactionsTable.reference, transaction_reference))
+      .limit(1);
+
+      if (results.length < 1) {
+        return null;
+      } 
+
+      const rawTx = results[0];
+      const orderIDParsed = webhookControllerMetaDataParser.safeParse(rawTx.metadata);
+      if (!orderIDParsed.success) {
+        return null;
+      }
+      const orderID = orderIDParsed.data.orderID;
+
+      const paystackResponseParsed = webhookControllerPaystackResponseParser.safeParse(rawTx.paystackResponse);
+      let currency = null;
+      if (paystackResponseParsed.success) {
+        currency = paystackResponseParsed.data.currency;
+      }
+
+      return {
+        transaction_reference: rawTx.transaction_reference,
+        business_webhook: rawTx.business_webhook,
+        transaction_status: rawTx.transaction_status,
+        order_id: orderID,
+        token: rawTx.token,
+        amountInCents: rawTx.amountInCents,
+        currency: currency
+      }
+    } catch(err) {
+      logger.error("Transaction Model: Could not get webhook controller transaction details from db", {error: err, transaction_reference});
+      throw new Error("Error fetching webhook controller transaction details");
     }
   }
 }

@@ -7,4 +7,6 @@ export const transactionModelMock = {
   getTransactionByReference: jest.fn(),
   getTransactionsByBusiness: jest.fn(),
   getTransactionById: jest.fn(),
+  getTransactionBusinessId: jest.fn(),
+  getWebhookControllerTransactionDetails: jest.fn(),
 } as TransactionModel;

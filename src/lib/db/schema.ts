@@ -88,6 +88,7 @@ export const environmentsTable = pgTable(
       .notNull()
       .references(() => businesses.id, { onDelete: "cascade" }),
     webhookUrl: text("webhook_url"),
+    webhookSecretEncryped: text("webhook_secret_encrypted").notNull(),
     callbackUrl: text("callback_url"),
   },
   (t) => [unique().on(t.businessID, t.type)],

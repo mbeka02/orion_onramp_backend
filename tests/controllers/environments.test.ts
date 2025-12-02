@@ -21,6 +21,8 @@ describe("Environment Controller: Create Key Tests", () => {
   const private_key = "private";
   const encrypted_private_key = "encrypted_private";
   const hashed_private_key = "hashed_private";
+  const webhook_secret = "webhook_secert";
+  const encrypted_webhook_secret = "encrypted_webhook_secret";
 
   beforeAll(async () => {
     try {
@@ -69,15 +71,21 @@ describe("Environment Controller: Create Key Tests", () => {
         });
 
       environmentModelMock.createKeys = jest.fn().mockImplementation(() => {
-        return { public_key: public_key, private_key: private_key };
+        return {
+          public_key: public_key,
+          private_key: private_key,
+          webhook_secret,
+        };
       });
 
       encryption_service_mock.encrypt = jest.fn().mockImplementation((text) => {
-        if (text !== private_key) {
+        if (text === private_key) {
+          return encrypted_private_key;
+        } else if (text === webhook_secret) {
+          return encrypted_webhook_secret;
+        } else {
           throw new Error("Invalid arguement");
         }
-
-        return encrypted_private_key;
       });
 
       encryption_service_mock.hash = jest
@@ -220,6 +228,7 @@ describe("Environment Controller: Create Key Tests", () => {
         encrypted_private_key: encrypted_private_key,
         hashed_private_key: hashed_private_key,
         business_id: business,
+        encrypted_webhook_secret,
       });
       expect(environmentDetails).toEqual({
         environment_id: created_environment_id,

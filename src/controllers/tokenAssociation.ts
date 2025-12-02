@@ -17,7 +17,10 @@ export const checkTokenAssociation = async (req: Request, res: Response) => {
       });
     }
 
-    if (!tokenType || !Object.values(TOKEN_TYPE).includes(tokenType as TOKEN_TYPE)) {
+    if (
+      !tokenType ||
+      !Object.values(TOKEN_TYPE).includes(tokenType as TOKEN_TYPE)
+    ) {
       return res.status(400).json({
         error: "Valid token type is required (KESy_MAINNET or KESy_TESTNET)",
       });

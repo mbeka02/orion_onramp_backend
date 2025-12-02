@@ -287,6 +287,26 @@ export class EnvironmentModel {
       throw new Error("Error checking if private key exists");
     }
   }
+
+  async getEnvironmentWebhookDetails(environment_id: string, encryption_service: EncryptionService): Promise<{webhook_secret: string} | null> {
+    try {
+      const results = await db.select({
+        encrypted_secret: environmentsTable.webhookSecretEncryped
+      }).from(environmentsTable)
+      .where(eq(environmentsTable.id, environment_id))
+      .limit(1);
+
+      if (results.length < 1) {
+        return null;
+      }
+
+      const webhookSecret = encryption_service.decrypt(results[0].encrypted_secret);
+      return {webhook_secret: webhookSecret};
+    } catch(err) {
+      logger.error("Environment Model: Error getting environment webhook secret", {error: err, environment_id});
+      throw new Error("Error getting webhook secret key");
+    }
+  }
 }
 
 const environmentModel = new EnvironmentModel();

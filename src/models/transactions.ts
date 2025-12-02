@@ -38,7 +38,8 @@ interface WebhookControllerTransactionDetails {
   order_id: string,
   token: TOKEN_TYPE,
   amountInCents: number,
-  currency: string | null
+  currency: string | null,
+  environmentID: string
 }
 
 export class TransactionModel {
@@ -299,6 +300,7 @@ export class TransactionModel {
       const results = await db.select({
         transaction_reference: transactionsTable.reference,
         business_webhook: environmentsTable.webhookUrl,
+        environmentID: transactionsTable.environmentID,
         transaction_status: transactionsTable.transactionStatus,
         metadata: transactionsTable.metadata,
         token: transactionsTable.token,
@@ -329,6 +331,7 @@ export class TransactionModel {
       return {
         transaction_reference: rawTx.transaction_reference,
         business_webhook: rawTx.business_webhook,
+        environmentID: rawTx.environmentID,
         transaction_status: rawTx.transaction_status,
         order_id: orderID,
         token: rawTx.token,

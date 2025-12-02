@@ -29,7 +29,7 @@ export class WebhookController {
         throw new MyError(Errors.BUSINESS_NOT_HAVE_WEBHOOK);
       }
 
-    if (event === WEBHOOK_CONTROLLER_EVENTS.CHARGE_SUCCESS) {
+      if (event === WEBHOOK_CONTROLLER_EVENTS.CHARGE_SUCCESS) {
         if (
           transactionDetails.transaction_status !==
           TRANSACTION_STATUS.SUCCESSFUL

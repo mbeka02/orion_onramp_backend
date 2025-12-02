@@ -16,7 +16,10 @@ describe("TransactionController - Webhook utilities", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    controller = new TransactionController(transactionModelMock as any, businessModelMock);
+    controller = new TransactionController(
+      transactionModelMock as any,
+      businessModelMock,
+    );
   });
 
   describe("isSignatureValid", () => {

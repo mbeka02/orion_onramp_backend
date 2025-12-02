@@ -9,5 +9,5 @@ export const liquidityModelMock = {
   sendTokensToAccount: jest.fn(),
   undoTreasuryCachedBalanceDeduct: jest.fn(),
   markTransactionAsFailed: jest.fn(),
-  markTransactionAsOnramped: jest.fn()
+  markTransactionAsOnramped: jest.fn(),
 } as LiquidityManagerModel;

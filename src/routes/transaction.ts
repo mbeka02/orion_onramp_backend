@@ -219,7 +219,11 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
       return res.status(400).send("Invalid signature");
     }
     const { event, data } = JSON.parse(body) as PaystackWebhookPayload;
-    await transactionController.handlePaystackWebhook(event, data, webhookController);
+    await transactionController.handlePaystackWebhook(
+      event,
+      data,
+      webhookController,
+    );
     res.status(200).send("Webhook received");
 
     try {
@@ -235,7 +239,7 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
         webhookController,
         webhookModel,
         environmentModel,
-        encryptionService
+        encryptionService,
       );
     } catch (err) {
       // Will implement queuing of this in a later PR

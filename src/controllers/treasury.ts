@@ -26,7 +26,7 @@ export class TreasuryController {
     webHookController: WebhookController,
     webHookModel: WebhookModel,
     environmentModel: EnvironmentModel,
-    encryptionService: EncryptionService
+    encryptionService: EncryptionService,
   ) {
     try {
       const doesTransactionExist = await treasuryModel.doesTransactionExist(
@@ -35,7 +35,6 @@ export class TreasuryController {
       if (doesTransactionExist === false) {
         throw new MyError(Errors.UNAUTHORIZED_PAYMENT);
       }
-
 
       const transactionAlreadyOnramped =
         await treasuryModel.hasTransactionAlreadyBeenOnramped(
@@ -51,7 +50,14 @@ export class TreasuryController {
         throw new MyError(Errors.PAYMENT_NOT_COMPLETE);
       }
 
-      await webHookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_PENDING, transaction_reference, transactionModel, webHookModel, environmentModel, encryptionService);
+      await webHookController.sendEvent(
+        WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_PENDING,
+        transaction_reference,
+        transactionModel,
+        webHookModel,
+        environmentModel,
+        encryptionService,
+      );
 
       // Get transaction details
       const transaction = await transactionModel.getTransactionByReference(
@@ -138,7 +144,14 @@ export class TreasuryController {
           transaction: transaction_reference,
         });
 
-        await webHookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_SUCCESS, transaction_reference, transactionModel, webHookModel, environmentModel, encryptionService);
+        await webHookController.sendEvent(
+          WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_SUCCESS,
+          transaction_reference,
+          transactionModel,
+          webHookModel,
+          environmentModel,
+          encryptionService,
+        );
       }
     } catch (err) {
       logger.error(
@@ -146,15 +159,20 @@ export class TreasuryController {
         { error: err, transaction_reference: transaction_reference },
       );
 
-
-
       if (err instanceof MyError) {
         if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
           await liquidityManagerController.markTransactionFailed(
             transaction_reference,
-            liquidityModel
+            liquidityModel,
           );
-          await webHookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.ACCOUNT_NOT_ASSOCIATED, transaction_reference, transactionModel, webHookModel, environmentModel, encryptionService);
+          await webHookController.sendEvent(
+            WEBHOOK_CONTROLLER_EVENTS.ACCOUNT_NOT_ASSOCIATED,
+            transaction_reference,
+            transactionModel,
+            webHookModel,
+            environmentModel,
+            encryptionService,
+          );
           throw err;
         }
         throw err;
@@ -162,10 +180,17 @@ export class TreasuryController {
 
       await liquidityManagerController.markTransactionFailed(
         transaction_reference,
-        liquidityModel
+        liquidityModel,
       );
 
-      await webHookController.sendEvent(WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_FAILED, transaction_reference, transactionModel, webHookModel, environmentModel, encryptionService);
+      await webHookController.sendEvent(
+        WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_FAILED,
+        transaction_reference,
+        transactionModel,
+        webHookModel,
+        environmentModel,
+        encryptionService,
+      );
       throw new Error("Could not onramp fiat on behalf of business");
     }
   }

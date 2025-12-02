@@ -8,6 +8,7 @@ import { auth } from "./lib/auth";
 import environmentRouter from "./routes/environment";
 import businessRouter from "./routes/business";
 import transactionRouter from "./routes/transaction";
+import tokenAssociationRouter from "./routes/tokenAssociation";
 import { Server } from "http";
 import {
   startCachedTreasuryBalanceUpdate,
@@ -49,6 +50,7 @@ app.get("/health", async (req, res) => {
 app.use("/api/environment", environmentRouter);
 app.use("/api/business", businessRouter);
 app.use("/api/transaction", transactionRouter);
+app.use("/api/token-association", tokenAssociationRouter);
 app.use("/api/admin", adminRouter);
 let server: Server;
 let isShuttingDown = false;

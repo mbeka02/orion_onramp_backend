@@ -57,10 +57,10 @@ Authentication & Admin Management
 1. Create Admin
    `POST /api/admin/create`
 
-Create a new admin (SUPER_ADMIN only, rate-limited) 
+Create a new admin (SUPER_ADMIN only, rate-limited)
 
 2. Admin Login
-`POST /api/admin/login`
+   `POST /api/admin/login`
 
 Login as an admin (rate-limited)
 

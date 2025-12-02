@@ -8,6 +8,5 @@ export const environmentModelMock = {
   getLatestValidBusinessEnvironmentKeys: jest.fn(),
   getBusinessEnvironments: jest.fn(),
   getEnvironmentWebhookDetails: jest.fn(),
-  doesPrivateKeyExist: jest.fn()
+  doesPrivateKeyExist: jest.fn(),
 } as EnvironmentModel;
-

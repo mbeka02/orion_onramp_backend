@@ -71,7 +71,11 @@ describe("Environment Controller: Create Key Tests", () => {
         });
 
       environmentModelMock.createKeys = jest.fn().mockImplementation(() => {
-        return { public_key: public_key, private_key: private_key, webhook_secret };
+        return {
+          public_key: public_key,
+          private_key: private_key,
+          webhook_secret,
+        };
       });
 
       encryption_service_mock.encrypt = jest.fn().mockImplementation((text) => {
@@ -224,7 +228,7 @@ describe("Environment Controller: Create Key Tests", () => {
         encrypted_private_key: encrypted_private_key,
         hashed_private_key: hashed_private_key,
         business_id: business,
-        encrypted_webhook_secret
+        encrypted_webhook_secret,
       });
       expect(environmentDetails).toEqual({
         environment_id: created_environment_id,

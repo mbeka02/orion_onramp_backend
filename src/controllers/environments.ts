@@ -44,10 +44,11 @@ export class EnvironmentsController {
       }
 
       // Create keys for environment
-      const { public_key, private_key, webhook_secret } = environmentModel.createKeys();
+      const { public_key, private_key, webhook_secret } =
+        environmentModel.createKeys();
       const encryptedPrivateKey = encryption_service.encrypt(private_key);
       const privateKeyHash = encryption_service.hash(private_key);
-      const encryptedWebhookSecret = encryption_service.encrypt(webhook_secret)
+      const encryptedWebhookSecret = encryption_service.encrypt(webhook_secret);
 
       // Store environment
       const environment_id = await environmentModel.storeEnvironment({
@@ -56,7 +57,7 @@ export class EnvironmentsController {
         hashed_private_key: privateKeyHash,
         public_key,
         business_id: args.businessID,
-        encrypted_webhook_secret: encryptedWebhookSecret
+        encrypted_webhook_secret: encryptedWebhookSecret,
       });
 
       // Return the keys for immediate display

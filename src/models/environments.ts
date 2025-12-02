@@ -50,7 +50,7 @@ export class EnvironmentModel {
           .values({
             businessID: environment.business_id,
             type: environment.type,
-            webhookSecretEncryped: environment.encrypted_webhook_secret
+            webhookSecretEncryped: environment.encrypted_webhook_secret,
           })
           .returning({ id: environmentsTable.id });
 
@@ -81,7 +81,11 @@ export class EnvironmentModel {
     }
   }
 
-  createKeys(): { public_key: string; private_key: string, webhook_secret: string } {
+  createKeys(): {
+    public_key: string;
+    private_key: string;
+    webhook_secret: string;
+  } {
     try {
       const { publicKey, privateKey } = generateKeyPairSync("ed25519", {
         publicKeyEncoding: { format: "pem", type: "spki" },
@@ -98,12 +102,12 @@ export class EnvironmentModel {
       const extractedPublicKey = extractBase64FromPEM(publicKey);
       const extractedPrivateKey = extractBase64FromPEM(privateKey);
 
-      const webhookSecret = 'whs_' + crypto.randomUUID();
+      const webhookSecret = "whs_" + crypto.randomUUID();
 
       return {
         public_key: extractedPublicKey,
         private_key: extractedPrivateKey,
-        webhook_secret: webhookSecret
+        webhook_secret: webhookSecret,
       };
     } catch (err) {
       logger.error("Environment Model Error: Error creating API keys", {
@@ -293,22 +297,32 @@ export class EnvironmentModel {
     }
   }
 
-  async getEnvironmentWebhookDetails(environment_id: string, encryption_service: EncryptionService): Promise<{webhook_secret: string} | null> {
+  async getEnvironmentWebhookDetails(
+    environment_id: string,
+    encryption_service: EncryptionService,
+  ): Promise<{ webhook_secret: string } | null> {
     try {
-      const results = await db.select({
-        encrypted_secret: environmentsTable.webhookSecretEncryped
-      }).from(environmentsTable)
-      .where(eq(environmentsTable.id, environment_id))
-      .limit(1);
+      const results = await db
+        .select({
+          encrypted_secret: environmentsTable.webhookSecretEncryped,
+        })
+        .from(environmentsTable)
+        .where(eq(environmentsTable.id, environment_id))
+        .limit(1);
 
       if (results.length < 1) {
         return null;
       }
 
-      const webhookSecret = encryption_service.decrypt(results[0].encrypted_secret);
-      return {webhook_secret: webhookSecret};
-    } catch(err) {
-      logger.error("Environment Model: Error getting environment webhook secret", {error: err, environment_id});
+      const webhookSecret = encryption_service.decrypt(
+        results[0].encrypted_secret,
+      );
+      return { webhook_secret: webhookSecret };
+    } catch (err) {
+      logger.error(
+        "Environment Model: Error getting environment webhook secret",
+        { error: err, environment_id },
+      );
       throw new Error("Error getting webhook secret key");
     }
   }

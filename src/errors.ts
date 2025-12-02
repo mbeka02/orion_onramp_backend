@@ -47,5 +47,6 @@ export enum Errors {
   ADMIN_NOT_FOUND = "Admin not found",
 
   // Webhook
-  BUSINESS_NOT_HAVE_WEBHOOK = "Business does not have a webhook"
+  BUSINESS_NOT_HAVE_WEBHOOK = "Business does not have a webhook",
+  TRANSACTION_STATUS_MISMATCH = "Transaction status mismatch",
 }

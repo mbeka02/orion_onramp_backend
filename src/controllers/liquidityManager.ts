@@ -142,18 +142,18 @@ export class LiquidityManagerController {
       await liquidityModel.markTransactionAsFailed(transaction_reference);
     } catch (err) {
       logger.error(
-        "Liquidity Manager Controller: Could not mark transaction as onramped",
+        "Liquidity Manager Controller: Could not mark transaction as failed",
         { error: err, transaction_reference },
       );
       if (retry < MAX_RETRIES) {
         await sleep(2 ** retry * 1000);
-        await this.markTransactionOnramped(
+        await this.markTransactionFailed(
           transaction_reference,
           liquidityModel,
           retry + 1,
         );
       } else {
-        throw new Error("Could not mark transaction as onramped");
+        throw new Error("Could not mark transaction as failed");
       }
     }
   }

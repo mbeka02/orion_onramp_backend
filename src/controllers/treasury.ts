@@ -50,14 +50,18 @@ export class TreasuryController {
         throw new MyError(Errors.PAYMENT_NOT_COMPLETE);
       }
 
-      await webHookController.sendEvent(
-        WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_PENDING,
-        transaction_reference,
-        transactionModel,
-        webHookModel,
-        environmentModel,
-        encryptionService,
-      );
+      try {
+        await webHookController.sendEvent(
+          WEBHOOK_CONTROLLER_EVENTS.TOKEN_TRANSFER_PENDING,
+          transaction_reference,
+          transactionModel,
+          webHookModel,
+          environmentModel,
+          encryptionService,
+        );
+      } catch (err) {
+        logger.error("Could not send token transfer pending webhook event", { error: err });
+      }
 
       // Get transaction details
       const transaction = await transactionModel.getTransactionByReference(

@@ -1,4 +1,3 @@
-import { AbortError } from "redis";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
 import { WEBHOOK_CONTROLLER_EVENTS } from "../types/webhook";
@@ -53,7 +52,7 @@ export class WebhookModel {
         error: err,
       });
 
-      if (err instanceof AbortError) {
+      if (err instanceof Error && err.name === "AbortError") {
         throw new Error("Fetch request timed out");
       }
 

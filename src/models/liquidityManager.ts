@@ -261,6 +261,23 @@ export class LiquidityManagerModel {
       throw new Error("Error marking transaction as onramped");
     }
   }
+
+  async markTransactionAsFailed(reference: string) {
+    try {
+      await db
+        .update(transactionsTable)
+        .set({
+          transactionStatus: TRANSACTION_STATUS.FAILED,
+        })
+        .where(eq(transactionsTable.reference, reference));
+    } catch (err) {
+      logger.error(
+        "Liquidity Manager Model: Error marking transaction as failed",
+        { error: err, reference },
+      );
+      throw new Error("Error marking transaction as failed");
+    }
+  }
 }
 
 const liquidityModel = new LiquidityManagerModel();

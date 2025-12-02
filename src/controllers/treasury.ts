@@ -26,7 +26,7 @@ export class TreasuryController {
       if (doesTransactionExist === false) {
         throw new MyError(Errors.UNAUTHORIZED_PAYMENT);
       }
-      
+
 
       const transactionAlreadyOnramped =
         await treasuryModel.hasTransactionAlreadyBeenOnramped(
@@ -42,7 +42,7 @@ export class TreasuryController {
         throw new MyError(Errors.PAYMENT_NOT_COMPLETE);
       }
 
-      logger.info("Token transfer pending", {transaction_reference})
+      logger.info("Token transfer pending", { transaction_reference })
 
       // Get transaction details
       const transaction = await transactionModel.getTransactionByReference(
@@ -93,7 +93,7 @@ export class TreasuryController {
             .catch((err) => {
               if (err instanceof MyError) {
                 if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
-                  logger.info("account not associated", {transaction_reference});
+                  logger.info("account not associated", { transaction_reference });
                   throw err;
                 }
               }
@@ -136,12 +136,26 @@ export class TreasuryController {
         { error: err, transaction_reference: transaction_reference },
       );
 
+
+
       if (err instanceof MyError) {
-        if (err.message !== Errors.BUSINESS_NOT_ASSOCIATED) {
-          logger.info("token transfer failed", {transaction_reference});
+        if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
+          logger.info("token transfer failed", { transaction_reference });
+          await liquidityManagerController.markTransactionFailed(
+            transaction_reference,
+            liquidityModel
+          );
+          throw err;
         }
         throw err;
       }
+
+      await liquidityManagerController.markTransactionFailed(
+        transaction_reference,
+        liquidityModel
+      );
+
+      logger.info("token transfer failed", { transaction_reference });
 
       throw new Error("Could not onramp fiat on behalf of business");
     }

@@ -8,4 +8,6 @@ export const liquidityModelMock = {
   getTransactionDetailsForBusinessTransfer: jest.fn(),
   sendTokensToAccount: jest.fn(),
   undoTreasuryCachedBalanceDeduct: jest.fn(),
+  markTransactionAsFailed: jest.fn(),
+  markTransactionAsOnramped: jest.fn()
 } as LiquidityManagerModel;

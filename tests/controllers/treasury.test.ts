@@ -51,6 +51,10 @@ describe("Treasury Business SDK Onramp Tests", () => {
     transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
   };
 
+  beforeEach(async () => {
+    jest.clearAllMocks();
+  })
+
   beforeAll(async () => {
     treasuryModelMock.doesTransactionExist = jest
       .fn()
@@ -178,6 +182,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
     } catch (err) {
       if (err instanceof MyError) {
         if (err.message === Errors.UNAUTHORIZED_PAYMENT) {
+          expect(liquidityManagerControllerMock.markTransactionFailed).toHaveBeenCalledTimes(0);
           expect(true).toBe(true);
         } else {
           console.error("Unexpected error", err);
@@ -204,7 +209,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
     } catch (err) {
       if (err instanceof MyError) {
         if (err.message === Errors.PAYMENT_ALREADY_ONRAMPED) {
-          expect(true).toBe(true);
+          expect(liquidityManagerControllerMock.markTransactionFailed).toHaveBeenCalledTimes(0);
         } else {
           console.error("Unexpected error", err);
           expect(false).toBe(true);
@@ -230,7 +235,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
     } catch (err) {
       if (err instanceof MyError) {
         if (err.message === Errors.PAYMENT_NOT_COMPLETE) {
-          expect(true).toBe(true);
+          expect(liquidityManagerControllerMock.markTransactionFailed).toHaveBeenCalledTimes(0);
         } else {
           console.error("Unexpected error", err);
           expect(false).toBe(true);
@@ -256,7 +261,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
     } catch (err) {
       if (err instanceof MyError) {
         if (err.message === Errors.TREASURY_DOES_NOT_HAVE_ENOUGH) {
-          expect(true).toBe(true);
+          expect(liquidityManagerControllerMock.markTransactionFailed).toHaveBeenCalledTimes(0);
           expect(
             liquidityManagerControllerMock.doesTreasuryHaveBalance,
           ).toHaveBeenCalledWith(
@@ -300,6 +305,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
       expect(
         liquidityManagerControllerMock.markTransactionOnramped,
       ).toHaveBeenCalledWith(enough_transaction_reference, liquidityModelMock);
+      expect(liquidityManagerControllerMock.markTransactionFailed).toHaveBeenCalledTimes(0);
     } catch (err) {
       console.error("Unexpected error", err);
       expect(false).toBe(true);
@@ -318,6 +324,11 @@ describe("Treasury Business SDK Onramp Tests", () => {
       );
       expect(false).toBe(true);
     } catch (err) {
+      expect(liquidityManagerControllerMock.markTransactionFailed).toHaveBeenCalledTimes(1);
+      expect(liquidityManagerControllerMock.markTransactionFailed).toHaveBeenCalledWith(
+        failing_transaction_reference,
+        liquidityModelMock,
+      );
       expect(
         liquidityManagerControllerMock.undoCacheDeduct,
       ).toHaveBeenCalledWith(

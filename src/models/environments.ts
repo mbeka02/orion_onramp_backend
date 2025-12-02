@@ -40,6 +40,7 @@ export class EnvironmentModel {
     encrypted_private_key: string;
     hashed_private_key: string;
     business_id: string;
+    encrypted_webhook_secret: string;
   }): Promise<string> {
     try {
       let environment_id: string | null = null;
@@ -49,6 +50,7 @@ export class EnvironmentModel {
           .values({
             businessID: environment.business_id,
             type: environment.type,
+            webhookSecretEncryped: environment.encrypted_webhook_secret
           })
           .returning({ id: environmentsTable.id });
 
@@ -79,7 +81,7 @@ export class EnvironmentModel {
     }
   }
 
-  createKeys(): { public_key: string; private_key: string } {
+  createKeys(): { public_key: string; private_key: string, webhook_secret: string } {
     try {
       const { publicKey, privateKey } = generateKeyPairSync("ed25519", {
         publicKeyEncoding: { format: "pem", type: "spki" },
@@ -96,9 +98,12 @@ export class EnvironmentModel {
       const extractedPublicKey = extractBase64FromPEM(publicKey);
       const extractedPrivateKey = extractBase64FromPEM(privateKey);
 
+      const webhookSecret = 'whs_' + crypto.randomUUID();
+
       return {
         public_key: extractedPublicKey,
         private_key: extractedPrivateKey,
+        webhook_secret: webhookSecret
       };
     } catch (err) {
       logger.error("Environment Model Error: Error creating API keys", {

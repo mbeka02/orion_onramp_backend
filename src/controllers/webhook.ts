@@ -14,7 +14,7 @@ export class WebhookController {
     transactionModel: TransactionModel,
     webhookModel: WebhookModel,
     environmentModel: EnvironmentModel,
-    encryptionService: EncryptionService
+    encryptionService: EncryptionService,
   ) {
     try {
       const transactionDetails =

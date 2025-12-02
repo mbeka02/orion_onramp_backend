@@ -190,7 +190,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -216,7 +216,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -242,7 +242,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -268,7 +268,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -294,7 +294,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -320,7 +320,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -346,7 +346,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -372,7 +372,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -398,7 +398,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -424,7 +424,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -450,7 +450,7 @@ describe("Webhook Controller: Send Event tests", () => {
         transactionModelMock,
         webhookModelMock,
         environmentModelMock,
-        encryption_service_mock
+        encryption_service_mock,
       );
       expect(webhookModelMock.generateSignature).toHaveBeenCalledWith(
         {

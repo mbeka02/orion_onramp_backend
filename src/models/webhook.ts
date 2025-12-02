@@ -39,12 +39,14 @@ export class WebhookModel {
           "x-orion-signature": signature,
         },
         body: JSON.stringify(data),
-        signal: signal
+        signal: signal,
       });
 
       clearTimeout(timeOutID);
       if (response.status !== 201) {
-        throw new Error(`Webhook delivery failed with status code ${response.status}`);
+        throw new Error(
+          `Webhook delivery failed with status code ${response.status}`,
+        );
       }
     } catch (err) {
       logger.error("Webhook Model: Error sending webhook event", {

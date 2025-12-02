@@ -28,6 +28,8 @@ const adminLimiter = rateLimit({
   max: 500,
   message: "Too many requests from this IP, please try again later",
 });
+const businessModel = new BusinessModel();
+const adminModel = new AdminModel(businessModel);
 router.post(
   "/create",
   createAdminLimiter,
@@ -40,7 +42,7 @@ router.post(
           .status(403)
           .json({ error: "Forbidden: Only SUPER_ADMIN can create new admins" });
       }
-      const adminModel = new AdminModel();
+
       const { admin, token } = await adminController.createadmin(
         req.body,
         adminModel,
@@ -71,7 +73,6 @@ router.post(
   validateBody(loginAdminSchema),
   async (req, res) => {
     try {
-      const adminModel = new AdminModel();
       const { admin, token } = await adminController.login(
         req.body,
         adminModel,
@@ -233,7 +234,6 @@ router.put(
         return res.status(400).json({ error: "Business ID is required" });
       }
 
-      const adminModel = new AdminModel();
       const result = await adminController.approveBusiness(
         id,
         adminId,
@@ -276,7 +276,6 @@ router.put(
         return res.status(400).json({ error: "Business ID is required" });
       }
 
-      const adminModel = new AdminModel();
       const result = await adminController.suspendBusiness(
         id,
         adminId,

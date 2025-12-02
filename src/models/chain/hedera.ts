@@ -102,48 +102,47 @@ export class HederaChainModel {
     accountid: string,
   ): Promise<boolean> {
     try {
+      let baseUrl: string;
       if (tokenType === TOKEN_TYPE.KESy_TESTNET) {
-        if (!process.env.HEDERA_TESTNET_MIRROR_NODE_API) {
-          throw new Error(
-            "Invalid env setup, set HEDERA_TESTNET_MIRROR_NODE_API in env",
-          );
-        }
-        const baseUrl = process.env.HEDERA_TESTNET_MIRROR_NODE_API;
-        let nextLink: string | null =
-          `/api/v1/accounts/${accountid}/tokens?limit=100`;
+        baseUrl = API_NODES.HEDERA_TESTNET;
+      } else if (tokenType === TOKEN_TYPE.KESy_MAINNET) {
+        baseUrl = API_NODES.HEDERA_MAINNET;
+      } else {
+        throw new Error("Unsupported token type");
+      }
 
-        let tokenAddress = token;
-        if (!this._isHederaFormatAddress(token)) {
-          tokenAddress = AccountId.fromEvmAddress(0, 0, token).toString();
-        }
+      let nextLink: string | null =
+        `/api/v1/accounts/${accountid}/tokens?limit=100`;
 
-        while (nextLink) {
-          const res = await fetch(`${baseUrl}${nextLink}`, { method: "GET" });
-          if (res.status === 200) {
-            const json = await res.json();
-            const parsed = hederaAccountDetailsSchema.safeParse(json);
-            if (parsed.success) {
-              const data = parsed.data;
-              const isTokenAssociated = data.tokens.find(
-                (t) => t.token_id.toLowerCase() === tokenAddress.toLowerCase(),
-              );
-              if (isTokenAssociated) {
-                return true;
-              } else {
-                nextLink = data.links.next;
-              }
+      let tokenAddress = token;
+      if (!this._isHederaFormatAddress(token)) {
+        tokenAddress = AccountId.fromEvmAddress(0, 0, token).toString();
+      }
+
+      while (nextLink) {
+        const res = await fetch(`${baseUrl}${nextLink}`, { method: "GET" });
+        if (res.status === 200) {
+          const json = await res.json();
+          const parsed = hederaAccountDetailsSchema.safeParse(json);
+          if (parsed.success) {
+            const data = parsed.data;
+            const isTokenAssociated = data.tokens.find(
+              (t) => t.token_id.toLowerCase() === tokenAddress.toLowerCase(),
+            );
+            if (isTokenAssociated) {
+              return true;
             } else {
-              break;
+              nextLink = data.links.next;
             }
           } else {
             break;
           }
+        } else {
+          break;
         }
-
-        return false;
-      } else {
-        throw new Error("Unsupported token type");
       }
+
+      return false;
     } catch (err) {
       console.error("Error checking if account has associated token", err);
       logger.error(

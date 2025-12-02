@@ -508,7 +508,9 @@ export class TransactionController {
               encryptionService,
             );
           } catch (err) {
-            logger.error("Failed to send charge.success webhook", { error: err });
+            logger.error("Failed to send charge.success webhook", {
+              error: err,
+            });
           }
 
           break;
@@ -525,7 +527,9 @@ export class TransactionController {
               encryptionService,
             );
           } catch (err) {
-            logger.error("Failed to send charge.success webhook", { error: err });
+            logger.error("Failed to send charge.success webhook", {
+              error: err,
+            });
           }
           break;
         default:

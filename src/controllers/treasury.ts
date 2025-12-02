@@ -60,7 +60,9 @@ export class TreasuryController {
           encryptionService,
         );
       } catch (err) {
-        logger.error("Could not send token transfer pending webhook event", { error: err });
+        logger.error("Could not send token transfer pending webhook event", {
+          error: err,
+        });
       }
 
       // Get transaction details

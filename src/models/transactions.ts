@@ -318,7 +318,7 @@ export class TransactionModel {
           paystackResponse: transactionsTable.paystackResponseRaw,
         })
         .from(transactionsTable)
-        .leftJoin(
+        .innerJoin(
           environmentsTable,
           eq(environmentsTable.id, transactionsTable.environmentID),
         )

@@ -487,9 +487,11 @@ export class TransactionController {
     try {
       switch (event) {
         case WEBHOOK_EVENTS.CHARGE_SUCCESS:
+          logger.info("Charge success", {data});
           await this.processChargeSuccess(data);
           break;
         case WEBHOOK_EVENTS.CHARGE_FAILED:
+          logger.info("Charge failed", {data})
           await this.processChargeFailed(data);
           break;
         default:

@@ -1,4 +1,4 @@
-import { MyError } from "../errors";
+import { Errors, MyError } from "../errors";
 import { EmailService } from "../lib/emails/email.util";
 import logger from "../lib/logger";
 import sleep from "../lib/sleep";

@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 export enum WEBHOOK_CONTROLLER_EVENTS {
-  PAYMENT_REQUEST_PENDING = "payment_request_pending",
-  PAYMENT_REQUEST_SUCCESS = "payment_request_success",
   CHARGE_SUCCESS = "charge_success",
   CHARGE_FAILED = "charge_failed",
   TOKEN_TRANSFER_PENDING = "token_transfer_pending",

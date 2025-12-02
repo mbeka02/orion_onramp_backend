@@ -26,6 +26,7 @@ export class TreasuryController {
       if (doesTransactionExist === false) {
         throw new MyError(Errors.UNAUTHORIZED_PAYMENT);
       }
+      
 
       const transactionAlreadyOnramped =
         await treasuryModel.hasTransactionAlreadyBeenOnramped(
@@ -40,6 +41,8 @@ export class TreasuryController {
       if (isPaymentCompleteSuccessfully === false) {
         throw new MyError(Errors.PAYMENT_NOT_COMPLETE);
       }
+
+      logger.info("Token transfer pending", {transaction_reference})
 
       // Get transaction details
       const transaction = await transactionModel.getTransactionByReference(
@@ -88,6 +91,12 @@ export class TreasuryController {
               );
             })
             .catch((err) => {
+              if (err instanceof MyError) {
+                if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
+                  logger.info("account not associated", {transaction_reference});
+                  throw err;
+                }
+              }
               throw new Error("Could not send tokens to business", {
                 cause: err,
               });
@@ -128,6 +137,9 @@ export class TreasuryController {
       );
 
       if (err instanceof MyError) {
+        if (err.message !== Errors.BUSINESS_NOT_ASSOCIATED) {
+          logger.info("token transfer failed", {transaction_reference});
+        }
         throw err;
       }
 

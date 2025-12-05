@@ -99,7 +99,89 @@ describe("Transaction Controller: Initialize Transaction Tests", () => {
       );
     });
   });
+  describe("Handling zombie transactions", () => {
+    it("should repair zombie transaction (missing authorization URL)", async () => {
+      const zombieTransaction = {
+        id: mockTransactionId,
+        reference: mockReference,
+        amount: mockAmountMinor,
+        email: mockEmail,
+        authorizationUrl: null, // Missing URL
+        accessCode: null,
+        transactionStatus: TRANSACTION_STATUS.PENDING,
+      };
 
+      const pgError = new DatabaseError("duplicate key", 0, "error");
+      pgError.code = "23505";
+      const drizzleErr = new DrizzleQueryError("duplicate key", []);
+      (drizzleErr as any).cause = pgError;
+
+      transactionModelMock.createTransaction = jest
+        .fn()
+        .mockRejectedValue(drizzleErr);
+      transactionModelMock.getTransactionByReference = jest
+        .fn()
+        .mockResolvedValue(zombieTransaction);
+
+      const mockPaystackResponse = {
+        status: true,
+        message: "Authorization URL created",
+        data: {
+          authorization_url: "https://checkout.paystack.com/repaired",
+          access_code: "repaired123",
+          reference: mockReference,
+        },
+      };
+
+      mockedAxios.post.mockResolvedValue({ data: mockPaystackResponse });
+      transactionModelMock.updateTransactionWithPaystackResponse = jest
+        .fn()
+        .mockResolvedValue({});
+
+      const result = await transactionController.initializeTransaction(
+        mockValidRequest,
+        mockEnvironmentID,
+        mockToken,
+      );
+
+      expect(result).toEqual({
+        reference: mockReference,
+        authorization_url: mockPaystackResponse.data.authorization_url,
+        access_code: mockPaystackResponse.data.access_code,
+      });
+      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+    });
+    it("should throw error if zombie repair fails", async () => {
+      const zombieTransaction = {
+        id: mockTransactionId,
+        reference: mockReference,
+        authorizationUrl: null,
+        accessCode: null,
+      };
+
+      const pgError = new DatabaseError("duplicate key", 0, "error");
+      pgError.code = "23505";
+      const drizzleErr = new DrizzleQueryError("duplicate key", []);
+      (drizzleErr as any).cause = pgError;
+
+      transactionModelMock.createTransaction = jest
+        .fn()
+        .mockRejectedValue(drizzleErr);
+      transactionModelMock.getTransactionByReference = jest
+        .fn()
+        .mockResolvedValue(zombieTransaction);
+
+      mockedAxios.post.mockRejectedValue(new Error("Paystack unavailable"));
+
+      await expect(
+        transactionController.initializeTransaction(
+          mockValidRequest,
+          mockEnvironmentID,
+          mockToken,
+        ),
+      ).rejects.toThrow("Payment provider error");
+    });
+  });
   describe("Idempotency handling", () => {
     it("should return existing transaction on duplicate reference", async () => {
       const existingTransaction = {

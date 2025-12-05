@@ -5,7 +5,7 @@ import { TRANSACTION_STATUS } from "../../src/types/transactions";
 import axios from "axios";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import { DatabaseError } from "pg";
-import { businessModelMock } from "../mocks/business_model_mock";
+import businessModelMock from "../mocks/business_model_mock";
 import { ENVIRONMENT_TYPES } from "../../src/types/environments";
 
 jest.mock("axios");

@@ -6,6 +6,7 @@ import axios from "axios";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import { DatabaseError } from "pg";
 import businessModelMock from "../mocks/business_model_mock";
+import { ENVIRONMENT_TYPES } from "../../src/types/environments";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -182,6 +183,58 @@ describe("Transaction Controller: Initialize Transaction Tests", () => {
       ).rejects.toThrow("Payment provider error");
     });
   });
+  describe("Paystack API errors", () => {
+    it("should handle Paystack API returning status=false", async () => {
+      transactionModelMock.createTransaction = jest.fn().mockResolvedValue({
+        id: mockTransactionId,
+        reference: mockReference,
+      });
+
+      mockedAxios.post.mockResolvedValue({
+        data: {
+          status: false,
+          message: "Invalid API key",
+        },
+      });
+
+      await expect(
+        transactionController.initializeTransaction(
+          mockValidRequest,
+          mockEnvironmentID,
+          mockToken,
+        ),
+      ).rejects.toThrow("Payment provider error: Invalid API key");
+    });
+
+    it("should handle Axios network errors", async () => {
+      transactionModelMock.createTransaction = jest.fn().mockResolvedValue({
+        id: mockTransactionId,
+        reference: mockReference,
+      });
+
+      const axiosError = {
+        isAxiosError: true,
+        response: {
+          status: 500,
+          data: { message: "Internal server error" },
+        },
+        message: "Network Error",
+      };
+
+      mockedAxios.post.mockRejectedValue(axiosError);
+      //I've had to type casting for the mock otherwise typescript will complain
+      (mockedAxios.isAxiosError as unknown as jest.Mock) = jest
+        .fn()
+        .mockReturnValue(true);
+      await expect(
+        transactionController.initializeTransaction(
+          mockValidRequest,
+          mockEnvironmentID,
+          mockToken,
+        ),
+      ).rejects.toThrow("Payment provider error: Internal server error");
+    });
+  });
   describe("Idempotency handling", () => {
     it("should return existing transaction on duplicate reference", async () => {
       const existingTransaction = {
@@ -265,6 +318,26 @@ describe("Transaction Controller: Initialize Transaction Tests", () => {
       ).rejects.toThrow("Missing or invalid 'orderID' in metadata");
     });
   });
+  describe("DB Error handling", () => {
+    it("should handle non-duplicate database errors", async () => {
+      const dbError = new DatabaseError("connection timeout", 0, "error");
+      dbError.code = "57P01"; // Different error code
+      const drizzleErr = new DrizzleQueryError("connection error", []);
+      (drizzleErr as any).cause = dbError;
+
+      transactionModelMock.createTransaction = jest
+        .fn()
+        .mockRejectedValue(drizzleErr);
+
+      await expect(
+        transactionController.initializeTransaction(
+          mockValidRequest,
+          mockEnvironmentID,
+          mockToken,
+        ),
+      ).rejects.toThrow("Failed to create transaction");
+    });
+  });
 });
 
 describe("Transaction Controller: Verify Transaction Tests", () => {
@@ -281,6 +354,37 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
       transactionModelMock,
       businessModelMock,
     );
+  });
+  it("should handle failed transaction from Paystack", async () => {
+    transactionModelMock.getTransactionByReference = jest
+      .fn()
+      .mockResolvedValue({
+        id: mockTransactionId,
+        reference: mockReference,
+        amount: mockAmount,
+        email: mockEmail,
+        transactionStatus: TRANSACTION_STATUS.PENDING,
+      });
+
+    mockedAxios.get.mockResolvedValue({
+      data: {
+        status: true,
+        data: {
+          status: "failed",
+          reference: mockReference,
+          amount: mockAmount,
+          customer: { email: mockEmail },
+        },
+      },
+    });
+
+    transactionModelMock.updateTransactionStatus = jest
+      .fn()
+      .mockResolvedValue({});
+
+    const result = await transactionController.verifyTransaction(mockReference);
+
+    expect(result.status).toBe(TRANSACTION_STATUS.FAILED);
   });
   describe("Already processed", () => {
     it("returns SUCCESSFUL from DB", async () => {
@@ -347,7 +451,44 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
       });
     });
   });
+  describe("Business authorization", () => {
+    it("should fetch transactions for authorized user", async () => {
+      businessModelMock.checkUserBusinessMembership = jest
+        .fn()
+        .mockResolvedValue(true);
+      transactionModelMock.getTransactionsByBusiness = jest
+        .fn()
+        .mockResolvedValue([]);
 
+      await transactionController.getTransactionsByBusiness(
+        "user-123",
+        "biz-456",
+        ENVIRONMENT_TYPES.TEST,
+        1,
+        10,
+      );
+
+      expect(businessModelMock.checkUserBusinessMembership).toHaveBeenCalled();
+    });
+
+    it("should reject unauthorized user", async () => {
+      businessModelMock.checkUserBusinessMembership = jest
+        .fn()
+        .mockResolvedValue(false);
+
+      await expect(
+        transactionController.getTransactionsByBusiness(
+          "user-123",
+          "biz-456",
+          ENVIRONMENT_TYPES.TEST,
+          1,
+          10,
+        ),
+      ).rejects.toThrow(
+        "You do not have permission to view these payment details",
+      );
+    });
+  });
   describe("Missing transaction", () => {
     it("throws error if not found", async () => {
       transactionModelMock.getTransactionByReference = jest

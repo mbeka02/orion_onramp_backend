@@ -5,6 +5,7 @@ import { TRANSACTION_STATUS } from "../../src/types/transactions";
 import axios from "axios";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import { DatabaseError } from "pg";
+import businessModelMock from "../mocks/business_model_mock";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
@@ -36,7 +37,10 @@ describe("Transaction Controller: Initialize Transaction Tests", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    transactionController = new TransactionController(transactionModelMock);
+    transactionController = new TransactionController(
+      transactionModelMock,
+      businessModelMock,
+    );
 
     jest
       .spyOn(TransactionController.prototype as any, "generateReference")
@@ -191,7 +195,10 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    transactionController = new TransactionController(transactionModelMock);
+    transactionController = new TransactionController(
+      transactionModelMock,
+      businessModelMock,
+    );
   });
   describe("Already processed", () => {
     it("returns SUCCESSFUL from DB", async () => {

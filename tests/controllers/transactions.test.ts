@@ -7,7 +7,7 @@ import { DrizzleQueryError } from "drizzle-orm/errors";
 import { DatabaseError } from "pg";
 import businessModelMock from "../mocks/business_model_mock";
 import { ENVIRONMENT_TYPES } from "../../src/types/environments";
-
+import * as crypto from "crypto";
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -504,7 +504,7 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
     it("should validate correct Paystack signature", () => {
       const body = JSON.stringify({ event: "charge.success" });
       const secret = "sk_test_xxx";
-      const hash = require("crypto")
+      const hash = crypto
         .createHmac("sha512", secret)
         .update(body)
         .digest("hex");

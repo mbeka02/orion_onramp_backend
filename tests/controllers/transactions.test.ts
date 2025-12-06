@@ -222,7 +222,7 @@ describe("Transaction Controller: Initialize Transaction Tests", () => {
       };
 
       mockedAxios.post.mockRejectedValue(axiosError);
-      //I've had to type casting for the mock otherwise typescript will complain
+      //I've had to do type casting for the mock; otherwise, TypeScript will complain
       (mockedAxios.isAxiosError as unknown as jest.Mock) = jest
         .fn()
         .mockReturnValue(true);

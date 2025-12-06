@@ -500,4 +500,69 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
       ).rejects.toThrow(`Transaction not found: ${mockReference}`);
     });
   });
+  describe("Webhook handling", () => {
+    it("should validate correct Paystack signature", () => {
+      const body = JSON.stringify({ event: "charge.success" });
+      const secret = "sk_test_xxx";
+      const hash = require("crypto")
+        .createHmac("sha512", secret)
+        .update(body)
+        .digest("hex");
+
+      const isValid = transactionController.isSignatureValid(body, hash);
+      expect(isValid).toBe(true);
+    });
+
+    it("should reject invalid signature", () => {
+      const body = JSON.stringify({ event: "charge.success" });
+      const invalidHash = "invalid_hash";
+
+      const isValid = transactionController.isSignatureValid(body, invalidHash);
+      expect(isValid).toBe(false);
+    });
+
+    it("should process charge.success webhook", async () => {
+      const webhookData = {
+        reference: mockReference,
+        status: "success",
+        amount: mockAmount,
+      };
+
+      transactionModelMock.getTransactionByReference = jest
+        .fn()
+        .mockResolvedValue({
+          id: mockTransactionId,
+          reference: mockReference,
+          transactionStatus: TRANSACTION_STATUS.PENDING,
+        });
+
+      transactionModelMock.updateTransactionStatus = jest
+        .fn()
+        .mockResolvedValue({});
+
+      await transactionController.processChargeSuccess(webhookData as any);
+
+      expect(transactionModelMock.updateTransactionStatus).toHaveBeenCalledWith(
+        mockReference,
+        TRANSACTION_STATUS.SUCCESSFUL,
+        webhookData,
+      );
+    });
+
+    it("should skip already successful transaction in webhook", async () => {
+      transactionModelMock.getTransactionByReference = jest
+        .fn()
+        .mockResolvedValue({
+          transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
+        });
+
+      await transactionController.processChargeSuccess({
+        reference: mockReference,
+      } as any);
+
+      expect(
+        transactionModelMock.updateTransactionStatus,
+      ).not.toHaveBeenCalled();
+    });
+  });
 });

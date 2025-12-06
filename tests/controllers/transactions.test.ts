@@ -501,68 +501,498 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
     });
   });
   describe("Webhook handling", () => {
-    it("should validate correct Paystack signature", () => {
-      const body = JSON.stringify({ event: "charge.success" });
-      const secret = "sk_test_xxx";
-      const hash = crypto
-        .createHmac("sha512", secret)
-        .update(body)
-        .digest("hex");
+    describe("Signature validation", () => {
+      it("should validate correct Paystack signature", () => {
+        const body = JSON.stringify({ event: "charge.success" });
+        const secret = "sk_test_xxx";
+        const hash = crypto
+          .createHmac("sha512", secret)
+          .update(body)
+          .digest("hex");
 
-      const isValid = transactionController.isSignatureValid(body, hash);
-      expect(isValid).toBe(true);
+        const isValid = transactionController.isSignatureValid(body, hash);
+        expect(isValid).toBe(true);
+      });
+
+      it("should reject invalid signature", () => {
+        const body = JSON.stringify({ event: "charge.success" });
+        const invalidHash = "invalid_hash";
+
+        const isValid = transactionController.isSignatureValid(
+          body,
+          invalidHash,
+        );
+        expect(isValid).toBe(false);
+      });
+
+      it("should reject signature with different length", () => {
+        const body = JSON.stringify({ event: "charge.success" });
+        const shortHash = "abc123";
+
+        const isValid = transactionController.isSignatureValid(body, shortHash);
+        expect(isValid).toBe(false);
+      });
+
+      it("should handle malformed signature gracefully", () => {
+        const body = JSON.stringify({ event: "charge.success" });
+        const malformedHash = "not-a-hex-string!!!";
+
+        const isValid = transactionController.isSignatureValid(
+          body,
+          malformedHash,
+        );
+        expect(isValid).toBe(false);
+      });
+
+      it("should reject empty signature", () => {
+        const body = JSON.stringify({ event: "charge.success" });
+        const emptyHash = "";
+
+        const isValid = transactionController.isSignatureValid(body, emptyHash);
+        expect(isValid).toBe(false);
+      });
     });
 
-    it("should reject invalid signature", () => {
-      const body = JSON.stringify({ event: "charge.success" });
-      const invalidHash = "invalid_hash";
-
-      const isValid = transactionController.isSignatureValid(body, invalidHash);
-      expect(isValid).toBe(false);
-    });
-
-    it("should process charge.success webhook", async () => {
-      const webhookData = {
-        reference: mockReference,
-        status: "success",
-        amount: mockAmount,
-      };
-
-      transactionModelMock.getTransactionByReference = jest
-        .fn()
-        .mockResolvedValue({
-          id: mockTransactionId,
+    describe("handlePaystackWebhook - Event routing", () => {
+      it("should route charge.success event to processChargeSuccess", async () => {
+        const webhookData = {
           reference: mockReference,
-          transactionStatus: TRANSACTION_STATUS.PENDING,
-        });
+          status: "success",
+          amount: mockAmount,
+        };
 
-      transactionModelMock.updateTransactionStatus = jest
-        .fn()
-        .mockResolvedValue({});
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.PENDING,
+          });
+        transactionModelMock.updateTransactionStatus = jest
+          .fn()
+          .mockResolvedValue({});
 
-      await transactionController.processChargeSuccess(webhookData as any);
+        await transactionController.handlePaystackWebhook(
+          "charge.success",
+          webhookData as any,
+        );
 
-      expect(transactionModelMock.updateTransactionStatus).toHaveBeenCalledWith(
-        mockReference,
-        TRANSACTION_STATUS.SUCCESSFUL,
-        webhookData,
-      );
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).toHaveBeenCalledWith(
+          mockReference,
+          TRANSACTION_STATUS.SUCCESSFUL,
+          webhookData,
+        );
+      });
+
+      it("should route charge.failed event to processChargeFailed", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "failed",
+          amount: mockAmount,
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.PENDING,
+          });
+        transactionModelMock.updateTransactionStatus = jest
+          .fn()
+          .mockResolvedValue({});
+
+        await transactionController.handlePaystackWebhook(
+          "charge.failed",
+          webhookData as any,
+        );
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).toHaveBeenCalledWith(
+          mockReference,
+          TRANSACTION_STATUS.FAILED,
+          webhookData,
+        );
+      });
+
+      it("should ignore unhandled webhook events", async () => {
+        const webhookData = {
+          reference: mockReference,
+        };
+
+        await transactionController.handlePaystackWebhook(
+          "transfer.success" as any,
+          webhookData as any,
+        );
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).not.toHaveBeenCalled();
+        expect(
+          transactionModelMock.getTransactionByReference,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("should handle errors in webhook processing gracefully", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "success",
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockRejectedValue(new Error("Database error"));
+
+        // Should not throw, just log the error
+        await expect(
+          transactionController.handlePaystackWebhook(
+            "charge.success",
+            webhookData as any,
+          ),
+        ).resolves.not.toThrow();
+      });
     });
 
-    it("should skip already successful transaction in webhook", async () => {
-      transactionModelMock.getTransactionByReference = jest
-        .fn()
-        .mockResolvedValue({
-          transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
-        });
+    describe("processChargeSuccess", () => {
+      it("should process charge.success webhook successfully", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "success",
+          amount: mockAmount,
+        };
 
-      await transactionController.processChargeSuccess({
-        reference: mockReference,
-      } as any);
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.PENDING,
+          });
+        transactionModelMock.updateTransactionStatus = jest
+          .fn()
+          .mockResolvedValue({});
 
-      expect(
-        transactionModelMock.updateTransactionStatus,
-      ).not.toHaveBeenCalled();
+        await transactionController.processChargeSuccess(webhookData as any);
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).toHaveBeenCalledWith(
+          mockReference,
+          TRANSACTION_STATUS.SUCCESSFUL,
+          webhookData,
+        );
+      });
+
+      it("should skip already successful transaction", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "success",
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
+          });
+
+        await transactionController.processChargeSuccess(webhookData as any);
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("should handle missing reference in webhook data", async () => {
+        const webhookData = {
+          status: "success",
+          // reference is missing
+        };
+
+        await transactionController.processChargeSuccess(webhookData as any);
+
+        expect(
+          transactionModelMock.getTransactionByReference,
+        ).not.toHaveBeenCalled();
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("should handle transaction not found", async () => {
+        const webhookData = {
+          reference: "unknown-reference",
+          status: "success",
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue(null);
+
+        await transactionController.processChargeSuccess(webhookData as any);
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("should handle database errors during update", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "success",
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.PENDING,
+          });
+        transactionModelMock.updateTransactionStatus = jest
+          .fn()
+          .mockRejectedValue(new Error("Database connection lost"));
+
+        // Should not throw
+        await expect(
+          transactionController.processChargeSuccess(webhookData as any),
+        ).resolves.not.toThrow();
+      });
+
+      it("should update transaction from FAILED to SUCCESSFUL if webhook arrives late", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "success",
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.FAILED, // Previously marked as failed
+          });
+        transactionModelMock.updateTransactionStatus = jest
+          .fn()
+          .mockResolvedValue({});
+
+        await transactionController.processChargeSuccess(webhookData as any);
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).toHaveBeenCalledWith(
+          mockReference,
+          TRANSACTION_STATUS.SUCCESSFUL,
+          webhookData,
+        );
+      });
+    });
+
+    describe("processChargeFailed", () => {
+      it("should process charge.failed webhook successfully", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "failed",
+          amount: mockAmount,
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.PENDING,
+          });
+        transactionModelMock.updateTransactionStatus = jest
+          .fn()
+          .mockResolvedValue({});
+
+        await transactionController.processChargeFailed(webhookData as any);
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).toHaveBeenCalledWith(
+          mockReference,
+          TRANSACTION_STATUS.FAILED,
+          webhookData,
+        );
+      });
+
+      it("should skip already failed transaction", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "failed",
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.FAILED,
+          });
+
+        await transactionController.processChargeFailed(webhookData as any);
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("should handle missing reference in webhook data", async () => {
+        const webhookData = {
+          status: "failed",
+          // reference is missing
+        };
+
+        await transactionController.processChargeFailed(webhookData as any);
+
+        expect(
+          transactionModelMock.getTransactionByReference,
+        ).not.toHaveBeenCalled();
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("should handle transaction not found", async () => {
+        const webhookData = {
+          reference: "unknown-reference",
+          status: "failed",
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue(null);
+
+        await transactionController.processChargeFailed(webhookData as any);
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("should handle database errors during update", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "failed",
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.PENDING,
+          });
+        transactionModelMock.updateTransactionStatus = jest
+          .fn()
+          .mockRejectedValue(new Error("Database connection lost"));
+
+        // Should not throw
+        await expect(
+          transactionController.processChargeFailed(webhookData as any),
+        ).resolves.not.toThrow();
+      });
+
+      it("should update transaction from SUCCESSFUL to FAILED if late failure webhook", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "failed",
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.SUCCESSFUL, // Was marked successful
+          });
+        transactionModelMock.updateTransactionStatus = jest
+          .fn()
+          .mockResolvedValue({});
+
+        await transactionController.processChargeFailed(webhookData as any);
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).toHaveBeenCalledWith(
+          mockReference,
+          TRANSACTION_STATUS.FAILED,
+          webhookData,
+        );
+      });
+
+      it("should handle null/undefined reference gracefully", async () => {
+        const webhookData = {
+          reference: null,
+          status: "failed",
+        };
+
+        await transactionController.processChargeFailed(webhookData as any);
+
+        expect(
+          transactionModelMock.getTransactionByReference,
+        ).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("Webhook data validation edge cases", () => {
+      it("should handle empty webhook data object", async () => {
+        await transactionController.processChargeSuccess({} as any);
+
+        expect(
+          transactionModelMock.getTransactionByReference,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("should handle webhook with reference as empty string", async () => {
+        const webhookData = {
+          reference: "",
+          status: "success",
+        };
+
+        await transactionController.processChargeSuccess(webhookData as any);
+
+        expect(
+          transactionModelMock.getTransactionByReference,
+        ).not.toHaveBeenCalled();
+      });
+
+      it("should handle webhook with extra unexpected fields", async () => {
+        const webhookData = {
+          reference: mockReference,
+          status: "success",
+          amount: mockAmount,
+          unexpectedField: "some value",
+          anotherField: 123,
+        };
+
+        transactionModelMock.getTransactionByReference = jest
+          .fn()
+          .mockResolvedValue({
+            id: mockTransactionId,
+            reference: mockReference,
+            transactionStatus: TRANSACTION_STATUS.PENDING,
+          });
+        transactionModelMock.updateTransactionStatus = jest
+          .fn()
+          .mockResolvedValue({});
+
+        await transactionController.processChargeSuccess(webhookData as any);
+
+        expect(
+          transactionModelMock.updateTransactionStatus,
+        ).toHaveBeenCalledWith(
+          mockReference,
+          TRANSACTION_STATUS.SUCCESSFUL,
+          webhookData, // Should still pass all data including unexpected fields
+        );
+      });
     });
   });
 });

@@ -504,10 +504,10 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
     describe("Signature validation", () => {
       it("should validate correct Paystack signature", () => {
         const body = JSON.stringify({ event: "charge.success" });
-        const secret = "sk_test_xxx";
+        const secret = process.env.PAYSTACK_TEST_SECRET_KEY as string;
         const hash = crypto
           .createHmac("sha512", secret)
-          .update(body)
+          .update(body, "utf8")
           .digest("hex");
 
         const isValid = transactionController.isSignatureValid(body, hash);

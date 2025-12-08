@@ -163,9 +163,9 @@ This controller uses the Hedera Model described below:
 
 # Hedera Model
 
-This model contains logic for on-chain operations such as checking if an account is associated to a token, transfering tokens from treasury account to another account, getting on-chain balance of treasury account.
+This model contains logic for on-chain operations such as checking if an account is associated to a token, transferring tokens from treasury account to another account, getting on-chain balance of treasury account.
 
-The treasury account is a multisignature account, the Hedera model gets the keys needed to sign transactions for the account in order to do the transfer of tokens
+The treasury account is a multisignature account, the Hedera model gets the keys needed to sign transactions for the account to transfer of tokens
 
 The addresses of tokens are stored on our database.
 

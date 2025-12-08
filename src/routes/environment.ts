@@ -3,6 +3,7 @@ import logger from "../lib/logger";
 import {
   createEnvironmentSchema,
   rotateKeysSchema,
+  updateWebhookSchema,
 } from "../types/environments";
 import environmentController from "../controllers/environments";
 import environmentModel from "../models/environments";
@@ -173,6 +174,134 @@ router.post(
       }
     } catch (err) {
       logger.error("Error rotating key in router", { error: err });
+      if (err instanceof MyError) {
+        if (err.message === Errors.UNAUTHORIZED) {
+          res.status(401).json({ message: err.message });
+          return;
+        }
+
+        res.status(400).json({ message: err.message });
+        return;
+      }
+      res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+    }
+  },
+);
+
+// GET webhook configuration for an environment
+router.get(
+  "/:environmentId/webhook",
+  authenticationMiddleware,
+  async (req, res) => {
+    try {
+      const session = await getAuthContext(req);
+      if (!session?.user.id) {
+        res.status(401).json({ message: Errors.UNAUTHORIZED });
+        return;
+      }
+
+      const encryptionService = new EncryptionService();
+      const webhookConfig = await environmentController.getWebhookConfig(
+        req.params.environmentId,
+        session.user.id,
+        environmentModel,
+        encryptionService,
+        businessModel,
+      );
+
+      res.status(200).json(webhookConfig);
+    } catch (err) {
+      logger.error("Error getting webhook config in router", { error: err });
+      if (err instanceof MyError) {
+        if (err.message === Errors.UNAUTHORIZED) {
+          res.status(401).json({ message: err.message });
+          return;
+        }
+
+        res.status(400).json({ message: err.message });
+        return;
+      }
+      res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+    }
+  },
+);
+
+// UPDATE webhook URL for an environment
+router.put(
+  "/:environmentId/webhook",
+  authenticationMiddleware,
+  async (req, res) => {
+    try {
+      const parsed = updateWebhookSchema.safeParse(req.body);
+      if (!parsed.success) {
+        const error = parsed.error.issues[0].message;
+        logger.error("Environment Route: Invalid webhook update data", {
+          data: req.body,
+          error,
+        });
+        res.status(400).json({ message: error });
+        return;
+      }
+
+      const session = await getAuthContext(req);
+      if (!session?.user.id) {
+        res.status(401).json({ message: Errors.UNAUTHORIZED });
+        return;
+      }
+
+      await environmentController.updateWebhookUrl(
+        req.params.environmentId,
+        session.user.id,
+        parsed.data.webhookUrl,
+        environmentModel,
+        businessModel,
+      );
+
+      res.status(200).json({
+        message: SuccessMessage.UPDATE_WEBHOOK_URL,
+      });
+    } catch (err) {
+      logger.error("Error updating webhook URL in router", { error: err });
+      if (err instanceof MyError) {
+        if (err.message === Errors.UNAUTHORIZED) {
+          res.status(401).json({ message: err.message });
+          return;
+        }
+
+        res.status(400).json({ message: err.message });
+        return;
+      }
+      res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
+    }
+  },
+);
+
+// POST test webhook event
+router.post(
+  "/:environmentId/webhook/test",
+  authenticationMiddleware,
+  async (req, res) => {
+    try {
+      const session = await getAuthContext(req);
+      if (!session?.user.id) {
+        res.status(401).json({ message: Errors.UNAUTHORIZED });
+        return;
+      }
+
+      const encryptionService = new EncryptionService();
+      await environmentController.sendTestWebhook(
+        req.params.environmentId,
+        session.user.id,
+        environmentModel,
+        encryptionService,
+        businessModel,
+      );
+
+      res.status(200).json({
+        message: SuccessMessage.TEST_WEBHOOK_SENT,
+      });
+    } catch (err) {
+      logger.error("Error sending test webhook in router", { error: err });
       if (err instanceof MyError) {
         if (err.message === Errors.UNAUTHORIZED) {
           res.status(401).json({ message: err.message });

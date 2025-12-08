@@ -134,6 +134,39 @@ There is also the `GET /api/environment/:business` for getting the information a
 
 # Treasury Service
 
-## Hedera Model
+The treasury service is incharge of interacting with our treasury account and onramping payments received. This service is not accessible by any endpoints and is just used internally.
+
+## Business Onramp
+
+This sends onramped tokens to a business' account. It only onramps if a previous transaction request was created. It has the following behaviour:
+
+| Scenario | Expected Outcome |
+| --- | ---- |
+| The SDK request has been made with a transaction reference that is not in our system | **Fail with an error message:** Unauthorized Payment |
+| The SDK request transaction reference exists but the transfer has already been complete | **Fail with an error message:** Payment already onramped |
+| The SDK request transaction reference exists but the payment is not complete or had an error | **Fail with an error message:** Payment not complete |
+| The SDK request transaction reference exists but the amount is more than in treasury | **The liquidity management should be triggered to source more tokens** |
+| The SDK request transaction reference exists and the treasury has the amount | **Tokens are sent to the DApp’s account and transaction marked as onramped** |
+| An unexpected error occurs while processing transaction and treasury had enough of token | **Optimistic deduction of treasury cache reversed** |
+
+### Liquidy Management
+
+The treasury service interacts with the LiquidityManagementController that's incharge of checking if treasury account has enough tokens for completing onramp, sourcing more tokens and transferring tokens to the business' account.
+
+We store the balance of the treasury account in our database for faster access of account balance. We also do this so that we can do an optimistic deduction of balance when we have concurrent onramp requests, where each request optimistically deducts the balance so that the next request doesn't see the same balance. If a request fails or can't be completed this optimistic deduction is reversed. 
+
+There is also a job that updates this cached balance with the actual onchain balance that runs periodically to avoid a case where there is a mismatch between cached balance and actual balance.
+
+Requests to treasury balance are locked with a shared key to avoid multiple requests updating the database at the same time. 
+
+This controller uses the Hedera Model described below:
+
+# Hedera Model
+
+This model contains logic for onchain operations such as checking if an account is associated to a token, transfering tokens from treasury account to another account, getting onchain balance of treasury account.
+
+The treasury account is a multisignature account, the Hedera model gets the keys needed to sign transactions for the account inorder to do the transfer of tokens
+
+The addresses of tokens are stored on our database.
 
 # Webhook Service

@@ -95,7 +95,7 @@ All business management routes require admin authentication and are rate-limited
 
 # Environment Service
 
-The environment service is incharge of managing the environments of a business. An environment has the API keys and webhook details that a business will use to integrate with Orion.
+The environment service is in charge of managing the environments of a business. An environment has the API keys and webhook details that a business will use to integrate with Orion.
 
 There are 2 kinds of environments: a **test** environment and a **live** environment. The test environment is for testing an integration with Orion. The money that is onramped isn't real and the tokens sent to the business' wallet are on testnet. The live environment has details of the actual integration, real funds are onramped and tokens on mainnet are sent to the business' wallet.
 
@@ -103,12 +103,12 @@ There are 2 kinds of environments: a **test** environment and a **live** environ
 
 The logic for creating an environment has this behaviour:
 
-| Scenario | Expected Outcome |
-| --- | ---- |
-| Business already has an environment of the same type as the one to be created | **Fail with error message:** Business environment already created |
-| Should fail if the user calling the function is not the admin or owner of the busines | **Fail with error message:** Unauthorized|
-| If a live environment is being created and business is not approved | **Fail with error message:** Business not approved |
-| Otherwise should create | **Environment created successfully** with a unique public key and private key created and webhook secret: Returns id, type, public key and private key of created environment |
+| Scenario                                                                               | Expected Outcome                                                                                                                                                              |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Business already has an environment of the same type as the one to be created          | **Fail with error message:** Business environment already created                                                                                                             |
+| Should fail if the user calling the function is not the admin or owner of the business | **Fail with error message:** Unauthorized                                                                                                                                     |
+| If a live environment is being created and business is not approved                    | **Fail with error message:** Business not approved                                                                                                                            |
+| Otherwise should create                                                                | **Environment created successfully** with a unique public key and private key created and webhook secret: Returns id, type, public key and private key of created environment |
 
 The public key and private key created are a ED25519 key pair, after creation the user is allowed to copy the private key only once. This private key is not stored on our database as plain text, instead we store a AES-256-GCM encrypted version and also a hash that is used to compare private keys. The webhook secret is a random string.
 
@@ -118,11 +118,11 @@ This logic is accessible via the `POST /api/environment/` endpoint. The endpoint
 
 We also allow a business to generate new API key pair. This can be done if their previous private key was exposed. This follows the logic below:
 
-| Scenario | Expected Outcome |
-| --- | ---- |
-| The business has not created the environment they want to rotate keys of | **Fail with error message:** Business does not have environment |
-| Should fail if the user calling the function is not the admin or owner of the business | **Fail with error message:** Unauthorized  |
-| Otherwise should create new key | **New keys for the environment created and the old key set to expire in 5 minutes:** Returns the new public and private keys |
+| Scenario                                                                               | Expected Outcome                                                                                                             |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| The business has not created the environment they want to rotate keys of               | **Fail with error message:** Business does not have environment                                                              |
+| Should fail if the user calling the function is not the admin or owner of the business | **Fail with error message:** Unauthorized                                                                                    |
+| Otherwise should create new key                                                        | **New keys for the environment created and the old key set to expire in 5 minutes:** Returns the new public and private keys |
 
 The keys are created in the same way as the previous chapter. After creating the new key, we still allow the old key to be used for only 5 minutes. This is to give the business enough time to switch to the new key without the risk of other requests failing.
 
@@ -134,38 +134,38 @@ There is also the `GET /api/environment/:business` for getting the information a
 
 # Treasury Service
 
-The treasury service is incharge of interacting with our treasury account and onramping payments received. This service is not accessible by any endpoints and is just used internally.
+The treasury service is in charge of interacting with our treasury account and onramping payments received. This service is not accessible by any endpoints and is just used internally.
 
 ## Business Onramp
 
 This sends onramped tokens to a business' account. It only onramps if a previous transaction request was created. It has the following behaviour:
 
-| Scenario | Expected Outcome |
-| --- | ---- |
-| The SDK request has been made with a transaction reference that is not in our system | **Fail with an error message:** Unauthorized Payment |
-| The SDK request transaction reference exists but the transfer has already been complete | **Fail with an error message:** Payment already onramped |
-| The SDK request transaction reference exists but the payment is not complete or had an error | **Fail with an error message:** Payment not complete |
-| The SDK request transaction reference exists but the amount is more than in treasury | **The liquidity management should be triggered to source more tokens** |
-| The SDK request transaction reference exists and the treasury has the amount | **Tokens are sent to the DApp’s account and transaction marked as onramped** |
-| An unexpected error occurs while processing transaction and treasury had enough of token | **Optimistic deduction of treasury cache reversed** |
+| Scenario                                                                                     | Expected Outcome                                                             |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| The SDK request has been made with a transaction reference that is not in our system         | **Fail with an error message:** Unauthorized Payment                         |
+| The SDK request transaction reference exists but the transfer has already been complete      | **Fail with an error message:** Payment already onramped                     |
+| The SDK request transaction reference exists but the payment is not complete or had an error | **Fail with an error message:** Payment not complete                         |
+| The SDK request transaction reference exists but the amount is more than in treasury         | **The liquidity management should be triggered to source more tokens**       |
+| The SDK request transaction reference exists and the treasury has the amount                 | **Tokens are sent to the DApp’s account and transaction marked as onramped** |
+| An unexpected error occurs while processing transaction and treasury had enough of token     | **Optimistic deduction of treasury cache reversed**                          |
 
-### Liquidy Management
+### Liquidity Management
 
-The treasury service interacts with the LiquidityManagementController that's incharge of checking if treasury account has enough tokens for completing onramp, sourcing more tokens and transferring tokens to the business' account.
+The treasury service interacts with the LiquidityManagementController that's in charge of checking if treasury account has enough tokens for completing onramp, sourcing more tokens and transferring tokens to the business' account.
 
-We store the balance of the treasury account in our database for faster access of account balance. We also do this so that we can do an optimistic deduction of balance when we have concurrent onramp requests, where each request optimistically deducts the balance so that the next request doesn't see the same balance. If a request fails or can't be completed this optimistic deduction is reversed. 
+We store the balance of the treasury account in our database for faster access of account balance. We also do this so that we can do an optimistic deduction of balance when we have concurrent onramp requests, where each request optimistically deducts the balance so that the next request doesn't see the same balance. If a request fails or can't be completed this optimistic deduction is reversed.
 
-There is also a job that updates this cached balance with the actual onchain balance that runs periodically to avoid a case where there is a mismatch between cached balance and actual balance.
+There is also a job that updates this cached balance with the actual on-chain balance that runs periodically to avoid a case where there is a mismatch between cached balance and actual balance.
 
-Requests to treasury balance are locked with a shared key to avoid multiple requests updating the database at the same time. 
+Requests to treasury balance are locked with a shared key to avoid multiple requests updating the database at the same time.
 
 This controller uses the Hedera Model described below:
 
 # Hedera Model
 
-This model contains logic for onchain operations such as checking if an account is associated to a token, transfering tokens from treasury account to another account, getting onchain balance of treasury account.
+This model contains logic for on-chain operations such as checking if an account is associated to a token, transfering tokens from treasury account to another account, getting on-chain balance of treasury account.
 
-The treasury account is a multisignature account, the Hedera model gets the keys needed to sign transactions for the account inorder to do the transfer of tokens
+The treasury account is a multisignature account, the Hedera model gets the keys needed to sign transactions for the account in order to do the transfer of tokens
 
 The addresses of tokens are stored on our database.
 

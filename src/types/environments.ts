@@ -27,5 +27,13 @@ export const rotateKeysSchema = z.object({
     .min(1, "Invalid business ID"),
 });
 
+export const updateWebhookSchema = z.object({
+  webhookUrl: z
+    .url("Webhook URL must be a valid URL")
+    .trim()
+    .min(1, "Webhook URL cannot be empty"),
+});
+
 export type RotateKeysType = z.infer<typeof rotateKeysSchema>;
 export type CreateEnvironmentType = z.infer<typeof createEnvironmentSchema>;
+export type UpdateWebhookType = z.infer<typeof updateWebhookSchema>;

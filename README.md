@@ -110,7 +110,7 @@ The logic for creating an environment has this behaviour:
 | If a live environment is being created and business is not approved                    | **Fail with error message:** Business not approved                                                                                                                            |
 | Otherwise should create                                                                | **Environment created successfully** with a unique public key and private key created and webhook secret: Returns id, type, public key and private key of created environment |
 
-The public key and private key created are a ED25519 key pair, after creation the user is allowed to copy the private key only once. This private key is not stored on our database as plain text, instead we store a AES-256-GCM encrypted version and also a hash that is used to compare private keys. The webhook secret is a random string.
+The public key and private key created are an ED25519 key pair, after creation the user is allowed to copy the private key only once. This private key is not stored on our database as plain text, instead we store a AES-256-GCM encrypted version and also a hash that is used to compare private keys. The webhook secret is a random string.
 
 This logic is accessible via the `POST /api/environment/` endpoint. The endpoint is JWT authenticated and can only be called by a user who is either the owner or an admin of the business.
 

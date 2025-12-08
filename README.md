@@ -170,3 +170,14 @@ The treasury account is a multisignature account, the Hedera model gets the keys
 The addresses of tokens are stored on our database.
 
 # Webhook Service
+
+This sends events to the business' webhook URL if they've registered one. The following events can be sent:
+
+1. "charge_success",
+2. "charge_failed",
+3. "token_transfer_pending",
+4. "token_transfer_success",
+5. "account_not_associated",
+6. "token_transfer_failed",
+
+More information can be found in ![Webhook Documentation](https://docs.orionramp.com/business-onramp/webhook/payment)

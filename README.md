@@ -181,3 +181,64 @@ This sends events to the business' webhook URL if they've registered one. The fo
 6. "token_transfer_failed",
 
 More information can be found in [Webhook Documentation](https://docs.orionramp.com/business-onramp/webhook/payment)
+
+# Transaction Service
+
+The transaction service handles payment processing (mobile money payments as well as card payments) and transaction status management. It allows businesses to initialize payments, verify statuses, and receive webhook updates.
+
+## Transaction Management
+
+1. Initialize a Transaction
+   `POST /api/transaction/initialize`
+
+   Initializes a new payment transaction. This endpoint requires a valid private key in the header.
+
+   **Request Payload (JSON Body):**
+
+   ```json
+   {
+     "token": "string" | "KESy_MAINNET" | "KESy_TESTNET", // Required: Type of token for the transaction.
+     "amount": "number", // Required: Transaction amount in major units (e.g., KES 1000). Must be positive and not exceed 500,000.
+     "email": "string", // Required: Customer email address. Must be a valid email.
+     "callback_url": "string (https URL)", // Optional: URL to redirect to after payment. Must be HTTPS.
+     "channels": "array of strings", // Optional: E.g., ["card", "mobile_money"]. Allowed values: "card", "bank", "ussd", "qr", "mobile_money", "bank_transfer", "eft", "apple_pay", "payattitude".
+     "currency": "string", // Optional: 3-letter currency code (e.g., "KES"). Default is "KES".
+     "metadata": { // Required: Additional data for the transaction.
+       "orderID": "string" // Required: Unique identifier for the order.
+     }
+     // Other optional fields like plan, invoice_limit, split_code, subaccount, transaction_charge, bearer are also supported.
+   }
+   ```
+
+   **Expected Response:** Returns the transaction reference, authorization URL, and access code required to complete the payment on the client side.
+   [Link to Docs](https://docs.orionramp.com/business-onramp/endpoint/intialize)
+
+2. Get All Transactions
+   `GET /api/transaction`
+
+   Retrieves a paginated list of transactions for a specific business and environment type.
+
+   `Query params:
+business_id (required): UUID of the business
+environment_type (required): "Live" | "Test"
+page (optional): number (default: 1)
+limit (optional): number (default: 20)`
+
+   **Expected Response:** Returns a list of transaction objects matching the criteria, along with pagination details (total items, pages, current page).
+
+3. Get Transaction by ID
+   `GET /api/transaction/:id`
+
+   Retrieves detailed information about a specific transaction.
+
+   **Expected Response:** Returns the specific transaction object including its current status, amount, and associated metadata.
+
+4. Paystack Webhook
+   `POST /api/transaction/webhook/paystack`
+
+   Handles incoming webhook events from Paystack (e.g., charge.success, charge.failed).
+
+   **Expected Response:** Updates the local transaction status based on the event. If successful, triggers the treasury service to process the crypto on-ramp.
+
+- The model and controller for transactions can be found under the models and controllers directory respectively.
+- The structure of the request and response bodies can be found in types/transactions and types/paystack.

@@ -1,3 +1,70 @@
+# Authentication Service
+
+The authentication service handles user registration, login, email verification, and password resets using [Better Auth](https://www.better-auth.com/).
+
+### Routes
+
+1. Sign Up using Email
+   `POST /api/auth/sign-up/email`
+
+   Registers a new user.
+
+   **Request Payload:**
+   ```json
+   {
+     "email": "user@example.com",
+     "password": "password",
+     "name": "John Doe",
+     "businessName": "My Business",
+     "phoneNumber": "+254700000000"
+   }
+   ```
+
+2. Sign In using Email
+   `POST /api/auth/sign-in/email`
+
+   Logs in an existing user.
+
+   **Request Payload:**
+   ```json
+   {
+     "email": "user@example.com",
+     "password": "password"
+   }
+   ```
+
+3. Sign Out
+   `POST /api/auth/sign-out`
+
+   Logs out the current user.
+
+4. Forgot Password
+   `POST /api/auth/forget-password`
+
+   Sends a password reset link to the user's email.
+
+   **Request Payload:**
+   ```json
+   {
+     "email": "user@example.com"
+   }
+   ```
+
+5. Reset Password
+   `POST /api/auth/reset-password`
+
+   Resets the user's password.
+
+### Data Model
+
+The authentication system uses the following tables (defined in `src/lib/db/schema.ts`):
+- `user`: Stores user details including `businessName`, `phoneNumber`, and `country`.
+- `session`: Stores active sessions.
+- `account`: Stores provider accounts (if any).
+- `verification`: Stores verification tokens.
+
+Configuration is in `src/lib/auth/index.ts`.
+
 # Notification Service
 
 ### Nodemailer and React emails

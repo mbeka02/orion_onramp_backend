@@ -194,6 +194,7 @@ The transaction service handles payment processing (mobile money payments as wel
    Initializes a new payment transaction. This endpoint requires a valid private key in the header.
 
    **Request Payload (JSON Body):**
+
    ```json
    {
      "token": "string" | "KESy_MAINNET" | "KESy_TESTNET", // Required: Type of token for the transaction.
@@ -218,10 +219,10 @@ The transaction service handles payment processing (mobile money payments as wel
    Retrieves a paginated list of transactions for a specific business and environment type.
 
    `Query params:
-   business_id (required): UUID of the business
-   environment_type (required): "Live" | "Test"
-   page (optional): number (default: 1)
-   limit (optional): number (default: 20)`
+business_id (required): UUID of the business
+environment_type (required): "Live" | "Test"
+page (optional): number (default: 1)
+limit (optional): number (default: 20)`
 
    **Expected Response:** Returns a list of transaction objects matching the criteria, along with pagination details (total items, pages, current page).
 

@@ -58,6 +58,15 @@ The authentication service handles user registration, login, email verification,
 
    Resets the user's password.
 
+   **Request Payload:**
+
+   ```json
+   {
+     "token": "verification_token",
+     "password": "newPassword"
+   }
+   ```
+
 ### Data Model
 
 The authentication system uses the following tables (defined in `src/lib/db/schema.ts`):

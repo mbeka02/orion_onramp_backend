@@ -184,7 +184,7 @@ More information can be found in [Webhook Documentation](https://docs.orionramp.
 
 # Transaction Service
 
-The transaction service handles payment processing ( mobile money payments as well as card payments) and transaction status management. It allows businesses to initialize payments, verify statuses, and receive webhook updates.
+The transaction service handles payment processing (mobile money payments as well as card payments) and transaction status management. It allows businesses to initialize payments, verify statuses, and receive webhook updates.
 
 ## Transaction Management
 
@@ -194,7 +194,6 @@ The transaction service handles payment processing ( mobile money payments as we
    Initializes a new payment transaction. This endpoint requires a valid private key in the header.
 
    **Request Payload (JSON Body):**
-
    ```json
    {
      "token": "string" | "KESy_MAINNET" | "KESy_TESTNET", // Required: Type of token for the transaction.
@@ -218,20 +217,20 @@ The transaction service handles payment processing ( mobile money payments as we
 
    Retrieves a paginated list of transactions for a specific business and environment type.
 
-`Query params:
-business_id (required): UUID of the business
-environment_type (required): "Live" | "Test"
-page (optional): number (default: 1)
-limit (optional): number (default: 20)`
+   `Query params:
+   business_id (required): UUID of the business
+   environment_type (required): "Live" | "Test"
+   page (optional): number (default: 1)
+   limit (optional): number (default: 20)`
 
-**Expected Response:** Returns a list of transaction objects matching the criteria, along with pagination details (total items, pages, current page).
+   **Expected Response:** Returns a list of transaction objects matching the criteria, along with pagination details (total items, pages, current page).
 
 3. Get Transaction by ID
    `GET /api/transaction/:id`
 
-Retrieves detailed information about a specific transaction.
+   Retrieves detailed information about a specific transaction.
 
-**Expected Response:** Returns the specific transaction object including its current status, amount, and associated metadata.
+   **Expected Response:** Returns the specific transaction object including its current status, amount, and associated metadata.
 
 4. Paystack Webhook
    `POST /api/transaction/webhook/paystack`

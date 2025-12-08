@@ -10,6 +10,7 @@ The authentication service handles user registration, login, email verification,
    Registers a new user.
 
    **Request Payload:**
+
    ```json
    {
      "email": "user@example.com",
@@ -26,6 +27,7 @@ The authentication service handles user registration, login, email verification,
    Logs in an existing user.
 
    **Request Payload:**
+
    ```json
    {
      "email": "user@example.com",
@@ -44,6 +46,7 @@ The authentication service handles user registration, login, email verification,
    Sends a password reset link to the user's email.
 
    **Request Payload:**
+
    ```json
    {
      "email": "user@example.com"
@@ -58,6 +61,7 @@ The authentication service handles user registration, login, email verification,
 ### Data Model
 
 The authentication system uses the following tables (defined in `src/lib/db/schema.ts`):
+
 - `user`: Stores user details including `businessName`, `phoneNumber`, and `country`.
 - `session`: Stores active sessions.
 - `account`: Stores provider accounts (if any).

@@ -180,4 +180,4 @@ This sends events to the business' webhook URL if they've registered one. The fo
 5. "account_not_associated",
 6. "token_transfer_failed",
 
-More information can be found in ![Webhook Documentation](https://docs.orionramp.com/business-onramp/webhook/payment)
+More information can be found in [Webhook Documentation](https://docs.orionramp.com/business-onramp/webhook/payment)

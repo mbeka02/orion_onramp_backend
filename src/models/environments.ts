@@ -326,6 +326,52 @@ export class EnvironmentModel {
       throw new Error("Error getting webhook secret key");
     }
   }
+
+  async getEnvironmentById(
+    environment_id: string,
+  ): Promise<{ business_id: string; webhook_url: string | null } | null> {
+    try {
+      const results = await db
+        .select({
+          business_id: environmentsTable.businessID,
+          webhook_url: environmentsTable.webhookUrl,
+        })
+        .from(environmentsTable)
+        .where(eq(environmentsTable.id, environment_id))
+        .limit(1);
+
+      if (results.length < 1) {
+        return null;
+      }
+
+      return results[0];
+    } catch (err) {
+      logger.error("Environment Model: Error getting environment by ID", {
+        error: err,
+        environment_id,
+      });
+      throw new Error("Error getting environment");
+    }
+  }
+
+  async updateWebhookUrl(
+    environment_id: string,
+    webhook_url: string,
+  ): Promise<void> {
+    try {
+      await db
+        .update(environmentsTable)
+        .set({ webhookUrl: webhook_url })
+        .where(eq(environmentsTable.id, environment_id));
+    } catch (err) {
+      logger.error("Environment Model: Error updating webhook URL", {
+        error: err,
+        environment_id,
+        webhook_url,
+      });
+      throw new Error("Error updating webhook URL");
+    }
+  }
 }
 
 const environmentModel = new EnvironmentModel();

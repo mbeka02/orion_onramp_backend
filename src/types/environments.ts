@@ -29,9 +29,9 @@ export const rotateKeysSchema = z.object({
 
 export const updateWebhookSchema = z.object({
   webhookUrl: z
-    .url("Webhook URL must be a valid URL")
+    .string()
     .trim()
-    .min(1, "Webhook URL cannot be empty"),
+    .pipe(z.url({ message: "Webhook URL must be a valid URL" })),
 });
 
 export type RotateKeysType = z.infer<typeof rotateKeysSchema>;

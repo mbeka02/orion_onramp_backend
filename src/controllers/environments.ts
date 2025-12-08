@@ -7,6 +7,9 @@ import {
 import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
 import { BusinessModel } from "../models/businesses";
+import webhookModel, { WebhookModel } from "../models/webhook";
+import { WEBHOOK_CONTROLLER_EVENTS } from "../types/webhook";
+import { TOKEN_TYPE } from "../types/token";
 
 export class EnvironmentsController {
   async create(
@@ -179,6 +182,163 @@ export class EnvironmentsController {
         throw err;
       }
       throw new Error("Error getting environments");
+    }
+  }
+
+  async getWebhookConfig(
+    environment_id: string,
+    user_id: string,
+    environmentModel: EnvironmentModel,
+    encryptionService: EncryptionService,
+    businessModel: BusinessModel,
+  ) {
+    try {
+      // Get environment and verify user has access
+      const environment =
+        await environmentModel.getEnvironmentById(environment_id);
+      if (!environment) {
+        throw new MyError(Errors.ENVIRONMENT_NOT_FOUND);
+      }
+
+      const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(
+        environment.business_id,
+        user_id,
+      );
+      if (!isUserOwnerOrAdmin) {
+        throw new MyError(Errors.UNAUTHORIZED);
+      }
+
+      // Get webhook details
+      const webhookDetails =
+        await environmentModel.getEnvironmentWebhookDetails(
+          environment_id,
+          encryptionService,
+        );
+      if (!webhookDetails) {
+        throw new MyError(Errors.ENVIRONMENT_NOT_FOUND);
+      }
+
+      return {
+        webhookUrl: environment.webhook_url,
+        webhookSecret: webhookDetails.webhook_secret,
+      };
+    } catch (err) {
+      logger.error("Environment Controller: Error getting webhook config", {
+        error: err,
+        environment_id,
+      });
+      if (err instanceof MyError) {
+        throw err;
+      }
+      throw new Error("Error getting webhook configuration");
+    }
+  }
+
+  async updateWebhookUrl(
+    environment_id: string,
+    user_id: string,
+    webhook_url: string,
+    environmentModel: EnvironmentModel,
+    businessModel: BusinessModel,
+  ) {
+    try {
+      // Get environment and verify user has access
+      const environment =
+        await environmentModel.getEnvironmentById(environment_id);
+      if (!environment) {
+        throw new MyError(Errors.ENVIRONMENT_NOT_FOUND);
+      }
+
+      const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(
+        environment.business_id,
+        user_id,
+      );
+      if (!isUserOwnerOrAdmin) {
+        throw new MyError(Errors.UNAUTHORIZED);
+      }
+
+      // Update webhook URL
+      await environmentModel.updateWebhookUrl(environment_id, webhook_url);
+    } catch (err) {
+      logger.error("Environment Controller: Error updating webhook URL", {
+        error: err,
+        environment_id,
+      });
+      if (err instanceof MyError) {
+        throw err;
+      }
+      throw new Error("Error updating webhook URL");
+    }
+  }
+
+  async sendTestWebhook(
+    environment_id: string,
+    user_id: string,
+    environmentModel: EnvironmentModel,
+    encryptionService: EncryptionService,
+    businessModel: BusinessModel,
+  ) {
+    try {
+      // Get environment and verify user has access
+      const environment =
+        await environmentModel.getEnvironmentById(environment_id);
+      if (!environment) {
+        throw new MyError(Errors.ENVIRONMENT_NOT_FOUND);
+      }
+
+      const isUserOwnerOrAdmin = await businessModel.isUserOwnerOrAdmin(
+        environment.business_id,
+        user_id,
+      );
+      if (!isUserOwnerOrAdmin) {
+        throw new MyError(Errors.UNAUTHORIZED);
+      }
+
+      // Check if webhook URL is set
+      if (!environment.webhook_url) {
+        throw new MyError(Errors.WEBHOOK_URL_NOT_SET);
+      }
+
+      // Get webhook secret
+      const webhookDetails =
+        await environmentModel.getEnvironmentWebhookDetails(
+          environment_id,
+          encryptionService,
+        );
+      if (!webhookDetails) {
+        throw new MyError(Errors.ENVIRONMENT_NOT_FOUND);
+      }
+
+      // Create test webhook data
+      const testData = {
+        event_type: WEBHOOK_CONTROLLER_EVENTS.CHARGE_SUCCESS,
+        order_id: "test_order_" + Date.now(),
+        token: TOKEN_TYPE.KESy_TESTNET,
+        amount: 100,
+        currency: "KES",
+      };
+
+      // Generate signature
+      const signature = webhookModel.generateSignature(
+        testData,
+        webhookDetails.webhook_secret,
+      );
+
+      // Send test webhook
+      await webhookModel.sendEvent(
+        testData,
+        signature,
+        environment.webhook_url,
+      );
+    } catch (err) {
+      logger.error("Environment Controller: Error sending test webhook", {
+        error: err,
+        environment_id,
+      });
+      if (err instanceof MyError) {
+        throw err;
+      }
+      throw new Error("Error sending test webhook");
     }
   }
 }

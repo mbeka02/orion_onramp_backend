@@ -181,3 +181,9 @@ This sends events to the business' webhook URL if they've registered one. The fo
 6. "token_transfer_failed",
 
 More information can be found in [Webhook Documentation](https://docs.orionramp.com/business-onramp/webhook/payment)
+
+# Architecture
+
+The diagram below shows how the above services work together:
+
+![Orion Architecture Diagram](https://drive.google.com/file/d/1VePuKrGknaltUV1d8DVIVIKNgEiDy6Ts/view?usp=sharing)

@@ -222,3 +222,49 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
     expect(true).toBe(true);
   });
 });
+
+describe("Liquidity Manager Tests: Undo Cache Deduct", () => {
+  const token = TOKEN_TYPE.KESy_TESTNET;
+  const goodAmount = 100;
+  const badAmount = 10000;
+  beforeEach(async () => {
+    jest.clearAllMocks();
+  });
+
+  beforeAll(async () => {
+    liquidityModelMock.undoTreasuryCachedBalanceDeduct = jest.fn().mockImplementation((token, amount) => {
+      return new Promise((res, rej) => {
+        if (token == TOKEN_TYPE.KESy_TESTNET && amount === badAmount) {
+          rej("Some error");
+        } else {
+          res(null);
+        }
+      })
+    })
+  });
+
+  it("should call cache deduct once if no errors occur", async () => {
+    await liquidityManagerController.undoCacheDeduct(
+      token,
+      goodAmount,
+      liquidityModelMock
+    );
+    expect(liquidityModelMock.undoTreasuryCachedBalanceDeduct).toHaveBeenCalledTimes(1);
+    expect(liquidityModelMock.undoTreasuryCachedBalanceDeduct).toHaveBeenCalledWith(token, goodAmount);
+  });
+
+  it("should try calling 5 times if errors occur", async () => {
+    try {
+      await liquidityManagerController.undoCacheDeduct(
+        token,
+        badAmount,
+        liquidityModelMock,
+        1,
+        0
+      );
+    } catch (err) {
+      expect(liquidityModelMock.undoTreasuryCachedBalanceDeduct).toHaveBeenCalledTimes(5);
+      expect(liquidityModelMock.undoTreasuryCachedBalanceDeduct).toHaveBeenCalledWith(token, badAmount);
+    }
+  })
+})

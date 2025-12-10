@@ -262,9 +262,104 @@ describe("Liquidity Manager Tests: Undo Cache Deduct", () => {
         1,
         0
       );
+      expect(false).toBe(true);
     } catch (err) {
       expect(liquidityModelMock.undoTreasuryCachedBalanceDeduct).toHaveBeenCalledTimes(5);
       expect(liquidityModelMock.undoTreasuryCachedBalanceDeduct).toHaveBeenCalledWith(token, badAmount);
     }
   })
+});
+
+describe("Liquidity Manager Tests: Mark Transaction Onramped", () => {
+  const goodTransactionReference = "good reference";
+  const badTransactionReference = "bad reference";
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+  })
+
+  beforeAll(async () => {
+    liquidityModelMock.markTransactionAsOnramped = jest.fn().mockImplementation((ref) => {
+      return new Promise((res, rej) => {
+        if (ref === goodTransactionReference) {
+          res(null);
+        } else if (ref === badTransactionReference) {
+          rej("Some error");
+        } else {
+          rej("Unexpected input");
+        }
+      })
+    })
+  })
+
+  it("should call mark transaction onramped once if no error", async () => {
+    await liquidityManagerController.markTransactionOnramped(
+      goodTransactionReference,
+      liquidityModelMock
+    );
+    expect(liquidityModelMock.markTransactionAsOnramped).toHaveBeenCalledTimes(1);
+    expect(liquidityModelMock.markTransactionAsOnramped).toHaveBeenCalledWith(goodTransactionReference);
+  });
+
+  it("should call mark transaction onramped 5 times if errors happen", async () => {
+    try {
+      await liquidityManagerController.markTransactionOnramped(
+        badTransactionReference,
+        liquidityModelMock,
+        1,
+        0
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      expect(liquidityModelMock.markTransactionAsOnramped).toHaveBeenCalledTimes(5);
+      expect(liquidityModelMock.markTransactionAsOnramped).toHaveBeenCalledWith(badTransactionReference);
+    }
+  });
+});
+
+describe("Liquidity Manager Controller: Mark Transaction Failed", () => {
+  const goodTransactionReference = "good reference";
+  const badTransactionReference = "bad reference";
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+  })
+
+  beforeAll(async () => {
+    liquidityModelMock.markTransactionAsFailed = jest.fn().mockImplementation((ref) => {
+      return new Promise((res, rej) => {
+        if (ref === goodTransactionReference) {
+          res(null);
+        } else if (ref === badTransactionReference) {
+          rej("Some error");
+        } else {
+          rej("Unexpected input");
+        }
+      })
+    })
+  })
+
+  it("should call mark transaction onramped once if no error", async () => {
+    await liquidityManagerController.markTransactionFailed(
+      goodTransactionReference,
+      liquidityModelMock
+    );
+    expect(liquidityModelMock.markTransactionAsFailed).toHaveBeenCalledTimes(1);
+    expect(liquidityModelMock.markTransactionAsFailed).toHaveBeenCalledWith(goodTransactionReference);
+  });
+
+  it("should call mark transaction onramped 5 times if errors happen", async () => {
+    try {
+      await liquidityManagerController.markTransactionFailed(
+        badTransactionReference,
+        liquidityModelMock,
+        1,
+        0
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      expect(liquidityModelMock.markTransactionAsFailed).toHaveBeenCalledTimes(5);
+      expect(liquidityModelMock.markTransactionAsFailed).toHaveBeenCalledWith(badTransactionReference);
+    }
+  });
 })

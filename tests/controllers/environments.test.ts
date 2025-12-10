@@ -461,3 +461,77 @@ describe("Environment Controller: Rotate Key Tests", () => {
     }
   });
 });
+
+describe("Environment Controller: Get All Business environments tests", () => {
+  const businessID = "business ID";
+  const adminUserID = "admin user";
+  const nonAdminUserID = "non admin user";
+  const environments = [
+    {
+      id: "environment id",
+      type: ENVIRONMENT_TYPES.TEST,
+      public_key: "a public key",
+      private_key_preview: "a private key preview",
+      created_at: new Date()
+    }
+  ]
+  
+  beforeAll(async () => {
+    businessModelMock.isUserOwnerOrAdmin = jest.fn().mockImplementation((business_id, user_id) => {
+      return new Promise((res, rej) => {
+        if (business_id === businessID && user_id === adminUserID) {
+          res(true);
+        } else if (business_id === businessID && user_id === nonAdminUserID) {
+          res(false);
+        } else {
+          rej("Unexpected input");
+        }
+      })
+    });
+
+    environmentModelMock.getBusinessEnvironments = jest.fn().mockImplementation((business_id) => {
+      return new Promise((res, rej) => {
+        if (business_id === businessID) {
+          res(environments)
+        } else {
+          rej("Unexpected business id");
+        }
+      })
+    })
+  })
+
+  it("should fail if user is not owner or admin of business", async () => {
+    try {
+      await environmentController.getAllBusinessEnvironments(
+        businessID,
+        nonAdminUserID,
+        environmentModelMock,
+        businessModelMock
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      if (err instanceof MyError) {
+        if (err.message === Errors.UNAUTHORIZED) {
+          expect(true).toBe(true);
+        } else {
+          console.error("Unexpected error", err);
+          expect(false).toBe(true);
+        }
+      } else {
+        console.error("Unexpected error", err);
+        expect(false).toBe(true);
+      }
+    }
+  });
+
+  it ("should return business environments", async () => {
+    const envs = await environmentController.getAllBusinessEnvironments(
+      businessID,
+      adminUserID,
+      environmentModelMock,
+      businessModelMock
+    );
+
+    expect(envs).toEqual(environments);
+  })
+})

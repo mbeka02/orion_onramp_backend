@@ -132,10 +132,10 @@ Configuration is in `src/lib/auth/index.ts`.
 
 # Notification Service
 
-### Nodemailer and React emails
+### Nodemailer and React Emails
 
 All email templates can be found under /src/lib/emails/templates folder.
-The email templates use react email and tailwind css is supported.
+The email templates use React Email and tailwind css is supported.
 
 The wrapper for the email service is in email.util.ts .
 

@@ -1,3 +1,55 @@
+# Orion: Hedera On-Ramp/Off-Ramp Backend
+
+## Project Overview
+
+Orion is a financial services platform designed to unlock the African market for the Hedera ecosystem. We are building the essential "on-ramp and off-ramp" infrastructure that connects local African fiat currencies directly to digital assets on Hedera. Our initial launch targets Kenya and Nigeria, two of Africa's largest and most dynamic economies, which have high crypto adoption rates but are largely cut off from the global Web3 ecosystem.
+
+## Key Features
+
+- **Fiat On-Ramp**: Facilitates seamless conversion between local African fiat currencies and digital assets on Hedera.
+- **Business Integration**: Provides services for businesses to integrate Orion's capabilities into their operations.
+- **User Authentication**: Secure user management including registration, login, and session handling.
+- **Environment Management**: Enables businesses to manage their API keys and webhook configurations for test and live environments.
+- **Treasury Operations**: Internal services for managing treasury accounts and token liquidity.
+- **Transaction Processing**: Handles payment processing, status management, and webhook updates for transactions.
+- **Hedera Integration**: Direct interaction with the Hedera network for on-chain operations.
+- **Webhook Notifications**: Delivers real-time event notifications to businesses.
+- **Admin Management**: Tools for administrative oversight and management of the platform.
+
+## Tech Stack
+
+The Orion backend is built with a modern and robust tech stack to ensure scalability, security, and performance:
+
+- **Language**: TypeScript
+- **Framework**: Express.js
+- **Database**: PostgreSQL (via Drizzle ORM)
+- **Authentication**: Better Auth
+- **Email Service**: Nodemailer with React Email
+- **Rate Limiting**: express-rate-limit
+- **Caching/Locking**: Redis, async-lock
+- **Configuration Management**: Infisical SDK
+- **Logging**: Pino
+- **Testing**: Jest, Supertest
+- **Hedera SDK**: @hiero-ledger/sdk
+- **Other Libraries**: dotenv, cors, bcrypt, jsonwebtoken, luxon, node-cron, posthog-node, zod, tailwindcss (for email templates)
+
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Key Features](#key-features)
+- [Tech Stack](#tech-stack)
+- [Table of Contents](#table-of-contents)
+- [Authentication Service](#authentication-service)
+- [Notification Service](#notification-service)
+- [Business Service](#business-service)
+- [Admin Service](#admin-service)
+- [Environment Service](#environment-service)
+- [Treasury Service](#treasury-service)
+- [Hedera Model](#hedera-model)
+- [Webhook Service](#webhook-service)
+- [Transaction Service](#transaction-service)
+- [Architecture](#architecture)
+
 # Authentication Service
 
 The authentication service handles user registration, login, email verification, and password resets using [Better Auth](https://www.better-auth.com/).
@@ -80,10 +132,10 @@ Configuration is in `src/lib/auth/index.ts`.
 
 # Notification Service
 
-### Nodemailer and React emails
+### Nodemailer and React Emails
 
 All email templates can be found under /src/lib/emails/templates folder.
-The email templates use react email and tailwind css is supported.
+The email templates use React Email and tailwind css is supported.
 
 The wrapper for the email service is in email.util.ts .
 

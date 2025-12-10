@@ -534,4 +534,154 @@ describe("Environment Controller: Get All Business environments tests", () => {
 
     expect(envs).toEqual(environments);
   })
+});
+
+describe("Environments Controller: Get Webhook Config", () => {
+  const nonExistingEnvironmentID = "non existing environment id";
+  const existingEnvironmentID = "existing environment id";
+  const notGetDetailsEnvironment = "not get details environment id";
+  const notGetDetailsBusiness = "not get details business id";
+  const nonAdminUser = "non admin user id";
+  const adminUser = "admin user id";
+  const business_id = "business id";
+  const webhookURL = "webhook url";
+  const webhookSecret = "webhook secret";
+
+  beforeAll(async () => {
+    environmentModelMock.getEnvironmentById = jest.fn().mockImplementation((environment_id) => {
+      return new Promise((res, rej) => {
+        if (environment_id === nonExistingEnvironmentID) {
+          res(null);
+        } else if (environment_id === existingEnvironmentID) {
+          res({
+            business_id: business_id,
+            webhook_url: webhookURL
+          })
+        } else if (environment_id == notGetDetailsEnvironment) {
+          res({
+            business_id: notGetDetailsBusiness,
+            webhook_url: webhookURL
+          })
+        } else {
+          rej("Unexpected input");
+        }
+      })
+    });
+
+    businessModelMock.isUserOwnerOrAdmin = jest.fn().mockImplementation((businessID, userID) => {
+      return new Promise((res, rej) => {
+        if ((businessID === business_id || businessID === notGetDetailsBusiness) && userID === nonAdminUser) {
+          res(false);
+        } else if ((businessID === business_id || businessID === notGetDetailsBusiness) && userID === adminUser) {
+          res(true);
+        } else {
+          rej("Unexpected input");
+        }
+      })
+    });
+
+    environmentModelMock.getEnvironmentWebhookDetails = jest.fn().mockImplementation((enviornment_id, _) => {
+      return new Promise((res, rej) => {
+        if (enviornment_id === notGetDetailsEnvironment) {
+          res(null);
+        } else if (enviornment_id === existingEnvironmentID) {
+          res({
+            webhook_secret: webhookSecret
+          })
+        } else {
+          rej("Unexpected input");
+        }
+      })
+    })
+  })
+
+  it("should fail if environment does not exist", async () => {
+    try {
+      await environmentController.getWebhookConfig(
+        nonExistingEnvironmentID,
+        adminUser,
+        environmentModelMock,
+        encryption_service_mock,
+        businessModelMock
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      if (err instanceof MyError) {
+        if (err.message === Errors.ENVIRONMENT_NOT_FOUND) {
+          expect(true).toBe(true);
+        } else {
+          console.error("Unexpected error", err);
+          expect(false).toBe(true);
+        }
+      } else {
+        console.error("Unexpected error", err);
+        expect(false).toBe(true);
+      }
+    }
+  });
+
+  it("should fail if user is not admin or owner of business", async () => {
+    try {
+      await environmentController.getWebhookConfig(
+        existingEnvironmentID,
+        nonAdminUser,
+        environmentModelMock,
+        encryption_service_mock,
+        businessModelMock
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      if (err instanceof MyError) {
+        if (err.message === Errors.UNAUTHORIZED) {
+          expect(true).toBe(true);
+        } else {
+          console.error("Unexpected error", err);
+          expect(false).toBe(true);
+        }
+      } else {
+        console.error("Unexpected error", err);
+        expect(false).toBe(true);
+      }
+    }
+  });
+
+  it("should throw error if it couldn't get webhook config", async () => {
+    try {
+      await environmentController.getWebhookConfig(
+        notGetDetailsEnvironment,
+        adminUser,
+        environmentModelMock,
+        encryption_service_mock,
+        businessModelMock
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      if (err instanceof MyError) {
+        if (err.message === Errors.NOT_GET_WEBHOOK_CONFIG) {
+          expect(true).toBe(true);
+        } else {
+          console.error("Unexpected error", err);
+          expect(false).toBe(true);
+        }
+      } else {
+        console.error("Unexpected error", err);
+        expect(false).toBe(true);
+      }
+    }
+  });
+
+  it("should return webhook config", async () => {
+    const webhookDetails = await environmentController.getWebhookConfig(
+      existingEnvironmentID,
+      adminUser,
+      environmentModelMock,
+      encryption_service_mock,
+      businessModelMock
+    );
+
+    expect(webhookDetails).toEqual({
+      webhookUrl: webhookURL,
+      webhookSecret: webhookSecret
+    })
+  })
 })

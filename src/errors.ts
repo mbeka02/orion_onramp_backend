@@ -51,4 +51,5 @@ export enum Errors {
   TRANSACTION_STATUS_MISMATCH = "Transaction status mismatch",
   ENVIRONMENT_NOT_FOUND = "Environment not found",
   WEBHOOK_URL_NOT_SET = "Webhook URL is not configured for this environment",
+  NOT_GET_WEBHOOK_CONFIG = "Failed to retrieve webhook configuration"
 }

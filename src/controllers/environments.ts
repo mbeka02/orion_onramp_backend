@@ -215,7 +215,7 @@ export class EnvironmentsController {
           encryptionService,
         );
       if (!webhookDetails) {
-        throw new MyError("Failed to retrieve webhook configuration");
+        throw new MyError(Errors.NOT_GET_WEBHOOK_CONFIG);
       }
 
       return {

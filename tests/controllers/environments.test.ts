@@ -684,4 +684,106 @@ describe("Environments Controller: Get Webhook Config", () => {
       webhookSecret: webhookSecret
     })
   })
+});
+
+describe("Environment Controller: Update webhook URL tests", () => {
+  const nonExistingEnvironmentID = "non existing environment id";
+  const existingEnvironmentID = "existing environment id";
+  const business_id = "business id";
+  const webhookURL = "webhook url";
+  const newWebhookURL = "new webhook url";
+  const nonAdminUser = "non admin user id";
+  const adminUser = "admin user id";
+
+  beforeAll(async () => {
+    environmentModelMock.getEnvironmentById = jest.fn().mockImplementation((environment_id) => {
+      return new Promise((res, rej) => {
+        if (environment_id === nonExistingEnvironmentID) {
+          res(null);
+        } else if (environment_id === existingEnvironmentID) {
+          res({
+            business_id: business_id,
+            webhook_url: webhookURL
+          })
+        } else {
+          rej("Unexpected input");
+        }
+      })
+    });
+
+     businessModelMock.isUserOwnerOrAdmin = jest.fn().mockImplementation((businessID, userID) => {
+      return new Promise((res, rej) => {
+        if (businessID === business_id  && userID === nonAdminUser) {
+          res(false);
+        } else if (businessID === business_id  && userID === adminUser) {
+          res(true);
+        } else {
+          rej("Unexpected input");
+        }
+      })
+    });
+  })
+
+  it("should fail if environment does not exist", async () => {
+    try {
+      await environmentController.updateWebhookUrl(
+        nonExistingEnvironmentID,
+        adminUser,
+        newWebhookURL,
+        environmentModelMock,
+        businessModelMock
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      if (err instanceof MyError) {
+        if (err.message === Errors.ENVIRONMENT_NOT_FOUND) {
+          expect(true).toBe(true);
+        } else {
+          console.error("Unexpected error", err);
+          expect(false).toBe(true);
+        }
+      } else {
+        console.error("Unexpected error", err);
+        expect(false).toBe(true);
+      }
+    }
+  });
+
+  it("should fail if user is not an admin", async () => {
+    try {
+      await environmentController.updateWebhookUrl(
+        existingEnvironmentID,
+        nonAdminUser,
+        newWebhookURL,
+        environmentModelMock,
+        businessModelMock
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      if (err instanceof MyError) {
+        if (err.message === Errors.UNAUTHORIZED) {
+          expect(true).toBe(true);
+        } else {
+          console.error("Unexpected error", err);
+          expect(false).toBe(true);
+        }
+      } else {
+        console.error("Unexpected error", err);
+        expect(false).toBe(true);
+      }
+    }
+  });
+
+  it("should update webhook", async () => {
+    await environmentController.updateWebhookUrl(
+      existingEnvironmentID,
+      adminUser,
+      newWebhookURL,
+      environmentModelMock,
+      businessModelMock
+    );
+
+    expect(environmentModelMock.updateWebhookUrl).toHaveBeenCalledWith(existingEnvironmentID, newWebhookURL);
+    expect(environmentModelMock.updateWebhookUrl).toHaveBeenCalledTimes(1);
+  })
 })

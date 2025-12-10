@@ -322,3 +322,9 @@ limit (optional): number (default: 20)`
 
 - The model and controller for transactions can be found under the models and controllers directory respectively.
 - The structure of the request and response bodies can be found in types/transactions and types/paystack.
+
+# Architecture
+
+The diagram below shows how the above services work together:
+
+![Orion Architecture Diagram](/docs/Orion%20Architecture%20Diagram.jpeg)

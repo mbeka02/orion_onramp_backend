@@ -50,11 +50,11 @@ export function validateParams(schema: z.ZodObject<any, any>) {
     }
   };
 }
-
-export function validateQuery(schema: z.ZodObject<any, any>) {
+export function validateQuery<T extends z.ZodType>(schema: T) {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      schema.parse(req.query);
+      const validated = schema.parse(req.query);
+      req.query = validated as any;
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -62,7 +62,6 @@ export function validateQuery(schema: z.ZodObject<any, any>) {
           field: issue.path.join("."),
           message: issue.message,
         }));
-
         res.status(400).json({
           error: "Invalid query parameters",
           details: errorMessages,

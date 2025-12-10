@@ -1,8 +1,4 @@
-import {
-  businesses,
-  environmentsTable,
-  transactionsTable,
-} from "../lib/db/schema";
+import { environmentsTable, transactionsTable } from "../lib/db/schema";
 import { db } from "../lib/db";
 import logger from "../lib/logger";
 import { TOKEN_TYPE } from "../types/token";
@@ -12,6 +8,8 @@ import {
   desc,
   count,
   eq,
+  or,
+  like,
   DrizzleQueryError,
   and,
   getTableColumns,
@@ -58,10 +56,41 @@ export class TransactionModel {
     environmentType: ENVIRONMENT_TYPES,
     page: number = 1,
     limit: number = 20,
+    filters?: {
+      status?: TRANSACTION_STATUS;
+      token?: TOKEN_TYPE;
+      search?: string;
+    },
   ) {
     const offset = (page - 1) * limit;
 
     try {
+      // Build where conditions dynamically
+      const conditions = [
+        eq(environmentsTable.type, environmentType),
+        eq(environmentsTable.businessID, businessID),
+      ];
+      if (filters?.status) {
+        conditions.push(
+          eq(transactionsTable.transactionStatus, filters.status),
+        );
+      }
+
+      if (filters?.token) {
+        conditions.push(eq(transactionsTable.token, filters.token));
+      }
+      if (filters?.search) {
+        const searchConditions = [
+          like(transactionsTable.reference, `%${filters.search}%`),
+          like(transactionsTable.email, `%${filters.search}%`),
+        ];
+
+        const searchCondition = or(...searchConditions);
+        if (searchCondition) {
+          conditions.push(searchCondition);
+        }
+      }
+      const whereClause = and(...conditions);
       const [transactionData, totalCountResult] = await Promise.all([
         db
           .select({
@@ -72,12 +101,7 @@ export class TransactionModel {
             environmentsTable,
             eq(environmentsTable.id, transactionsTable.environmentID),
           )
-          .where(
-            and(
-              eq(environmentsTable.type, environmentType),
-              eq(environmentsTable.businessID, businessID),
-            ),
-          )
+          .where(whereClause)
           .limit(limit)
           .offset(offset)
           .orderBy(desc(transactionsTable.createdAt)),
@@ -88,12 +112,7 @@ export class TransactionModel {
             environmentsTable,
             eq(environmentsTable.id, transactionsTable.environmentID),
           )
-          .where(
-            and(
-              eq(environmentsTable.type, environmentType),
-              eq(environmentsTable.businessID, businessID),
-            ),
-          ),
+          .where(whereClause),
       ]);
 
       const totalItems = totalCountResult[0]?.count || 0;

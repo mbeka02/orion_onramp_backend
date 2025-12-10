@@ -2,7 +2,10 @@ import { Router, Request, Response } from "express";
 import { TransactionController } from "../controllers/transactions";
 import { TransactionModel } from "../models/transactions";
 import { validateBody } from "../middleware/validation";
-import { initializeTransactionSchema } from "../types/transactions";
+import {
+  getTransactionsSchema,
+  initializeTransactionSchema,
+} from "../types/transactions";
 import logger from "../lib/logger";
 import { Errors, MyError } from "../errors";
 import { PaystackWebhookPayload } from "../types/paystack";
@@ -44,6 +47,9 @@ export const initializeTransactionLimiter = rateLimit({
  * Query Params:
  * business_id
  * environment_type
+ * status -optional
+ * token - optional
+ * search -optional
  * page
  * limit
  */
@@ -55,42 +61,49 @@ router.get("/", authenticationMiddleware, async (req, res) => {
       return;
     }
 
-    const businessID = req.query.business_id;
-    const environmentType = req.query.environment_type;
-    const rawPage = Number(req.query.page);
-    const rawLimit = Number(req.query.limit);
-    const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
-    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? rawLimit : 20;
-    if (
-      !businessID ||
-      !environmentType ||
-      typeof businessID !== "string" ||
-      typeof environmentType !== "string"
-    ) {
+    const result = getTransactionsSchema.safeParse(req.query);
+
+    if (!result.success) {
       res.status(400).json({
-        error:
-          "Error Bad Request.Include the business id and environment type in the query parameters and ensure they are valid strings",
+        error: "Invalid query parameters",
+        details: result.error.issues.map((issue) => ({
+          field: issue.path.join("."),
+          message: issue.message,
+        })),
       });
       return;
     }
+
+    const {
+      business_id,
+      environment_type,
+      page,
+      limit,
+      status,
+      token,
+      search,
+    } = result.data;
     const validEnvironmentTypes = Object.values(ENVIRONMENT_TYPES);
-    if (!validEnvironmentTypes.includes(environmentType as ENVIRONMENT_TYPES)) {
+    if (
+      !validEnvironmentTypes.includes(environment_type as ENVIRONMENT_TYPES)
+    ) {
       res.status(400).json({
         error: `Invalid environment_type. Must be one of: ${validEnvironmentTypes.join(", ")}`,
       });
       return;
     }
+
     const transactions = await transactionController.getTransactionsByBusiness(
       session.user.id,
-      businessID,
-      environmentType as ENVIRONMENT_TYPES,
+      business_id,
+      environment_type as ENVIRONMENT_TYPES,
       page,
       limit,
+      { status, token, search },
     );
     return res.status(200).json(transactions);
   } catch (err) {
     logger.error("Error fetching transactions in router", { error: err });
-
     if (err instanceof MyError) {
       if (err.message === Errors.TRANSACTION_VIEW_FORBIDDEN) {
         res.status(403).json({ message: err.message });
@@ -98,7 +111,6 @@ router.get("/", authenticationMiddleware, async (req, res) => {
       }
       return res.status(400).json({ message: err.message });
     }
-
     res.status(500).json({ message: Errors.INTERNAL_SERVER_ERROR });
   }
 });

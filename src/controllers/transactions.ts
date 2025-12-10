@@ -264,6 +264,11 @@ export class TransactionController {
     environmentType: ENVIRONMENT_TYPES,
     page: number,
     limit: number,
+    filters?: {
+      status?: TRANSACTION_STATUS;
+      token?: TOKEN_TYPE;
+      search?: string;
+    },
   ) {
     try {
       const validMember =
@@ -280,6 +285,7 @@ export class TransactionController {
           environmentType,
           page,
           limit,
+          filters,
         );
       return transactions;
     } catch (err) {

@@ -1,3 +1,4 @@
+import e from "express";
 import environmentController from "../../src/controllers/environments";
 import { Errors, MyError } from "../../src/errors";
 import {
@@ -10,6 +11,7 @@ import { environmentModelMock } from "../mocks/environment_model_mock";
 
 describe("Environment Controller: Create Key Tests", () => {
   const business = "existing id";
+  const failingBusinessID = "failing id";
   const unapprovedBusiness = "unapproved business id";
   const liveEnvironment = ENVIRONMENT_TYPES.LIVE;
   const adminUser = "admin";
@@ -245,6 +247,7 @@ describe("Environment Controller: Create Key Tests", () => {
 
 describe("Environment Controller: Rotate Key Tests", () => {
   const business = "existing id";
+  const issueGettingDetailsBusiness = "issue getting details business id";
   const adminUser = "admin";
   const nonAdminUser = "non admin";
   const non_existing_environment = ENVIRONMENT_TYPES.LIVE;
@@ -264,12 +267,12 @@ describe("Environment Controller: Rotate Key Tests", () => {
           (business_id: string, environment_type: ENVIRONMENT_TYPES) => {
             return new Promise((res, rej) => {
               if (
-                business_id === business &&
+                (business_id === business || business_id === issueGettingDetailsBusiness) &&
                 environment_type === non_existing_environment
               ) {
                 res(false);
               } else if (
-                business_id === business &&
+                (business_id === business || business_id === issueGettingDetailsBusiness) &&
                 environment_type === existing_environment
               ) {
                 res(true);
@@ -332,7 +335,7 @@ describe("Environment Controller: Rotate Key Tests", () => {
         .fn()
         .mockImplementation((business_id: string, user_id: string) => {
           return new Promise((res, rej) => {
-            if (user_id === adminUser && business_id === business) {
+            if (user_id === adminUser && (business_id === business || business_id === issueGettingDetailsBusiness)) {
               res(true);
             } else {
               res(false);
@@ -369,6 +372,32 @@ describe("Environment Controller: Rotate Key Tests", () => {
       }
     }
   });
+
+  it("should fail if old keys for business couldn't be gotten", async () => {
+    try {
+      await environmentController.rotateKeys(
+        issueGettingDetailsBusiness,
+        adminUser,
+        existing_environment,
+        environmentModelMock,
+        encryption_service_mock,
+        businessModelMock,
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      if (err instanceof MyError) {
+        if (err.message === Errors.BUSINESS_DOES_NOT_HAVE_KEYS) {
+          expect(true).toBe(true);
+        } else {
+          console.error("Unexpected error", err);
+          expect(false).toBe(true);
+        }
+      } else {
+        console.error("Unexpected error", err);
+        expect(false).toBe(true);
+      }
+    }
+  })
 
   it("should fail if user calling is not admin or owner", async () => {
     try {

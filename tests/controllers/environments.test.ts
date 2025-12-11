@@ -970,7 +970,7 @@ describe("Environment Controller: Send Test Webhook", () => {
       expect(false).toBe(true);
     } catch (err) {
       if (err instanceof MyError) {
-        if (err.message === Errors.ENVIRONMENT_NOT_FOUND) {
+        if (err.message === Errors.NOT_GET_WEBHOOK_CONFIG) {
           expect(true).toBe(true);
         }
       } else {

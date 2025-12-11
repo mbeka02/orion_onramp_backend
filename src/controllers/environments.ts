@@ -307,7 +307,7 @@ export class EnvironmentsController {
           encryptionService,
         );
       if (!webhookDetails) {
-        throw new MyError(Errors.ENVIRONMENT_NOT_FOUND);
+        throw new MyError(Errors.NOT_GET_WEBHOOK_CONFIG);
       }
 
       // Create test webhook data

@@ -981,15 +981,15 @@ describe("Environment Controller: Send Test Webhook", () => {
 
   it("should send test webhook", async () => {
     await environmentController.sendTestWebhook(
-        existingEnvironment,
-        adminUser,
-        environmentModelMock,
-        encryption_service_mock,
-        businessModelMock,
-        webhookModelMock,
-      );
+      existingEnvironment,
+      adminUser,
+      environmentModelMock,
+      encryption_service_mock,
+      businessModelMock,
+      webhookModelMock,
+    );
 
-      expect(webhookModelMock.generateSignature).toHaveBeenCalledTimes(1);
-      expect(webhookModelMock.sendEvent).toHaveBeenCalledTimes(1);
+    expect(webhookModelMock.generateSignature).toHaveBeenCalledTimes(1);
+    expect(webhookModelMock.sendEvent).toHaveBeenCalledTimes(1);
   });
 });

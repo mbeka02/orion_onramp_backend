@@ -19,7 +19,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
   const onramped_transaction_reference = "onramped transaction";
   const not_complete_transaction_reference = "not_complete_transaction";
   const too_much_transaction_reference = "too_much_transaction";
-  
+
   const too_much_amount = 1000000;
   const testToken = TOKEN_TYPE.KESy_TESTNET;
   const too_much_transaction_id = "too_much_id";
@@ -67,7 +67,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
     amount: enough_amount * 100,
     email: "enough",
     transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
-  }
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -149,7 +149,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
             res(failing_transaction);
           } else if (id === not_associated_transaction_reference) {
             res(not_associated_transaction);
-          }else {
+          } else {
             rej(new Error("Unexpected transaction id"));
           }
         });
@@ -172,7 +172,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
               rej(new Error("Could not send"));
             } else if (environment_id === not_associated_environment) {
               rej(new MyError(Errors.BUSINESS_NOT_ASSOCIATED));
-            }else {
+            } else {
               res(null);
             }
           });
@@ -413,11 +413,15 @@ describe("Treasury Business SDK Onramp Tests", () => {
         encryption_service_mock,
       );
       expect(false).toBe(true);
-    } catch(err) {
+    } catch (err) {
       if (err instanceof MyError) {
         if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
-          expect(liquidityManagerControllerMock.undoCacheDeduct).toHaveBeenCalledTimes(1);
-          expect(liquidityManagerControllerMock.markTransactionFailed).toHaveBeenCalledTimes(1);
+          expect(
+            liquidityManagerControllerMock.undoCacheDeduct,
+          ).toHaveBeenCalledTimes(1);
+          expect(
+            liquidityManagerControllerMock.markTransactionFailed,
+          ).toHaveBeenCalledTimes(1);
           expect(webhookControllerMock.sendEvent).toHaveBeenCalledTimes(2);
           expect(webhookControllerMock.sendEvent).toHaveBeenCalledWith(
             WEBHOOK_CONTROLLER_EVENTS.ACCOUNT_NOT_ASSOCIATED,
@@ -425,8 +429,8 @@ describe("Treasury Business SDK Onramp Tests", () => {
             transactionModelMock,
             webhookModelMock,
             environmentModelMock,
-            encryption_service_mock
-          )
+            encryption_service_mock,
+          );
         } else {
           console.error("Unexpected error", err);
           expect(false).toBe(true);
@@ -435,5 +439,5 @@ describe("Treasury Business SDK Onramp Tests", () => {
         expect(false).toBe(true);
       }
     }
-  })
+  });
 });

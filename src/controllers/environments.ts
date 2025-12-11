@@ -277,7 +277,7 @@ export class EnvironmentsController {
     environmentModel: EnvironmentModel,
     encryptionService: EncryptionService,
     businessModel: BusinessModel,
-    webhookModel: WebhookModel
+    webhookModel: WebhookModel,
   ) {
     try {
       // Get environment and verify user has access

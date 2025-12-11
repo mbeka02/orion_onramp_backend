@@ -89,7 +89,7 @@ export class LiquidityManagerController {
     amount: number,
     liquidityModel: LiquidityManagerModel,
     retry: number = 1,
-    sleepMs: number = 2
+    sleepMs: number = 2,
   ) {
     try {
       await liquidityModel.undoTreasuryCachedBalanceDeduct(token, amount);
@@ -102,7 +102,13 @@ export class LiquidityManagerController {
       });
       if (retry < MAX_RETRIES) {
         await sleep(sleepMs ** retry * 1000);
-        await this.undoCacheDeduct(token, amount, liquidityModel, retry + 1, sleepMs);
+        await this.undoCacheDeduct(
+          token,
+          amount,
+          liquidityModel,
+          retry + 1,
+          sleepMs,
+        );
       } else {
         throw new Error("Could not undo cache deduct");
       }
@@ -113,7 +119,7 @@ export class LiquidityManagerController {
     transaction_reference: string,
     liquidityModel: LiquidityManagerModel,
     retry: number = 1,
-    sleepMs: number = 2
+    sleepMs: number = 2,
   ) {
     try {
       await liquidityModel.markTransactionAsOnramped(transaction_reference);
@@ -128,7 +134,7 @@ export class LiquidityManagerController {
           transaction_reference,
           liquidityModel,
           retry + 1,
-          sleepMs
+          sleepMs,
         );
       } else {
         throw new Error("Could not mark transaction as onramped");
@@ -140,7 +146,7 @@ export class LiquidityManagerController {
     transaction_reference: string,
     liquidityModel: LiquidityManagerModel,
     retry: number = 1,
-    sleepMs: number = 2
+    sleepMs: number = 2,
   ) {
     try {
       await liquidityModel.markTransactionAsFailed(transaction_reference);
@@ -155,7 +161,7 @@ export class LiquidityManagerController {
           transaction_reference,
           liquidityModel,
           retry + 1,
-          sleepMs
+          sleepMs,
         );
       } else {
         throw new Error("Could not mark transaction as failed");

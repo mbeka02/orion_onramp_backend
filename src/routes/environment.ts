@@ -296,7 +296,7 @@ router.post(
         environmentModel,
         encryptionService,
         businessModel,
-        webhookModel
+        webhookModel,
       );
 
       res.status(200).json({

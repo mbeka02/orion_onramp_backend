@@ -957,6 +957,29 @@ describe("Environment Controller: Send Test Webhook", () => {
     }
   });
 
+  it("should fail if could not get webhook details", async () => {
+    try {
+      await environmentController.sendTestWebhook(
+        notGetWebhookDetailsEnvironment,
+        adminUser,
+        environmentModelMock,
+        encryption_service_mock,
+        businessModelMock,
+        webhookModelMock,
+      );
+      expect(false).toBe(true);
+    } catch (err) {
+      if (err instanceof MyError) {
+        if (err.message === Errors.WEBHOOK_URL_NOT_SET) {
+          expect(true).toBe(true);
+        }
+      } else {
+        console.error("Unexpected error", err);
+        expect(false).toBe(true);
+      }
+    }
+  });
+
   it("should send test webhook", async () => {
     try {
       await environmentController.sendTestWebhook(

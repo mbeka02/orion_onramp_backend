@@ -14,6 +14,7 @@ import { EncryptionService } from "../lib/encryption";
 import { getAuthContext } from "../lib/auth/utils";
 import rateLimit from "express-rate-limit";
 import businessModel from "../models/businesses";
+import webhookModel from "../models/webhook";
 const router: Router = Express.Router();
 export const createEnvironmentLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
@@ -295,6 +296,7 @@ router.post(
         environmentModel,
         encryptionService,
         businessModel,
+        webhookModel,
       );
 
       res.status(200).json({

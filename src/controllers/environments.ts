@@ -7,7 +7,7 @@ import {
 import { Errors, MyError } from "../errors";
 import { EncryptionService } from "../lib/encryption";
 import { BusinessModel } from "../models/businesses";
-import webhookModel, { WebhookModel } from "../models/webhook";
+import { WebhookModel } from "../models/webhook";
 import { WEBHOOK_CONTROLLER_EVENTS } from "../types/webhook";
 import { TOKEN_TYPE } from "../types/token";
 
@@ -215,7 +215,7 @@ export class EnvironmentsController {
           encryptionService,
         );
       if (!webhookDetails) {
-        throw new MyError("Failed to retrieve webhook configuration");
+        throw new MyError(Errors.NOT_GET_WEBHOOK_CONFIG);
       }
 
       return {
@@ -277,6 +277,7 @@ export class EnvironmentsController {
     environmentModel: EnvironmentModel,
     encryptionService: EncryptionService,
     businessModel: BusinessModel,
+    webhookModel: WebhookModel,
   ) {
     try {
       // Get environment and verify user has access
@@ -306,7 +307,7 @@ export class EnvironmentsController {
           encryptionService,
         );
       if (!webhookDetails) {
-        throw new MyError(Errors.ENVIRONMENT_NOT_FOUND);
+        throw new MyError(Errors.NOT_GET_WEBHOOK_CONFIG);
       }
 
       // Create test webhook data

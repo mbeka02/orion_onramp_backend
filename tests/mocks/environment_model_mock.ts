@@ -9,4 +9,6 @@ export const environmentModelMock = {
   getBusinessEnvironments: jest.fn(),
   getEnvironmentWebhookDetails: jest.fn(),
   doesPrivateKeyExist: jest.fn(),
+  updateWebhookUrl: jest.fn(),
+  getEnvironmentById: jest.fn(),
 } as EnvironmentModel;

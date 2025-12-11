@@ -11,7 +11,6 @@ import { webhookModelMock } from "../mocks/webhook_model_mock";
 
 describe("Environment Controller: Create Key Tests", () => {
   const business = "existing id";
-  const failingBusinessID = "failing id";
   const unapprovedBusiness = "unapproved business id";
   const liveEnvironment = ENVIRONMENT_TYPES.LIVE;
   const adminUser = "admin";
@@ -981,8 +980,7 @@ describe("Environment Controller: Send Test Webhook", () => {
   });
 
   it("should send test webhook", async () => {
-    try {
-      await environmentController.sendTestWebhook(
+    await environmentController.sendTestWebhook(
         existingEnvironment,
         adminUser,
         environmentModelMock,
@@ -993,15 +991,5 @@ describe("Environment Controller: Send Test Webhook", () => {
 
       expect(webhookModelMock.generateSignature).toHaveBeenCalledTimes(1);
       expect(webhookModelMock.sendEvent).toHaveBeenCalledTimes(1);
-    } catch (err) {
-      if (err instanceof MyError) {
-        if (err.message === Errors.ENVIRONMENT_NOT_FOUND) {
-          expect(true).toBe(true);
-        }
-      } else {
-        console.error("Unexpected error", err);
-        expect(false).toBe(true);
-      }
-    }
   });
 });

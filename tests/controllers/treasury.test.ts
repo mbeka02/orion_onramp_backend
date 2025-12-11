@@ -2,6 +2,7 @@ import treasuryController from "../../src/controllers/treasury";
 import { Errors, MyError } from "../../src/errors";
 import { TOKEN_TYPE } from "../../src/types/token";
 import { TRANSACTION_STATUS } from "../../src/types/transactions";
+import { WEBHOOK_CONTROLLER_EVENTS } from "../../src/types/webhook";
 import { emailServiceMock } from "../mocks/email_service_mock";
 import { encryption_service_mock } from "../mocks/encryption_mock";
 import { environmentModelMock } from "../mocks/environment_model_mock";
@@ -18,6 +19,7 @@ describe("Treasury Business SDK Onramp Tests", () => {
   const onramped_transaction_reference = "onramped transaction";
   const not_complete_transaction_reference = "not_complete_transaction";
   const too_much_transaction_reference = "too_much_transaction";
+  
   const too_much_amount = 1000000;
   const testToken = TOKEN_TYPE.KESy_TESTNET;
   const too_much_transaction_id = "too_much_id";
@@ -54,6 +56,18 @@ describe("Treasury Business SDK Onramp Tests", () => {
     email: "enough",
     transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
   };
+  const not_associated_transaction_reference = "not associated transaction";
+  const not_associated_transaction_id = "not_associated_transaction";
+  const not_associated_environment = "not associated environment id";
+  const not_associated_transaction = {
+    id: not_associated_transaction_id,
+    environmentID: not_associated_environment,
+    reference: not_associated_transaction_reference,
+    token: testToken,
+    amount: enough_amount * 100,
+    email: "enough",
+    transactionStatus: TRANSACTION_STATUS.SUCCESSFUL,
+  }
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -70,7 +84,8 @@ describe("Treasury Business SDK Onramp Tests", () => {
             transaction_id === not_complete_transaction_reference ||
             transaction_id === too_much_transaction_reference ||
             transaction_id === enough_transaction_reference ||
-            transaction_id === failing_transaction_reference
+            transaction_id === failing_transaction_reference ||
+            transaction_id === not_associated_transaction_reference
           ) {
             res(true);
           } else {
@@ -100,7 +115,8 @@ describe("Treasury Business SDK Onramp Tests", () => {
             transaction_id === onramped_transaction_reference ||
             transaction_id === too_much_transaction_reference ||
             transaction_id === enough_transaction_reference ||
-            transaction_id === failing_transaction_reference
+            transaction_id === failing_transaction_reference ||
+            transaction_id === not_associated_transaction_reference
           ) {
             res(true);
           } else {
@@ -131,7 +147,9 @@ describe("Treasury Business SDK Onramp Tests", () => {
             res(enough_transaction);
           } else if (id === failing_transaction_reference) {
             res(failing_transaction);
-          } else {
+          } else if (id === not_associated_transaction_reference) {
+            res(not_associated_transaction);
+          }else {
             rej(new Error("Unexpected transaction id"));
           }
         });
@@ -152,7 +170,9 @@ describe("Treasury Business SDK Onramp Tests", () => {
           return new Promise((res, rej) => {
             if (environment_id === failingEnvironment) {
               rej(new Error("Could not send"));
-            } else {
+            } else if (environment_id === not_associated_environment) {
+              rej(new MyError(Errors.BUSINESS_NOT_ASSOCIATED));
+            }else {
               res(null);
             }
           });
@@ -377,4 +397,43 @@ describe("Treasury Business SDK Onramp Tests", () => {
       );
     }
   });
+
+  it("should fail and send not associated event if business has not associated", async () => {
+    try {
+      await treasuryController.businessOnramp(
+        not_associated_transaction_reference,
+        treasuryModelMock,
+        liquidityManagerControllerMock,
+        transactionModelMock,
+        liquidityModelMock,
+        emailServiceMock,
+        webhookControllerMock,
+        webhookModelMock,
+        environmentModelMock,
+        encryption_service_mock,
+      );
+      expect(false).toBe(true);
+    } catch(err) {
+      if (err instanceof MyError) {
+        if (err.message === Errors.BUSINESS_NOT_ASSOCIATED) {
+          expect(liquidityManagerControllerMock.undoCacheDeduct).toHaveBeenCalledTimes(1);
+          expect(liquidityManagerControllerMock.markTransactionFailed).toHaveBeenCalledTimes(1);
+          expect(webhookControllerMock.sendEvent).toHaveBeenCalledTimes(2);
+          expect(webhookControllerMock.sendEvent).toHaveBeenCalledWith(
+            WEBHOOK_CONTROLLER_EVENTS.ACCOUNT_NOT_ASSOCIATED,
+            not_associated_transaction_reference,
+            transactionModelMock,
+            webhookModelMock,
+            environmentModelMock,
+            encryption_service_mock
+          )
+        } else {
+          console.error("Unexpected error", err);
+          expect(false).toBe(true);
+        }
+      } else {
+        expect(false).toBe(true);
+      }
+    }
+  })
 });

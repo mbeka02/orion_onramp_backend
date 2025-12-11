@@ -361,7 +361,7 @@ describe("Liquidity Manager Controller: Mark Transaction Failed", () => {
       });
   });
 
-  it("should call mark transaction onramped once if no error", async () => {
+  it("should call mark transaction failed once if no error", async () => {
     await liquidityManagerController.markTransactionFailed(
       goodTransactionReference,
       liquidityModelMock,
@@ -372,7 +372,7 @@ describe("Liquidity Manager Controller: Mark Transaction Failed", () => {
     );
   });
 
-  it("should call mark transaction onramped 5 times if errors happen", async () => {
+  it("should call mark transaction failed 5 times if errors happen", async () => {
     try {
       await liquidityManagerController.markTransactionFailed(
         badTransactionReference,

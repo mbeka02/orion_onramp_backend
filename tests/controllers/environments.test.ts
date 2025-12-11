@@ -1,4 +1,3 @@
-import e from "express";
 import environmentController from "../../src/controllers/environments";
 import { Errors, MyError } from "../../src/errors";
 import {
@@ -862,9 +861,9 @@ describe("Environment Controller: Send Test Webhook", () => {
       .fn()
       .mockImplementation((businessId, userId) => {
         return new Promise((res, rej) => {
-          if (businessId === businessId && userId === nonAdminUser) {
+          if (businessId === business_id && userId === nonAdminUser) {
             res(false);
-          } else if (businessId === businessId && userId === adminUser) {
+          } else if (businessId === business_id && userId === adminUser) {
             res(true);
           } else {
             rej("Unexpected input");
@@ -938,7 +937,7 @@ describe("Environment Controller: Send Test Webhook", () => {
   it("should fail if environment does not have webhook URL", async () => {
     try {
       await environmentController.sendTestWebhook(
-        nonExistingEnvironment,
+        environmentWithNoWebhook,
         adminUser,
         environmentModelMock,
         encryption_service_mock,
@@ -958,7 +957,7 @@ describe("Environment Controller: Send Test Webhook", () => {
     }
   });
 
-  it("should fail if could not get environment's webhook details", async () => {
+  it("should send test webhook", async () => {
     try {
       await environmentController.sendTestWebhook(
         existingEnvironment,

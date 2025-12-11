@@ -9,7 +9,7 @@ import {
   count,
   eq,
   or,
-  like,
+  ilike,
   DrizzleQueryError,
   and,
   getTableColumns,
@@ -81,8 +81,8 @@ export class TransactionModel {
       }
       if (filters?.search) {
         const searchConditions = [
-          like(transactionsTable.reference, `%${filters.search}%`),
-          like(transactionsTable.email, `%${filters.search}%`),
+          ilike(transactionsTable.reference, `%${filters.search}%`),
+          ilike(transactionsTable.email, `%${filters.search}%`),
         ];
 
         const searchCondition = or(...searchConditions);

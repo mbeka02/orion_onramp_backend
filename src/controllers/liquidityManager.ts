@@ -61,6 +61,7 @@ export class LiquidityManagerController {
     token_type: TOKEN_TYPE,
     amount: number,
     liquidityModel: LiquidityManagerModel,
+    crypto_account: string | null,
   ) {
     try {
       // Get transaction details
@@ -70,7 +71,14 @@ export class LiquidityManagerController {
           token_type,
           amount,
         );
-      await liquidityModel.sendTokensToAccount(details);
+      
+      // Send tokens to account if provided
+      if (crypto_account) {
+        await liquidityModel.sendTokensToAccount({...details, business_crypto_account: crypto_account});
+      } else {
+        await liquidityModel.sendTokensToAccount(details);
+      }
+      
     } catch (err) {
       logger.error(
         "Liquidity Manager Controller: Error sending tokens to business",

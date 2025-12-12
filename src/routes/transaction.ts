@@ -224,7 +224,7 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
     }
 
     if (isIPValid === false) {
-      logger.info("IP address of request", {ip: req.ip, headerIP: ip});
+      logger.info("IP address of request", { ip: req.ip, headerIP: ip });
       return res.status(403).send("Invalid IP");
     }
     const body = (req as any).rawBody;

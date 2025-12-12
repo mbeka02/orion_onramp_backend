@@ -115,6 +115,7 @@ export const transactionsTable = pgTable("transactions", {
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date()),
+  cryptoAccount: text("crypto_account"),
 });
 export const environmentKeysTable = pgTable(
   "environment_keys",

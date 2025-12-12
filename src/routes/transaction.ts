@@ -212,6 +212,21 @@ router.post(
  */
 router.post("/webhook/paystack", async (req: Request, res: Response) => {
   try {
+    const ip = req.headers["x-forwarded-for"];
+    // Validate MPs
+    const validIPs = ["52.31.139.75", "52.49.173.169", "52.214.14.220"];
+    let isIPValid = false;
+    for (const validIP of validIPs) {
+      if (ip === validIP) {
+        isIPValid = true;
+        break;
+      }
+    }
+
+    if (isIPValid === false) {
+      logger.info("IP address of request", { ip: req.ip, headerIP: ip });
+      return res.status(403).send("Invalid IP");
+    }
     const body = (req as any).rawBody;
     if (!body) {
       logger.error("Raw body not available for webhook signature validation");

@@ -84,6 +84,7 @@ export class TransactionController {
         reference: reference,
         token: token,
         metadata: transactionRequest.metadata,
+        crypto_account: transactionRequest.crypto_account,
       });
 
       logger.info("Transaction record created", {

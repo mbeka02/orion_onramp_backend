@@ -147,6 +147,7 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
         tokenType,
         amount,
         liquidityModelMock,
+        null,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -171,6 +172,7 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
         tokenType,
         amount,
         liquidityModelMock,
+        null,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -195,6 +197,7 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
         tokenType,
         amount,
         liquidityModelMock,
+        null,
       );
       expect(false).toBe(true);
     } catch (err) {
@@ -218,8 +221,33 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
       tokenType,
       amount,
       liquidityModelMock,
+      null,
     );
-    expect(true).toBe(true);
+    expect(liquidityModelMock.sendTokensToAccount).toHaveBeenCalledWith({
+      token_type: tokenType,
+      treasury_account: treasuryAccount,
+      token_address: token,
+      business_crypto_account: goodAccount,
+      amount_with_decimals: amountWithDecimals,
+    });
+  });
+
+  it("should send tokens to account provided", async () => {
+    const account = "some account";
+    await liquidityManagerController.sendTokensToBusiness(
+      good_environment,
+      tokenType,
+      amount,
+      liquidityModelMock,
+      account,
+    );
+    expect(liquidityModelMock.sendTokensToAccount).toHaveBeenCalledWith({
+      token_type: tokenType,
+      treasury_account: treasuryAccount,
+      token_address: token,
+      business_crypto_account: account,
+      amount_with_decimals: amountWithDecimals,
+    });
   });
 });
 

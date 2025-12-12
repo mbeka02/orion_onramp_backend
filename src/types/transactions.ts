@@ -43,6 +43,9 @@ export const getTransactionsSchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().default(20),
 });
+
+export const hederaAccountIdRegex = /^\d+\.\d+\.\d+$/;
+
 // Initialize transaction schema
 export const initializeTransactionSchema = z.object({
   token: TokenTypeEnum,
@@ -85,6 +88,8 @@ export const initializeTransactionSchema = z.object({
   transaction_charge: z.number().int().nonnegative().optional(),
 
   bearer: z.enum(["account", "subaccount"]).optional(),
+
+  crypto_account: z.string().regex(hederaAccountIdRegex).optional(),
 });
 
 // Verify transaction params schema

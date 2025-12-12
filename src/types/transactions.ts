@@ -89,7 +89,7 @@ export const initializeTransactionSchema = z.object({
 
   bearer: z.enum(["account", "subaccount"]).optional(),
 
-  crypto_account: z.string().regex(hederaAccountIdRegex).optional()
+  crypto_account: z.string().regex(hederaAccountIdRegex).optional(),
 });
 
 // Verify transaction params schema

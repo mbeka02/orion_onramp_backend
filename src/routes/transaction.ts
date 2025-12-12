@@ -212,9 +212,9 @@ router.post(
  */
 router.post("/webhook/paystack", async (req: Request, res: Response) => {
   try {
-    const ip = req.headers['x-forwarded-for'];
+    const ip = req.headers["x-forwarded-for"];
     // Validate MPs
-    const validIPs = ['52.31.139.75', '52.49.173.169', '52.214.14.220'];
+    const validIPs = ["52.31.139.75", "52.49.173.169", "52.214.14.220"];
     let isIPValid = false;
     for (const validIP of validIPs) {
       if (ip === validIP) {
@@ -224,7 +224,7 @@ router.post("/webhook/paystack", async (req: Request, res: Response) => {
     }
 
     if (isIPValid === false) {
-      console.log(req.ip)
+      console.log(req.ip);
       return res.status(400).send("Invalid IP");
     }
     const body = (req as any).rawBody;

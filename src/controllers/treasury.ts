@@ -109,7 +109,7 @@ export class TreasuryController {
                 transaction.token,
                 amount,
                 liquidityModel,
-                transaction.cryptoAccount
+                transaction.cryptoAccount,
               );
             })
             .catch((err) => {

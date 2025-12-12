@@ -28,6 +28,7 @@ interface createTransactionArgs {
   authorizationUrl?: string;
   accessCode?: string;
   metadata?: Record<string, any>;
+  crypto_account?: string
 }
 
 interface UpdatePaystackResponseArgs {
@@ -159,6 +160,7 @@ export class TransactionModel {
           authorizationUrl: args.authorizationUrl,
           accessCode: args.accessCode,
           metadata: args.metadata,
+          cryptoAccount: args.crypto_account
         })
         .returning();
       logger.info("Transaction created", {

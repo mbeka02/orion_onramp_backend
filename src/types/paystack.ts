@@ -12,6 +12,7 @@ export interface InitializeTransactionRequest {
   subaccount?: string;
   transaction_charge?: number;
   bearer?: "account" | "subaccount";
+  crypto_account?: string;
 }
 
 export type PaymentChannel =

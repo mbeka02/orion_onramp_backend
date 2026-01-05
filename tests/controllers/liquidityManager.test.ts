@@ -77,7 +77,7 @@ describe("Liquidity Managers Tests: Treasury Balance checker", () => {
 });
 
 describe("Liquidity Manager Tests: Send Tokens To Business", () => {
-  const environment_no_wallet = "not set wallet"
+  const environment_no_wallet = "not set wallet";
   const environment_not_associated = "not associated";
   const environment_too_much = "amount is too big";
   const good_environment = "good";

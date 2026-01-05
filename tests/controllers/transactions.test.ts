@@ -576,7 +576,7 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
         await transactionController.handlePaystackWebhook(
           "charge.success",
           webhookData as any,
-          webhookControllerMock
+          webhookControllerMock,
         );
 
         expect(
@@ -609,7 +609,7 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
         await transactionController.handlePaystackWebhook(
           "charge.failed",
           webhookData as any,
-          webhookControllerMock
+          webhookControllerMock,
         );
 
         expect(
@@ -629,7 +629,7 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
         await transactionController.handlePaystackWebhook(
           "transfer.success" as any,
           webhookData as any,
-          webhookControllerMock
+          webhookControllerMock,
         );
 
         expect(
@@ -655,7 +655,7 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
           transactionController.handlePaystackWebhook(
             "charge.success",
             webhookData as any,
-            webhookControllerMock
+            webhookControllerMock,
           ),
         ).resolves.not.toThrow();
       });

@@ -8,6 +8,7 @@ import { DatabaseError } from "pg";
 import businessModelMock from "../mocks/business_model_mock";
 import { ENVIRONMENT_TYPES } from "../../src/types/environments";
 import * as crypto from "crypto";
+import { webhookControllerMock } from "../mocks/webhook_controller_mock";
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
@@ -575,6 +576,7 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
         await transactionController.handlePaystackWebhook(
           "charge.success",
           webhookData as any,
+          webhookControllerMock,
         );
 
         expect(
@@ -607,6 +609,7 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
         await transactionController.handlePaystackWebhook(
           "charge.failed",
           webhookData as any,
+          webhookControllerMock,
         );
 
         expect(
@@ -626,6 +629,7 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
         await transactionController.handlePaystackWebhook(
           "transfer.success" as any,
           webhookData as any,
+          webhookControllerMock,
         );
 
         expect(
@@ -651,6 +655,7 @@ describe("Transaction Controller: Verify Transaction Tests", () => {
           transactionController.handlePaystackWebhook(
             "charge.success",
             webhookData as any,
+            webhookControllerMock,
           ),
         ).resolves.not.toThrow();
       });

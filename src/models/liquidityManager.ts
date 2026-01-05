@@ -22,6 +22,14 @@ interface BusinessTransactionDetails {
   amount_with_decimals: number;
 }
 
+interface RawBusinessTransactionDetails {
+  token_type: TOKEN_TYPE;
+  treasury_account: string;
+  token_address: string;
+  business_crypto_account: string | null;
+  amount_with_decimals: number;
+}
+
 export class LiquidityManagerModel {
   async getCachedTreasuryTokenBalance(token_type: TOKEN_TYPE): Promise<number> {
     try {
@@ -129,7 +137,7 @@ export class LiquidityManagerModel {
     environment_id: string,
     tokenType: TOKEN_TYPE,
     amount: number,
-  ): Promise<BusinessTransactionDetails> {
+  ): Promise<RawBusinessTransactionDetails> {
     try {
       const businessDetails = await db
         .select({
@@ -145,9 +153,6 @@ export class LiquidityManagerModel {
       }
 
       const business = businessDetails[0];
-      if (!business.business_crypto_account) {
-        throw new MyError(Errors.BUSINESS_NOT_SET_WALLET);
-      }
 
       const tokenDetails = await db
         .select({

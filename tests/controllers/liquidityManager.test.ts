@@ -77,7 +77,6 @@ describe("Liquidity Managers Tests: Treasury Balance checker", () => {
 });
 
 describe("Liquidity Manager Tests: Send Tokens To Business", () => {
-  const environment_no_wallet = "no wallet";
   const environment_not_associated = "not associated";
   const environment_too_much = "amount is too big";
   const good_environment = "good";
@@ -95,9 +94,7 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
       .fn()
       .mockImplementation((environment_id, token_type, amount) => {
         return new Promise((res, rej) => {
-          if (environment_id === environment_no_wallet) {
-            rej(new MyError(Errors.BUSINESS_NOT_SET_WALLET));
-          } else if (environment_id === environment_not_associated) {
+          if (environment_id === environment_not_associated) {
             res({
               token_type: tokenType,
               treasury_account: treasuryAccount,
@@ -138,31 +135,6 @@ describe("Liquidity Manager Tests: Send Tokens To Business", () => {
           }
         });
       });
-  });
-
-  it("should fail if business has not set crypto wallet", async () => {
-    try {
-      await liquidityManagerController.sendTokensToBusiness(
-        environment_no_wallet,
-        tokenType,
-        amount,
-        liquidityModelMock,
-        null,
-      );
-      expect(false).toBe(true);
-    } catch (err) {
-      if (err instanceof MyError) {
-        if (err.message === Errors.BUSINESS_NOT_SET_WALLET) {
-          expect(true).toBe(true);
-        } else {
-          console.error("Unexpected error", err);
-          expect(false).toBe(true);
-        }
-      } else {
-        console.error("Unexpected error", err);
-        expect(false).toBe(true);
-      }
-    }
   });
 
   it("should fail if business has not associated to account", async () => {

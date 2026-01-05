@@ -82,12 +82,11 @@ export class LiquidityManagerController {
         if (details.business_crypto_account) {
           await liquidityModel.sendTokensToAccount({
             ...details,
-            business_crypto_account: details.business_crypto_account!
+            business_crypto_account: details.business_crypto_account!,
           });
         } else {
           throw new MyError(Errors.BUSINESS_NOT_SET_WALLET);
         }
-        
       }
     } catch (err) {
       logger.error(
